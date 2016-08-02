@@ -73,6 +73,7 @@ class Nabm():
         sys.stderr.write("Ouverture de la base NABM\n")
         
     def expertise_liste(self, lst_actes, nabm_version=43):
+        """Ce prmier essai me semble à déplacer."""
         (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
         print(lst_actes)
         titrer("Tous ces actes existent-ils dans la NABM ?");
@@ -80,8 +81,8 @@ class Nabm():
             print("{} : ".format(acte), end='')
             req="""SELECT nabm.id, nabm.libelle 
         AS 'libelle_NABM', 'B', nabm.coef
-FROM nabm
-WHERE nabm.id=  {} """.format(acte)
+        FROM nabm
+        WHERE nabm.id=  {} """.format(acte)
             self.NABM_DB.execute_sql(req)
             res = self.NABM_DB.cursor.fetchall()
             if res:
@@ -92,19 +93,21 @@ WHERE nabm.id=  {} """.format(acte)
         titrer("Un libellé manquant signifie probablement \
 que votre liste de codes contient un code qui a disparu de la nomenclature.");
 
-    def charger_liste_de_codes(act_lst):
-        """Enregiste une liste dans la base de données.
-
-La table est nommée : nabm_sheet
-"""
-        pass
+##    def charger_liste_de_codes(act_lst):
+##        """Enregiste une liste dans la base de données.
+##
+##La table est nommée : nabm_sheet
+##"""
+##        pass
+        
     def __del__(self):
         # self.NABM_DB.close()
-        print("POURQUOI ?Fermeture de la base {base} terminée".format(base=Cf.NABM_DB))
+        print("POURQUOI ? Fermeture de la base {base} terminée".format(base=Cf.NABM_DB))
 
 class Invoice():
     """Gestion d'une facture NABM ou autre.
 La facture est implémentée dans une base squlite pour réaliser des requêtes"""
+
     def __init__(self):
 #         self.INVOICE_DB=Nabm().INVOICE_LIST
         self.INVOICE_DB = lib_sqlite.GestionBD('tempo.sqlite')
@@ -144,7 +147,7 @@ DROP TABLE invoice_list
     def show_data(self):
         self.INVOICE_DB.quick_sql("SELECT * FROM invoice_list")
 
-class TestInvoiceReference():
+class TestInvoiceAccordingToReference():
     """Tests d'une facture selon une référence.
 
 Je pensais qu'il allait utiliser la structure attach dans python.
@@ -153,20 +156,40 @@ En fait il faut l'utiliser dans la base Sqlite."""
         """Enregistrement de 2 connecteurs"""
         self.ref = REF_DB
         self.invoice = INV_DB
+        self.report = []
+    def conclude(self):
+        """Lit le self.report et l'envoie vers un fichier si non vide"""
+        if self.report == []:
+            print("rapport vide")
+        else:
+            print("Rapport à sauvegarder : ", self.error_report)
 
     def attach_another_database(self):
+        """Attancher la base de la facture à la table de nomenclature"""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
         self.ref.quick_sql("SELECT 'La base 2 est connectée' AS COMMENTAIRE")
-        # self.ref.quick_sql('SELECT * FROM inv.invoice_list')
-        # La base de référence 'connait' à présent la notion de facture.
-        # On peut réaliser des vérifications entre les 3 bases.
 
+    def affiche_etude_select(self,sql):
+        """Affiche une liste des lignes de Select éventuellement vide."""
+        self.ref.execute_sql(sql)
+        res_as_list =  self.ref.resultat_req()
+        if len(res_as_list) == 0:
+            print("RAS")
+            return False
+        else:
+            print("{} lignes : " . format(str(len(res_as_list))))
+            for line in res_as_list:
+                print(line)
+            return res_as_list
+        
     def inv_test1(self, nabm_version=43):
-        """"Un premmier test"""
-        (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
-        titrer("Tous ces actes existent-ils dans la NABM ?");
+        """"Un premmier test : Les actes sont-ils dans la nomenclature.
 
-        self.ref.quick_sql("""
+Puis affiche de nombre B."""
+        (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
+
+        titrer("Tous ces actes existent-ils dans la NABM ?");
+        req = """
         SELECT
            inv.invoice_list.id,
            inv.invoice_list.code,
@@ -175,15 +198,18 @@ En fait il faut l'utiliser dans la base Sqlite."""
         FROM inv.invoice_list
         LEFT JOIN nabm 
         ON inv.invoice_list.code=nabm.id 
-""")
-
+"""
+        res_lst = self.affiche_etude_select(req)
+        if res_lst:
+            total_B =sum([line[3] for line in res_lst
+                          if line[3] is not None ])
+            print("Somme des B : {}".format(str(total_B)))
+       
     def inv_test2(self, nabm_version=43):
-        """"Un premmier test"""
-        titrer("actes non présent dans le référentiel ")
-        # print("Fonction appelée : {}", )
+        """"Mettre en évidence les lignes non à la nomenclature."""
+        titrer("actes non présents dans le référentiel ")
         (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
-
-        self.ref.quick_sql("""
+        select_req = """
         SELECT
            inv.invoice_list.id,
            inv.invoice_list.code,
@@ -192,9 +218,35 @@ En fait il faut l'utiliser dans la base Sqlite."""
         FROM inv.invoice_list
         LEFT JOIN nabm 
         ON inv.invoice_list.code=nabm.id
-        WHERE nabm.libelle IS NULL
-""")
+        WHERE nabm.libelle IS NULL"""
         
+        self.affiche_etude_select(select_req)
+        titrer("Contrôle d'une liste vide : ")
+        self.affiche_etude_select("Select 1,2 Where 1 = 2")
+        
+    def inv_test3(self, nabm_version=43):
+        """Test de codes répétés"""
+        (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
+        titrer("Certains codes sont-ils présents plus d'une fois ?");
+        req="""SELECT  code AS code_NABM,
+        count(code) AS 'occurence' 
+        FROM inv.invoice_list GROUP BY code
+        HAVING occurence> 1""";
+        lst = self.affiche_etude_select(req)
+        for acte in [ line[0] for line in lst ]:
+           sql = """Select id, MaxCode  from {ref_name}
+        WHERE id=?""". format(ref_name=nabm_file)
+
+           self.ref.execute_sql(sql, param =(acte, ))
+           print(self.ref.resultat_req())
+
+        
+def study_cursor(cursor):
+    nb_lignes = False
+    for line in cursor:
+        print(line)
+        nb_lines = True
+    return True
     
                            
 def _test():
@@ -203,12 +255,16 @@ def _test():
     doctest.testmod(verbose=False)
 
 if __name__=='__main__':
-    # _test()
+    _test()
     # _demo()
     a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
     '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
     '1245', '1806', '1207', '9105', '4340', '1465', '0322',
     '0323','2145', '4332', '4355', '4362', '4362']
+    ab = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    '0996','0552', '1208', '0593', '0578', '0352', '0353',
+     '1806', '1207', '9105', '4340', '1465', '0322',
+    '0323', '4332', '4355', '4362', '4362']
     # a = ['0323','9105', '1208']
     # Nabm().expertise_liste(a, nabm_version=43)
     # On a 2 représentations : la facture, la référence
@@ -219,10 +275,11 @@ if __name__=='__main__':
     invoice.load_invoice_list(a)
     # invoice.show_data()
     
-    T = TestInvoiceReference(act_ref.NABM_DB, invoice.INVOICE_DB)
+    T = TestInvoiceAccordingToReference(act_ref.NABM_DB, invoice.INVOICE_DB)
     T.attach_another_database()
-    T.inv_test1()
-    T.inv_test2()
+    # T.inv_test1()
+    # T.inv_test2()
+    T.inv_test3()
+    T.conclude()    
     
-    
-#    invoice.INVOICE_DB.close()
+

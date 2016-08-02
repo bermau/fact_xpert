@@ -46,14 +46,14 @@ class GestionBD:
         else:
             return 1
 
-    def resultatReq(self):
+    def resultat_req(self):
         "renvoie le résultat de la requête précédente (une liste de tuples)"
         return self.cursor.fetchall()
 
     def quick_sql(self, req):
        if self.execute_sql(req):
           # Afficher les noms de colonnes
-          records=self.resultatReq()         # ce sera un tuple de tuples
+          records=self.resultat_req()         # ce sera un tuple de tuples
           # TypeError: 'NoneType' object is not iterable
           try:
              for i in self.cursor.description:
