@@ -9,4 +9,4 @@ PORT=le_port;DATABASE=nom_de_la_base;UID=qq_un;PWD=machin'
 # Nom de la bases sqlite contenant la nabm.
 # Les versions sont nabm41, 42 et 43.
 
-NABM_DB = "nabm_db.sqlite"
+NABM_DB = "nabm_db.sqlite"   
