@@ -1,6 +1,7 @@
 # file : conf_file.py
 # Fichier de configuration exmeple
 # à adapter
+# essai jout cette ligne depuis m
 
 # Connexion à la base principale
 CONNEXION_BASE_PROD = 'DRIVER={SQL Server};SERVER=nom_du_serveur;\
