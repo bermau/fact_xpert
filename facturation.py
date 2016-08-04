@@ -11,58 +11,7 @@ import lib_nabm
 import conf_file as Cf
 import sys
 from bm_u import titrer
-##
-##
-##PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
-##                '1809', '1810', '1811', '1812', '1813', '1814', '1815',
-##                '1816', '1817', '1818', '1819' ]
-##
-##HEP_B_LST_REF = ['0322', '0323', '0351', '0352', '0353', '0354']
-##
-##def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
-##    sous_liste = [ acte for acte in actes_lst if acte in lst_ref ]
-##    if len(sous_liste) > N:
-##        return True, sous_liste
-##    else:
-##        return False
-##
-##def detecter_plus_de_deux_proteines(actes_lst):
-##    """Renvoie si la liste contient plus de 2 protéines."""
-##    return _detect_more_than_n_objects_in_a_list(actes_lst, PROT_LST_REF, 2)
-##
-##def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
-##    """Renvoie si la liste contient plus de 3 sérologies hépatite B."""
-##    return _detect_more_than_n_objects_in_a_list(actes_lst, HEP_B_LST_REF, 3)
-##
-##def _demo():
-##    """Une démonstration des possibilité de ce module"""
-##    a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-##    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
-##    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
-##    '0323','2145', '4332', '4355', '4362', '4362']
-##    print("Voilà une liste d'actes : ", a)
-##    print("Test des protéines : ")
-##    print(detecter_plus_de_deux_proteines(a))
-##    print("Test des sérologies Hépatite B :")
-##    print(detecter_plus_de_trois_sero_hepatite_b(a))    
-##
-##def get_name_of_nabm_files(nabm_version):
-##    """Renvoie le nom des tables de la nabm en fonction de la version.
-##--> (nabm_table_name, incompatibility_table_name).
-##
-##    >>> get_name_of_nabm_files(41)
-##    ('nabm41', 'incompatibility41')
-##    >>> get_name_of_nabm_files('42')
-##    ('nabm42', 'incompatibility42')
-##"""
-##    tables = { 43:('nabm', 'incompatibility'),
-##               41:('nabm41', 'incompatibility41'),
-##               42:('nabm42', 'incompatibility42'),
-##          }
-##    return tables[int(nabm_version)]
-##
-##
-##    
+ 
 class Invoice():
     """Gestion d'une facture NABM ou autre.
 
