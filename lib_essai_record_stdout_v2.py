@@ -21,6 +21,7 @@ et __exit__ (en sortie).
         self.__init__()
         print("passe par __enter__")
         return self # permet la notation "with XX as f"
+    
     def __exit__(self, *args, **kwargs):
         
         self.stop_and_get()
@@ -28,7 +29,8 @@ et __exit__ (en sortie).
         
     def __init__(self):
         print("Initialisation réalisée dasn __init__")
-        self.memory = StringIO()  # la VO utilisait BytesIO()
+        self.important = False
+        self.memory = StringIO()
         sys.stdout = self
         
     def write(self, s):
@@ -36,10 +38,16 @@ et __exit__ (en sortie).
         self.memory.write(s)
         self.old_stdout.write(s)
 
+    def save_memory_to_file(self,filename='sortie.txt'):
+        with open('sortie.txt', 'a') as f:
+            for line in self.memory.read():
+                f.write(line)            
+        
     def stop_and_get(self):
         sys.stdout = self.old_stdout
         self.memory.seek(0)
-        return self.memory.read()
+        if self.important:
+            self.save_memory_to_file()
   
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit. Renvoie True si c'est à sauvegarder."""
@@ -53,13 +61,8 @@ with  PersistentStdout() as buf:
     print('pas de passage ', end='')
     print("à la ligne")
     print()
-    important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
     print("une petite pour la route")
 
-  
-if important:
-    with open('sortie.txt', 'a') as f:
-        for line in buf.stop_and_get():
-                f.write(line)
-
+print("Ceci est hors contexte et ne sera pas sauvé.")  
         
