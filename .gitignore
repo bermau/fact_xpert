@@ -1,6 +1,7 @@
 # BM: 
 conf_file.py
 essai_*
+PRIVATE/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
