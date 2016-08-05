@@ -48,13 +48,38 @@ et __exit__ (en sortie).
         self.memory.seek(0)
         if self.important:
             self.save_memory_to_file()
-  
+
+
+
+def decor(funct):
+    print("Je décore la fonction : '{}()'".format(funct.__name__))
+    def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments de
+                                  # la fonction
+        print("PRE")
+        print("Je vais exécuter la fonction")
+        a=list(args)
+        print("Liste des arguments :", a)
+        with  PersistentStdout() as buf:
+              buf.important = funct(*args, **kwargs)
+        print("POST")
+        return buf.important
+    return wrapper # et non pas wrapper()
+
+@decor  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit. Renvoie True si c'est à sauvegarder."""
     print(msg)
-    return msg == "à enregistrer"
+    print("ceci est une ligne intéressante... ou non, en focntion\
+    d'un test")
+    return msg == "à enregistrer"   
 
 print("début")
+
+
+fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
+
+
+
 with  PersistentStdout() as buf:
 # On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
     print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
@@ -66,3 +91,5 @@ with  PersistentStdout() as buf:
 
 print("Ceci est hors contexte et ne sera pas sauvé.")  
         
+
+
