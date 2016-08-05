@@ -52,17 +52,41 @@ et __exit__ (en sortie).
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit. Renvoie True si c'est à sauvegarder."""
     print(msg)
+    print("quelque chose d'intéressant")
     return msg == "à enregistrer"
 
-print("début")
-with  PersistentStdout() as buf:
-# On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
-    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
-    print('pas de passage ', end='')
-    print("à la ligne")
-    print()
-    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
-    print("une petite pour la route")
+# Ci dessous j'essai de créer un décorateur
+def mon_deco_recorder(function):
+    def wrapper(*args, **kwargs):
+        print("prétraitement")
+        sys.stderr.write("entrée dans wrapper")
+        with PersistentStdout() as buf:
+            print("indicateur dans with")
+            buf.important = function(*args, **kwargs)
+            sys.stderr.write("sortie de with")
+        # print("post traitement")
+    sys.stderr.write("Dans le décorateur")   
+    return wrapper 
 
-print("Ceci est hors contexte et ne sera pas sauvé.")  
-        
+def decorate(func):
+    def wrapper(*args, **kwargs):
+        # Pré-traitement
+        func(*args, **kwargs)
+        # Post-traitement
+    return wrapper
+
+print("début")
+##with  PersistentStdout() as buf:
+### On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
+##    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
+##    print('pas de passage ', end='')
+##    print("à la ligne")
+##    print()
+##    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+##    print("une petite pour la route")
+##
+##print("Ceci est hors contexte et ne sera pas sauvé.")  
+##        
+##print("\n\n autres méthode ")
+
+a= mon_deco_recorder(fonction_qui_ecrit_et_fait_des_tests("à enregistrer"))
