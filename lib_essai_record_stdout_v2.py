@@ -48,12 +48,31 @@ et __exit__ (en sortie).
         self.memory.seek(0)
         if self.important:
             self.save_memory_to_file()
-  
+
+
+
+def decor(funct):
+    print("Je décore la fonction : '{}()'".format(funct.__name__))
+    def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments de
+                                  # la fonction
+        print("PRE")
+        print("Je vais exécuter la fonction")
+        a=list(args)
+        print("Liste des arguments :", a)
+        with  PersistentStdout() as buf:
+              buf.important = funct(*args, **kwargs)
+        print("POST")
+        return buf.important
+    return wrapper # et non pas wrapper()
+
+@decor  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit. Renvoie True si c'est à sauvegarder."""
     print(msg)
-    print("quelque chose d'intéressant")
-    return msg == "à enregistrer"
+
+    print("ceci est une ligne intéressante... ou non, en fonction\
+    d'un test")
+    return msg == "à enregistrer"   
 
 # Ci dessous j'essai de créer un décorateur
 def mon_deco_recorder(function):
@@ -76,17 +95,36 @@ def decorate(func):
     return wrapper
 
 print("début")
-##with  PersistentStdout() as buf:
-### On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
-##    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
-##    print('pas de passage ', end='')
-##    print("à la ligne")
-##    print()
-##    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
-##    print("une petite pour la route")
+##<<<<<<< HEAD
+####with  PersistentStdout() as buf:
+##### On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
+####    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
+####    print('pas de passage ', end='')
+####    print("à la ligne")
+####    print()
+####    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+####    print("une petite pour la route")
+####
+####print("Ceci est hors contexte et ne sera pas sauvé.")  
+####        
+####print("\n\n autres méthode ")
 ##
-##print("Ceci est hors contexte et ne sera pas sauvé.")  
-##        
-##print("\n\n autres méthode ")
+##a= mon_deco_recorder(fonction_qui_ecrit_et_fait_des_tests("à enregistrer"))
+##=======
 
-a= mon_deco_recorder(fonction_qui_ecrit_et_fait_des_tests("à enregistrer"))
+
+fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
+
+
+
+with  PersistentStdout() as buf:
+# On imprime des tas de lignes à l'écran, qui sortent mais sont stockées
+    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
+    print('pas de passage ', end='')
+    print("à la ligne")
+    print()
+    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+    print("une petite pour la route")
+
+print("Ceci est hors contexte et ne sera pas sauvé.")  
+        
