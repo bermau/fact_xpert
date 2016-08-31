@@ -20,6 +20,8 @@ PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
 HEP_B_LST_REF = ['0322', '0323', '0351', '0352', '0353', '0354']
 
 def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
+    """Renvoie si une liste contient plus de n membres d'une liste de reférence.
+    """
     sous_liste = [ acte for acte in actes_lst if acte in lst_ref ]
     if len(sous_liste) > N:
         return True, sous_liste
@@ -27,11 +29,19 @@ def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
         return False
 
 def detecter_plus_de_deux_proteines(actes_lst):
-    """Renvoie si la liste contient plus de 2 protéines."""
+    """Renvoie si la liste contient plus de 2 protéines.
+    >>> detecter_plus_de_deux_proteines(['1806','1805','1605','1819'])
+    (True, ['1806', '1805', '1819'])
+
+    """
     return _detect_more_than_n_objects_in_a_list(actes_lst, PROT_LST_REF, 2)
 
 def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
-    """Renvoie si la liste contient plus de 3 sérologies hépatite B."""
+    """Renvoie si la liste contient plus de 3 sérologies hépatite B.
+    >>> detecter_plus_de_trois_sero_hepatite_b(['1806','1805','0323', '0353', '0354'])
+    False
+
+    """
     return _detect_more_than_n_objects_in_a_list(actes_lst, HEP_B_LST_REF, 3)
 
 def _demo():
@@ -62,14 +72,12 @@ def get_name_of_nabm_files(nabm_version):
     return tables[int(nabm_version)]
 
 
-
 class Nabm():
     
     def __init__(self):
-        """Ouvre la bae de données contenant la NABM
+        """Ouvre la base de données contenant la NABM
 
-        >>> Nabm()
-
+        >>> TEST=Nabm()
         
         """
         self.NABM_DB = lib_sqlite.GestionBD(Cf.NABM_DB)
@@ -105,7 +113,7 @@ La table est nommée : nabm_sheet
         
     def __del__(self):
         self.NABM_DB.close()
-        print("POURQUOI ? Fermeture de la base {base} terminée".format(base=Cf.NABM_DB))
+        # print("POURQUOI ? Fermeture de la base {base} terminée".format(base=Cf.NABM_DB))
 
                            
 def _test():

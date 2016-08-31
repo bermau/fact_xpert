@@ -18,14 +18,11 @@ class GestionBD:
         try:
             self.baseDonn = sqlite3.connect(dbName)
         except Exception as err:
-##            print(('Connexion to database failed :\n'\
-##                  'SQL Error is :\n%s' % err))
             sys.stderr.write(('Connexion to database failed :\n'\
-                  'SQL Error is :\n%s' % err))
-            
+                  'SQL Error is :\n%s' % err))           
             self.echec = 1
         else:
-            print("Connexion OK") 
+            # print("Connexion OK") 
             self.cursor = self.baseDonn.cursor()   # création du curseur
             self.echec = 0
 
