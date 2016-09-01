@@ -1,4 +1,4 @@
-"""Une classe pour enregistrer la sortie standard si nécessaire"""
+"""Une classe pour enregistrer la sortie standard si nécessaire."""
 
 # J'ai transformé cette classe avec un context manager, puis un décorateur.
 
@@ -29,19 +29,20 @@ et __exit__ (en sortie).
         self.stop_and_get()
         print("sortie par __exit__")
         
-    def __init__(self):
+    def __init__(self, filename='sortie.txt'):
         print("Initialisation réalisée dasn __init__")
+        self.filename=filename
         self.important = False
         self.memory = StringIO()
         sys.stdout = self
-        
+                
     def write(self, s):
         """Ecrit sur la sortie standard et sur le buffer"""
         self.memory.write(s)
         self.old_stdout.write(s)
 
-    def save_memory_to_file(self,filename='sortie.txt'):
-        with open('sortie.txt', 'a') as f:
+    def save_memory_to_file(self):
+        with open(self.filename, 'a') as f:
             for line in self.memory.read():
                 f.write(line)            
         
@@ -53,59 +54,43 @@ et __exit__ (en sortie).
 
 
 
-def decor(funct):
+def record_if_important(filename='output.txt'):
     print("Je décore la fonction : '{}()'".format(funct.__name__))
-    def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments de
-                                  # la fonction
-        print("PRE")
+    def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
+                                  # de la fonction
+        print("Ceci est avant enregistrement")
         print("Je vais exécuter la fonction")
-        a=list(args)
+        a = list(args)
         print("Liste des arguments :", a)
-        with  PersistentStdout() as buf:
+        with  PersistentStdout(filename) as buf:
               buf.important = funct(*args, **kwargs)
-        print("POST")
+        print("Ceci est après enregistrement")
         return buf.important
     return wrapper # et non pas wrapper()
 
-@decor  
+@record_if_important(filename='tutu.txt')  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
-    """Ecrit. Renvoie True si c'est à sauvegarder."""
+    """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
     print("ceci est une ligne intéressante... ou non, en fonction\
     d'un test")
     return msg == "à enregistrer"   
 
-# Ci dessous j'essai de créer un décorateur
-def mon_deco_recorder(function):
-    def wrapper(*args, **kwargs):
-        print("prétraitement")
-        sys.stderr.write("entrée dans wrapper")
-        with PersistentStdout() as buf:
-            print("indicateur dans with")
-            buf.important = function(*args, **kwargs)
-            sys.stderr.write("sortie de with")
-        # print("post traitement")
-    sys.stderr.write("Dans le décorateur")   
-    return wrapper 
 
-def decorate(func):
-    def wrapper(*args, **kwargs):
-        # Pré-traitement
-        func(*args, **kwargs)
-        # Post-traitement
-    return wrapper
+if __name__ == '__main__':
 
-print("début")
-
-fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
-
-with  PersistentStdout() as buf:
-# On imprime des tas de lignes à l'écran, qui sortent et sont stockées
-    print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
-    print('pas de passage ', end='')
-    print("à la ligne")
-    print()
-    buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
-    print("une petite pour la route")
-print("Ceci est hors contexte et ne sera pas sauvé.")  
-        
+    fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
+    fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+    fonction_qui_ecrit_et_fait_des_tests("NON enregistrer")
+    print("une petite ligne pour la route")
+    
+##    with  PersistentStdout() as buf:
+##    # On imprime des tas de lignes à l'écran, qui sortent et sont stockées
+##        print("Aujourdh'ui c'est l'été") # ceci est capturé et affiché
+##        print('pas de passage ', end='')
+##        print("à la ligne")
+##        print()
+##        buf.important = fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
+##        print("une petite pour la route")
+##    print("Ceci est hors contexte et ne sera pas sauvé.")  
+            
