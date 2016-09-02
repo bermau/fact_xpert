@@ -1,9 +1,15 @@
 #!/bin/env python3
-"""Essai de connexion à un odbc"""
+"""Essai de connexion à un odbc.
+
+Pour qu ele programme fontionne il faut :
+CONNEXION = MyODBC_to_infocentre()
+... le programme
+de(CONNEXION)
+"""
 
 import pyodbc
 import conf_file as Cf
-import nabm_lib # utilitaires pour la NABM
+import lib_nabm # utilitaires pour la NABM
 import datetime, sys 
 
 CONNEXION = '' # sera utilisé pour la connexion à la base
@@ -116,7 +122,7 @@ FROM REQUESTS R
           ON DBT.BILLTESTID=A.BILLTESTID
  
 WHERE R.ACCESSNUMBER = ?"""
-
+    
     cursor = CONNEXION.query(sql,(req_id))
     rows = cursor.fetchall()
     # save_pickle(rows,"ID", IPP, date)
@@ -190,37 +196,6 @@ AND T.RESVALUE IS NOT NULL""", id  )
 
 
 
-def ETUDE_req_ids_from_patid(IPP, date):
-    """Liste des numéros ID long à partir d'un IPP pour une date donnée.
-
-Les arguments de date doivnent être fournis au format français. 
-La requête retourne des dates en format ISO.
-
-"""
-    patid = IPP
-    lendemain = le_lendemain(date)    
-    sql=r"""SELECT top 20 
-  R.ACCESSNUMBER, R.REQCREATIONDATE, R.STATUSDATE, R.LASTUPDTESTDATE, RECEIVEDDATE,  R.COLLECTIONDATE
-
-, P.PATID, H.HOSPITNUMBER, P.NAME, P.FIRSTNAME, P.MAIDENNAME, P.SEX, P.BIRTHDATE
-
-FROM REQUESTS R
-RIGHT JOIN PATIENTS P
-   ON R.PATID=P.PATID
-LEFT JOIN HOSPITALIZATIONS H
-   ON R.HOSPITID=H.HOSPITID
-
-WHERE P.PATID = ? 
-AND R.COLLECTIONDATE BETWEEN ? AND ?
-
-ORDER BY R.ACCESSNUMBER
-"""
-    a = MyODBC_to_infocentre()
-    cursor = CONNEXION.query(sql,(patid, date,lendemain))
-    rows = cursor.fetchall()   
-    for row in rows:
-        print(row.ACCESSNUMBER,row.COLLECTIONDATE, row.NAME, row.FIRSTNAME, row.BIRTHDATE)
-
 def save_pickle(rows, titre, arg1, arg2):
     import pickle
     file_name = titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
@@ -232,13 +207,11 @@ def save_pickle_v2(rows, titre, *args):
     import pickle
     file_name = titre + "_" + str(args) + "_" + str(arg2.replace("/","")) + ".pickle"
     print(*args)
-    # with open(file_name,mode='wb') as fichier:
-    #     pickle.dump(rows, fichier)
 
 def req_ids_from_patid(IPP, date):
     """Liste des numéros ID long à partir d'un IPP pour une date donnée.
 
-Les arguments de date doivnent être fournis au foramt français. 
+Les arguments de date doivnent être fournis au format français. 
 La requête retourne des dates en format ISO.
       
 """
@@ -317,9 +290,9 @@ def fac_de_IPP_date(IPP, date):
     print("IMPORTANT : élimination des actes HN")
     print(" ".join(actes_lst))
     print("Test de la règle des protéines:")
-    print(nabm_lib.detecter_plus_de_deux_proteines(actes_lst))
+    print(lib_nabm.detecter_plus_de_deux_proteines(actes_lst))
     print("Test de la règle des sérologie:")
-    print(nabm_lib.detecter_plus_de_trois_sero_hepatite_b(actes_lst))
+    print(lib_nabm.detecter_plus_de_trois_sero_hepatite_b(actes_lst))
     
 def essai_sur_base():
     """Récupérer un nom de colonne"""
@@ -398,8 +371,6 @@ L'ordre de traitement diffère de l'ordre de création des dossiers."""
     aset_IPP = set(lst_IPP)
     prt("Ces dossiers concernent {} patients avec un IPP".format(
         str(len(aset_IPP))))
-    
-    # print(aset_IPP)
 
     # Pour chaque IPP, je veux l'étude de la facture le jour donné.
     for ipp in list(aset_IPP)[4:10]:
@@ -410,10 +381,12 @@ L'ordre de traitement diffère de l'ordre de création des dossiers."""
 def _test():
     """Lancer les tests doctests"""
     import doctest
-    doctest.testmod(verbose=False)
-
+    doctest.testmod(verbose=False )
+    
 if __name__=='__main__':
-    # _test()
     CONNEXION = MyODBC_to_infocentre()
+    #_test()
+    
+    
     _demo_etude_facturation_d_un_jour("30/05/2016")
     del(CONNEXION)
