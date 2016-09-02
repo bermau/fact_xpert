@@ -55,8 +55,12 @@ DROP TABLE invoice_list
 class TestInvoiceAccordingToReference():
     """Tests d'une facture selon une référence.
 
-Je pensais qu'il allait utiliser la structure attach dans python.
-En fait il faut l'utiliser dans la base Sqlite."""
+La base contenant la nomenclature n'est jamais modifiée.
+A la base de référence (REF) contenant la nomenclature,
+on attache une base temporaire contenant la facture, ce qui permet
+d'utiliser des instruction SQL.
+
+On utilise pour cela la commande attach dans Sqlite."""
     def __init__(self, REF_DB, INV_DB, nabm_version):
         """Enregistrement de 2 connecteurs"""
         self.ref = REF_DB
@@ -81,8 +85,8 @@ En fait il faut l'utiliser dans la base Sqlite."""
         else:
             print("Rapport à sauvegarder : ", self.buf)
 
-    def attach_another_database(self):
-        """Attancher la base de la facture à la table de nomenclature"""
+    def attach_invoice_database(self):
+        """Attacher la base de la facture à la base de nomenclature"""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
         self.ref.quick_sql("SELECT 'La base 2 est connectée' AS COMMENTAIRE")
 
@@ -173,11 +177,9 @@ def study_cursor(cursor):
 def _test():
     """Execute doctests."""
     import doctest
-    doctest.testmod(verbose=False)
-
-if __name__=='__main__':
-    _test()
-    # _demo()
+    (failures, tests) = doctest.testmod(verbose=False)
+    print((failures, tests))
+def _demo():
     a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
     '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
     '1245', '1806', '1207', '9105', '4340', '1465', '0322',
@@ -198,10 +200,15 @@ if __name__=='__main__':
     
     T = TestInvoiceAccordingToReference(act_ref.NABM_DB, invoice.INVOICE_DB,
                                         nabm_version=43)
-    T.attach_another_database()
+    T.attach_invoice_database()
     T.inv_test1()
     T.inv_test2()
     T.inv_test3()
-    T.conclude()    
+    T.conclude() 
+
+if __name__=='__main__':
+    # _test()
+    _demo()
+       
     
 
