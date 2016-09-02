@@ -76,7 +76,7 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-@record_if_important(filename='tutu.txt')  
+@record_if_important()  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
@@ -88,6 +88,8 @@ def fonction_qui_ecrit_et_fait_des_tests(msg):
 if __name__ == '__main__':
 
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
+    fonction_qui_ecrit_et_fait_des_tests("NON enregistrer")
+
     fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
     fonction_qui_ecrit_et_fait_des_tests("NON enregistrer")
     print("une petite ligne pour la route")
