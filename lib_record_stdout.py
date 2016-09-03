@@ -74,11 +74,7 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-<<<<<<< HEAD
-@record_if_important()  
-=======
 @record_if_important(filename='ma_sortie.txt')  
->>>>>>> 5ddf5bc9d373cd89a77b2e8880a3e956cc72364c
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
@@ -95,16 +91,7 @@ def _demo_context_manager():
     print("ligne 4 à ne pas retenir")  
         
 def _demo_decorator():
-
-<<<<<<< HEAD
-if __name__ == '__main__':
-
-    fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer")
-    fonction_qui_ecrit_et_fait_des_tests("NON enregistrer")
-
-=======
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer (1)")
->>>>>>> 5ddf5bc9d373cd89a77b2e8880a3e956cc72364c
     fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer (2)")
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer (3)")
