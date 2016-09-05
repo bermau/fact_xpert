@@ -1,10 +1,11 @@
 #!/bin/env python3
 """Essai de connexion à un odbc.
 
-Pour qu ele programme fontionne il faut :
+Pour que le programme fontionne il faut créer une connexion avec la base:
+
 CONNEXION = MyODBC_to_infocentre()
 ... le programme
-de(CONNEXION)
+del(CONNEXION)
 """
 
 import pyodbc

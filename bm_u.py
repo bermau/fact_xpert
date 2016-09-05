@@ -3,7 +3,8 @@
 # divers utilitaires
 
 
-def titrer(msg):
+def title(msg):
     print("*" * 30)
     print(msg)
     print("*" * 30)
+
