@@ -187,10 +187,13 @@ Si anomalie, retourne False, sinon True"""
            print(maxcode)
            if maxcode !=  0:
                print("non nul")
+
                
-    def inv_test4(self, nabm_version=43):
+               
+    def inv_test_actes_trop_repetes(self, nabm_version=43):
         """Test de codes répétés.
-ESSAI DE MEILLEUR CODE avec appel par nom"""
+MEILLEUR CODE avec appel par nom"""
+        # On peut sans doute faire beaucoup plus simple avec une vue SQL.
         noerror=True
         
         (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(
@@ -206,10 +209,21 @@ ESSAI DE MEILLEUR CODE avec appel par nom"""
         cur = self.ref.con.cursor()
         
         cur.execute(req)
-        for row in cur:
-            print (row)
-            print(row['code_NABM'], row['occurence'])
-
+        for rowa in cur:
+            print (rowa)
+            print(rowa['code_NABM'], rowa['occurence'])
+            # lancer une seconde requête.
+            cur2 = self.ref.con.cursor()
+            sql2 = """Select id, MaxCode  from {ref_name} 
+WHERE id=?""". format(ref_name=nabm_file)
+            cur2.execute(sql2, (rowa['code_NABM'],))
+            for rowb in cur2:
+                print((rowb['id']), (rowb['MaxCode']), type(rowb['MaxCode']))
+                if (rowb['MaxCode'] > 0) and \
+                   (int(rowa['occurence']) > int(rowb['MaxCode'])):
+                    print("ERREUR maxcode")
+                    noerror=False
+        return noerror     
            
     def rech_codes(self): 
         """ Pour bien tester, j'ai besoin d'actes dont le max soit de
@@ -281,7 +295,7 @@ On définit une liste de codes a.
     title("Test 2")
     T.inv_in_nabm()
     title("Test 4")
-    T.inv_test4()
+    T.inv_test_actes_trop_repetes()
     T.rech_codes()
     title("Conclusion")
     T.conclude()

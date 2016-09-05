@@ -107,6 +107,22 @@ test, sont des tests unitaires."""
         T.inv_test1()
         title("Test 1 Version2")
         self.assertFalse(T.inv_in_nabm(nabm_version=43))
+
+    def test_inv_test_actes_trop_repetes(self):
+        """.....Tests trop répétés."""
+        act_ref = Nabm()
+        # Déclaration et initilisation de la facture:
+        invoice = Invoice()
+        invoice.load_invoice_list(self.actes_inconnu_1515)
+        # invoice.show_data()
+        # Le test de la facture nécessite une base de facture, une base de nabm
+        # et une version de nomenclature.
+    
+        T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
+                                            nabm_version=43)
+        T.attach_invoice_database()
+     
+        self.assertTrue(T.inv_test_actes_trop_repetes(nabm_version=43))        
  
 def test_suite():
     """retourne la liste des tests à traiter."""
