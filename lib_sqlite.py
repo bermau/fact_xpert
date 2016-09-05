@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Gestion des connexions à une base sqlite.
+# Evolution : Remplacement de basDonn par con.
 
 
 import sqlite3
@@ -11,8 +13,8 @@ class GestionBD:
     def __init__(self, dbName=None, in_memory=False):
         "Établissement de la connexion et création du curseur"
         if in_memory:
-            self.baseDonn = sqlite3.connect(':memory:')
-            self.cursor = self.baseDonn.cursor()   # création du curseur
+            self.con = sqlite3.connect(':memory:')
+            self.cur = self.con.cursor()   # création du curseur
             self.echec = 0           
         else:
             self.dbname = dbName
@@ -20,14 +22,14 @@ class GestionBD:
             if not os.path.isfile(dbName): 
                 print("Error : Database {} does not exist".format(dbName))   
             try:
-                self.baseDonn = sqlite3.connect(dbName)
+                self.con = sqlite3.connect(dbName)
             except Exception as err:
                 sys.stderr.write(('Connexion to database failed :\n'\
                       'SQL Error is :\n%s' % err))           
                 self.echec = 1
             else:
                 # print("Connexion OK") 
-                self.cursor = self.baseDonn.cursor()   # création du curseur
+                self.cur = self.con.cursor()   # création du curseur
                 self.echec = 0
 
     def execute_sql(self, req, param =None):
@@ -36,9 +38,9 @@ class GestionBD:
             # obligé de faire cette bidouille infame ! Je dois améliorer le
 			# passage des arguments
             if param == None :
-                self.cursor.execute(req)
+                self.cur.execute(req)
             else:
-                self.cursor.execute(req, param)
+                self.cur.execute(req, param)
         except sqlite3.Error as e:
             sys.stderr.write("An SQL error occurred: {}\n".format(e.args[0]))
             sys.stderr.write("Request was: {}\n".format(req))
@@ -49,7 +51,7 @@ class GestionBD:
 
     def resultat_req(self):
         "renvoie le résultat de la requête précédente (une liste de tuples)"
-        return self.cursor.fetchall()
+        return self.cur.fetchall()
 
     def quick_sql(self, req):
        if self.execute_sql(req):
@@ -57,7 +59,7 @@ class GestionBD:
           records=self.resultat_req()         # ce sera un tuple de tuples
           # TypeError: 'NoneType' object is not iterable
           try:
-             for i in self.cursor.description:
+             for i in self.cur.description:
                  print(i[0], '|', end=' ')
              print()
           # afficher les résulats
@@ -70,12 +72,12 @@ class GestionBD:
           except:
              print("Rien à afficher")
     def commit(self):
-        if self.baseDonn:
-            self.baseDonn.commit()         # transfert curseur -> disque
+        if self.con:
+            self.con.commit()         # transfert curseur -> disque
 
     def close(self):
-        if self.baseDonn:
-            self.baseDonn.close()
+        if self.con:
+            self.con.close()
             print("Database {} has been closed".format(self.dbname))
 
 if __name__ == '__main__': 

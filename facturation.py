@@ -8,6 +8,7 @@ La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
 
 import lib_sqlite
+import sqlite3
 import lib_nabm
 import conf_file as Cf
 import sys
@@ -95,10 +96,15 @@ On utilise pour cela la commande attach dans Sqlite."""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
         # self.ref.quick_sql("SELECT 'La base 2 est connectée' AS COMMENTAIRE")
 
-    def affiche_etude_select(self, sql):
+    def affiche_etude_select(self, sql , param=None):
         """Affiche une liste des lignes de Select éventuellement vide.
+-> Liste des résultats ou None.s
+
         """
-        self.ref.execute_sql(sql)
+        if param is None:    
+            self.ref.execute_sql(sql)
+        else:
+            self.ref.execute_sql(sql, param=param)
         res_as_list =  self.ref.resultat_req()
         if len(res_as_list) == 0:
             self.prt_buf("RAS")
@@ -132,7 +138,7 @@ Puis affiche le nombre de B."""
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
             self.prt_buf("Somme des B : {}".format(str(total_B)))
-        return not ( res_lst is None)
+        return not (res_lst is None)
     
     def inv_in_nabm(self, nabm_version=43):
         """"Les actes sont-ils présent dans la nomenclature ?
@@ -140,6 +146,7 @@ Puis affiche le nombre de B."""
 Si anomalie, retourne False, sinon True"""
         
         self.prt_buf("Recherche des lignes absentes de la NABM");
+        self.prt_buf("Question : toutes les lignes sont à la NABM ? ");
         req = """
         SELECT
            inv.invoice_list.id,
@@ -155,22 +162,55 @@ Si anomalie, retourne False, sinon True"""
         return res_lst is None
 
     def inv_test3(self, nabm_version=43):
-        """Test de codes répétés"""
-        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(nabm_version)
+        """Test de codes répétés CODE TRES LAID"""
+        noerror=True
+        
+        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(
+            nabm_version)
         self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
         req="""SELECT  code AS code_NABM,
         count(code) AS 'occurence' 
         FROM inv.invoice_list GROUP BY code
         HAVING occurence> 1""";
+
         lst = self.affiche_etude_select(req)
         
         self.prt_buf("Le référentiel indique : ")
-        for acte in [ line[0] for line in lst ]:
+        for acte  in [ line[0] for line in lst ]:
            sql = """Select id, MaxCode  from {ref_name}
         WHERE id=?""". format(ref_name=nabm_file)
-           self.ref.execute_sql(sql, param =(acte, ))
-           self.prt_buf(self.ref.resultat_req())
+           
+           res = self.affiche_etude_select(sql, param =(acte, ))
+           # self.prt_buf(self.ref.resultat_req())
+           # Un accès par nom serait préférable !
+           maxcode =  int(res[0][1])
+           print(maxcode)
+           if maxcode !=  0:
+               print("non nul")
+               
+    def inv_test4(self, nabm_version=43):
+        """Test de codes répétés.
+ESSAI DE MEILLEUR CODE avec appel par nom"""
+        noerror=True
+        
+        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(
+            nabm_version)
+        self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
+        req="""SELECT  code AS code_NABM,
+        count(code) AS 'occurence' 
+        FROM inv.invoice_list GROUP BY code
+        HAVING occurence> 1"""
 
+        # self.ref est l'objet qui contient un connecteur (nommé con).
+        self.ref.con.row_factory = sqlite3.Row
+        cur = self.ref.con.cursor()
+        
+        cur.execute(req)
+        for row in cur:
+            print (row)
+            print(row['code_NABM'], row['occurence'])
+
+           
     def rech_codes(self): 
         """ Pour bien tester, j'ai besoin d'actes dont le max soit de
          1, 2 et 3, voire plus."""
@@ -240,8 +280,8 @@ On définit une liste de codes a.
     print("Réponse du test :", rep12)
     title("Test 2")
     T.inv_in_nabm()
-    title("Test 3")
-    T.inv_test3()
+    title("Test 4")
+    T.inv_test4()
     T.rech_codes()
     title("Conclusion")
     T.conclude()
