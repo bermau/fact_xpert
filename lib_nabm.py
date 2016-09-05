@@ -5,13 +5,13 @@
 # par convention, j'écris tout en anglais, sauf les fonctions
 # terminales que je laisse en français.
 
-"""La tabble de référence est dans une base sqlite fermée.
-La facture a vérifier est écrite dans une base sqlite temporaire."""
+"""La table de référence est dans une base sqlite fermée.
+La facture à vérifier est écrite dans une base sqlite temporaire."""
 
 import lib_sqlite
 import conf_file as Cf
 import sys
-from bm_u import titrer
+from bm_u import title as titrer
 
 PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
                 '1809', '1810', '1811', '1812', '1813', '1814', '1815',
@@ -84,7 +84,7 @@ class Nabm():
         sys.stderr.write("Ouverture de la base NABM\n")
         
     def expertise_liste(self, lst_actes, nabm_version=43):
-        """Ce prmier essai me semble à déplacer."""
+        """Ce premier essai me semble à déplacer."""
         (nabm_file, incompatility_file) = get_name_of_nabm_files(nabm_version)
         print(lst_actes)
         titrer("Tous ces actes existent-ils dans la NABM ?");

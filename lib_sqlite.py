@@ -8,23 +8,27 @@ import conf_file as Cf # fichier de parametrage avec nom de la base sqlite
 class GestionBD:
     """Mise en place et interfaçage d'une base de données Sqlite."""
 
-    def __init__(self, dbName):
+    def __init__(self, dbName=None, in_memory=False):
         "Établissement de la connexion et création du curseur"
-        self.dbname = dbName
-        # Vérifier que le fichier de DB existe
-        if not os.path.isfile(dbName): 
-            print("Error : Database {} does not exist".format(dbName))
-            
-        try:
-            self.baseDonn = sqlite3.connect(dbName)
-        except Exception as err:
-            sys.stderr.write(('Connexion to database failed :\n'\
-                  'SQL Error is :\n%s' % err))           
-            self.echec = 1
-        else:
-            # print("Connexion OK") 
+        if in_memory:
+            self.baseDonn = sqlite3.connect(':memory:')
             self.cursor = self.baseDonn.cursor()   # création du curseur
-            self.echec = 0
+            self.echec = 0           
+        else:
+            self.dbname = dbName
+            # Vérifier que le fichier de DB existe
+            if not os.path.isfile(dbName): 
+                print("Error : Database {} does not exist".format(dbName))   
+            try:
+                self.baseDonn = sqlite3.connect(dbName)
+            except Exception as err:
+                sys.stderr.write(('Connexion to database failed :\n'\
+                      'SQL Error is :\n%s' % err))           
+                self.echec = 1
+            else:
+                # print("Connexion OK") 
+                self.cursor = self.baseDonn.cursor()   # création du curseur
+                self.echec = 0
 
     def execute_sql(self, req, param =None):
         "Exécution de la requête <req>, avec détection d'erreur éventuelle."
@@ -86,3 +90,7 @@ if __name__ == '__main__':
     BASE.quick_sql("Select * from nabm WHERE ID = 126")
     BASE.close()
 
+    # Autre exemple avec une base en mémoire RAM.
+    INRAM=GestionBD(in_memory=True)
+    INRAM.quick_sql("Select 1,2,3 ")
+    

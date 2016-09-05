@@ -2,24 +2,29 @@
 # file: lib_facturation.py
 # Utilitaires pour la gestion de la facturation
 
-"""La tabble de référence est dans une base sqlite fermée.
-La facture a vérifier est écrite dans une base sqlite temporaire."""
-
+"""La table de référence est dans une base sqlite qui n'est jamais modifiée.
+Elle peut même être protégée en écriture, ce qui garantit son intégrité.
+La facture à vérifier est écrite dans une base sqlite temporaire.
+La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
 
 import lib_sqlite
 import lib_nabm
 import conf_file as Cf
 import sys
-from bm_u import titrer
- 
+from bm_u import title
+
+def sub_title(msg):
+    print("     **** "+msg+" ***")
+
 class Invoice():
-    """Gestion d'une facture NABM ou autre.
+    """Gestion d'une facture NABM.
 
 La facture est implémentée dans une base sqlite pour réaliser des requêtes"""
 
     def __init__(self):
+        # Création de la base dans un fichier réel ou en RAM 
         self.INVOICE_DB = lib_sqlite.GestionBD('tempo.sqlite')
-        # self.INVOICE_DB = lib_sqlite.GestionBD(':memory:')
+        # self.INVOICE_DB = lib_sqlite.GestionBD(in_memory=True)
         if not self.table_invoice_exists():
             self.create_table_invoice_in_database()
             
@@ -61,7 +66,7 @@ on attache une base temporaire contenant la facture, ce qui permet
 d'utiliser des instruction SQL.
 
 On utilise pour cela la commande attach dans Sqlite."""
-    def __init__(self, REF_DB, INV_DB, nabm_version):
+    def __init__(self, INV_DB, REF_DB, nabm_version):
         """Enregistrement de 2 connecteurs"""
         self.ref = REF_DB
         self.nabm_version = nabm_version
@@ -74,8 +79,8 @@ On utilise pour cela la commande attach dans Sqlite."""
         
     def prt_buf(self, msg):
         """Imprimer dans un buffer """
-        self.buf.append(msg)
-        
+        # self.buf.append(msg)
+        print(msg)
     def conclude(self):
         """Imprime le rapport le sauve éventuellement"""
         for line in self.buf:
@@ -88,15 +93,16 @@ On utilise pour cela la commande attach dans Sqlite."""
     def attach_invoice_database(self):
         """Attacher la base de la facture à la base de nomenclature"""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
-        self.ref.quick_sql("SELECT 'La base 2 est connectée' AS COMMENTAIRE")
+        # self.ref.quick_sql("SELECT 'La base 2 est connectée' AS COMMENTAIRE")
 
-    def affiche_etude_select(self,sql):
-        """Affiche une liste des lignes de Select éventuellement vide."""
+    def affiche_etude_select(self, sql):
+        """Affiche une liste des lignes de Select éventuellement vide.
+        """
         self.ref.execute_sql(sql)
         res_as_list =  self.ref.resultat_req()
         if len(res_as_list) == 0:
             self.prt_buf("RAS")
-            return False
+            return None # Mieux que False
         else:
             self.prt_buf("{} lignes : " . format(str(len(res_as_list))))
             for line in res_as_list:
@@ -104,9 +110,9 @@ On utilise pour cela la commande attach dans Sqlite."""
             return res_as_list
         
     def inv_test1(self, nabm_version=43):
-        """"Un premmier test : Les actes sont-ils dans la nomenclature.
+        """"Les actes sont-ils dans la nomenclature.
 
-Puis affiche de nombre B."""
+Puis affiche le nombre de B."""
         
         self.prt_buf("Tous ces actes existent-ils dans la NABM ?");
         req = """
@@ -120,17 +126,21 @@ Puis affiche de nombre B."""
         ON inv.invoice_list.code=nabm.id 
 """
         res_lst = self.affiche_etude_select(req)
+
+        sub_title("Somme des B")
         if res_lst:
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
             self.prt_buf("Somme des B : {}".format(str(total_B)))
-       
-    def inv_test2(self, nabm_version=43):
-        """"Mettre en évidence les lignes non à la nomenclature."""
-        question= "Actes absents du référentiel "
-        self.prt_buf(question)
+        return not ( res_lst is None)
+    
+    def inv_in_nabm(self, nabm_version=43):
+        """"Les actes sont-ils présent dans la nomenclature ?
 
-        select_req = """
+Si anomalie, retourne False, sinon True"""
+        
+        self.prt_buf("Recherche des lignes absentes de la NABM");
+        req = """
         SELECT
            inv.invoice_list.id,
            inv.invoice_list.code,
@@ -139,16 +149,11 @@ Puis affiche de nombre B."""
         FROM inv.invoice_list
         LEFT JOIN nabm 
         ON inv.invoice_list.code=nabm.id
-        WHERE nabm.libelle IS NULL"""
+        WHERE nabm.libelle IS NULL
+"""
+        res_lst = self.affiche_etude_select(req)
+        return res_lst is None
 
-        errors = self.affiche_etude_select(select_req)
-        if errors:
-            self.report.append(question)
-            self.report.append(errors)
-
-        self.prt_buf("Contrôle d'une liste vide : ")
-        self.affiche_etude_select("Select 1,2 Where 1 = 2")
-        
     def inv_test3(self, nabm_version=43):
         """Test de codes répétés"""
         (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(nabm_version)
@@ -158,6 +163,7 @@ Puis affiche de nombre B."""
         FROM inv.invoice_list GROUP BY code
         HAVING occurence> 1""";
         lst = self.affiche_etude_select(req)
+        
         self.prt_buf("Le référentiel indique : ")
         for acte in [ line[0] for line in lst ]:
            sql = """Select id, MaxCode  from {ref_name}
@@ -165,50 +171,84 @@ Puis affiche de nombre B."""
            self.ref.execute_sql(sql, param =(acte, ))
            self.prt_buf(self.ref.resultat_req())
 
+    def rech_codes(self): 
+        """ Pour bien tester, j'ai besoin d'actes dont le max soit de
+         1, 2 et 3, voire plus."""
+
+        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(43)
+        self.prt_buf("quelques codes avec MaxCode > 0");
+        sql = """Select id, Libelle,MaxCode  from {ref_name}
+        WHERE MaxCode > 5 """. format(ref_name=nabm_file)
+        self.ref.execute_sql(sql)
+        self.prt_buf(self.ref.resultat_req())
+        # Je retiens :
+        # (557, 'LITHIUM (LI , LITHIEMIE , LI SERIQUE , LI ERYTHROCYTAIRE) (SANG)', 2)
+        # (1374, 'VITAMINE B 12 (DOSAGE) (SANG)', 1),
+        # (1137, 'C-PEPTIDE (SANG)', 3)
+        # (703, 'INSULINE LIBRE (SANG)', 3)
+        # (1154, 'TEST DIRECT DE COOMBS (ANTIGLOBULINE SPECIFIQUE)', 4)
+        # (274, "MYCOBACTERIE : SENSIBILITE VIS A VIS D'UN ANTIBIO PAR ANTIBIO", 5)
         
-def study_cursor(cursor):
-    nb_lignes = False
-    for line in cursor:
-        print(line)
-        nb_lines = True
-    return True
-    
-                           
+        
+    def macro_test(self, nabm_version_43):
+        """Comprends plusieurs tests.
+
+Renvoie True si aucun erreur, False sinon.
+"""
+        self.test_in_nabm(nabm_version=nabm_version)
+        
 def _test():
     """Execute doctests."""
     import doctest
     (failures, tests) = doctest.testmod(verbose=False)
     print((failures, tests))
+
 def _demo():
-    a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    """Exemple d'utilisation.
+On définit une liste de codes a.
+"""
+    a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
     '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
     '1245', '1806', '1207', '9105', '4340', '1465', '0322',
     '0323','2145', '4332', '4355', '4362', '4362']
-    aa = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    actes_repetes = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
     '0996','0552', '1208', '0593', '0578', '0352', '0353',
      '1806', '1207', '9105', '4340', '1465', '0322',
     '0323', '4332', '4355', '4362', '4362']
-    # a = ['0323','9105', '1208']
-    lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
-    # On a 2 représentations : la facture, la référence
+    liste_ok = ['0323', '9105', '1208']
+    actes_inconnu1515 = ['0323', '9105', '1515', '1208']
+
+    a = a_inconnus_512_1245_2145
+    # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
+    # 3 représentations : la facture, la référence, les Test entre facture
+    # et référence.
     act_ref = lib_nabm.Nabm()
+    # Déclaration et initilisation de la facture:
     invoice = Invoice()
-    
-    # invoice.create_table_invoice_in_database()
     invoice.load_invoice_list(a)
     # invoice.show_data()
+    # Le test de la facture nécessite une base de facture, une base de nabm
+    # et une version de nomenclature.
     
-    T = TestInvoiceAccordingToReference(act_ref.NABM_DB, invoice.INVOICE_DB,
+    T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
                                         nabm_version=43)
     T.attach_invoice_database()
+    title("Test 1")
     T.inv_test1()
-    T.inv_test2()
+    title("Test 1 Version2")    
+    rep12 = T.inv_in_nabm()
+    print("Réponse du test :", rep12)
+    title("Test 2")
+    T.inv_in_nabm()
+    title("Test 3")
     T.inv_test3()
-    T.conclude() 
+    T.rech_codes()
+    title("Conclusion")
+    T.conclude()
 
 if __name__=='__main__':
-    # _test()
+    #_test()
     _demo()
-       
+    pass
     
 
