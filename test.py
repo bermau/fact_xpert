@@ -11,7 +11,11 @@
 # v2 : mars 2016 : support une nouvelle architecture : /bin/, /test/, /input/,
 # /output/
 
-# 
+# Dans ces tests, les fonctions doivent retourner False s'il y a une
+# anomalie dans la facture et True s'il n'y en a pas.
+#
+# Le jeux de données des tests est dans data_for_tests.py
+
 import unittest, os, sys, pdb
 
 dirname=os.path.dirname(__file__) # __file__ n'est pas défini sous IDLE 2.7. 
@@ -26,6 +30,7 @@ if updir not in sys.path:
                     
 # à partir de maintenant on peut rechercher les modules situés
 # au dessus de ce script
+from data_for_tests import *
 from facturation import *
 from lib_nabm import *
 
@@ -35,95 +40,77 @@ class CalculsTest(unittest.TestCase):
 test, sont des tests unitaires."""
         
     @classmethod    
-    def setUpClass(self):
+    def XXsetUpClass(self):
         """Crée l'environnement. Initialise des listes d'actes."""
-        self.a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
-    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323','2145', '4332', '4355', '4362', '4362']
-        self.actes_repetes = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0352', '0353',
-     '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323', '4332', '4355', '4362', '4362']
-        self.actes_ok = ['0323', '9105', '1208']
-        self.actes_inconnu_1515 = ['0323', '9105', '1515', '1208']
-        self.actes_703_repete_plus_de_3_fois = [ '0323','0703', '9105','0703', '1208','0703', '0703',]
-
+        # Inutile pour l'instant.
         print("Setting Up Class environment")
 
     def setUp(self):
        """Crée l'environnemnt en ouvrant l'application et insère une chaine dans la premier fenetre"""
        print("SetUp environment")
-       actes_ok = ['0323', '9105', '1208']
+       autre_actes_ok = ['0323', '9105', '1208']
        
     def XX_tearDown(self):
         print("Tearing down environment.\n")
 
-    def test_1_always_true(self):
-        """.....Test toujours vrai."""
-        self.assertTrue( True )
+                         
+    def common_set_of_tests(self, facture=actes_inconnu_1515):
+        """Une fonction pour aider à écrire des tests."""
+        self.act_ref=Nabm() 
+        self.invoice = Invoice()
+        self.invoice.load_invoice_list(facture)
+        self.test = TestInvoiceAccordingToReference(self.invoice.INVOICE_DB,
+                                                    self.act_ref.NABM_DB,
+                                                    nabm_version=43)
+        self.test.attach_invoice_database()     
 
-    def test_2_nabm1(self):
-        """.....règle sur séro hépatites B."""
-        self.assertFalse(detecter_plus_de_trois_sero_hepatite_b([
-            '1806','1805','0323', '0353', '0354']))
+    def test_5_nabm(self):
+        """Une facture entirèrement correcte."""
+        self.common_set_of_tests(facture= actes_ok)
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
+   
+    def test_6_nabm(self):
+        """Une facture avec des actes inconnus."""
+        self.common_set_of_tests(facture= actes_inconnu_1515)
+        self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
-    def test_3_nabm2(self):
-        """.....Extraction de lignes de facturation depuis un écran VIS."""
-        self.assertEqual(self.actes_ok, ['0323', '9105', '1208'])
-
-    def test_4_name(self):
-        """.....Facture selon le module facturation."""
-        act_ref = Nabm()
-        # Déclaration et initilisation de la facture:
-        invoice = Invoice()
-        invoice.load_invoice_list(self.actes_ok)
-        # invoice.show_data()
-        # Le test de la facture nécessite une base de facture, une base de nabm
-        # et une version de nomenclature.
+    def test_7_nabm(self):
+        """Une facture avec des actes trop répétés."""
+        self.common_set_of_tests(facture= actes_703_repete_plus_de_3_fois)
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
+    def test_8_nabm(self):
+        """Une facture avec répétitions autorisées mais un acte inconnu."""
+        facture = actes_703_repete_3_fois_plus_inconnu
+        self.common_set_of_tests(facture=facture)
+        self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
+        self.assertTrue(detecter_plus_de_trois_sero_hepatite_b(
+            facture))
+        self.assertTrue(detecter_plus_de_deux_proteines(facture))
+    def test_8_nabm(self):
+        """Une facture avec des erreurs hépatite B."""
+        facture = actes_avec_plus_de_3_seros_hepatite
+        self.common_set_of_tests(facture=facture)
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
+        self.assertFalse(detecter_plus_de_trois_sero_hepatite_b(
+            facture))
+        self.assertTrue(detecter_plus_de_deux_proteines(facture))
+    def test_8_nabm(self):
+        """Une facture avec 3 types d'erreurs."""
+        facture = actes_plus_2_prot_plus_3_hep_inconnu_1517_1518
+        self.common_set_of_tests(facture=facture)
+        self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
+        self.assertFalse(detecter_plus_de_trois_sero_hepatite_b(
+            facture))
+        self.assertFalse(detecter_plus_de_deux_proteines(facture))
+                        
     
-        T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
-                                            nabm_version=43)
-        T.attach_invoice_database()
-        title("Test 1")
-        T.inv_test1()
-        title("Test 1 Version2")
-        self.assertTrue(T.inv_in_nabm(nabm_version=43))
-
-    def test_5_name(self):
-        """.....Facture selon le module facturation acte inconnu."""
-        act_ref = Nabm()
-        # Déclaration et initilisation de la facture:
-        invoice = Invoice()
-        invoice.load_invoice_list(self.actes_inconnu_1515)
-        # invoice.show_data()
-        # Le test de la facture nécessite une base de facture, une base de nabm
-        # et une version de nomenclature.
-    
-        T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
-                                            nabm_version=43)
-        T.attach_invoice_database()
-        title("Test 1")
-        T.inv_test1()
-        title("Test 1 Version2")
-        self.assertFalse(T.inv_in_nabm(nabm_version=43))
-
-    def test_inv_test_actes_trop_repetes(self):
-        """.....Tests trop répétés."""
-        act_ref = Nabm()
-        # Déclaration et initilisation de la facture:
-        invoice = Invoice()
-        invoice.load_invoice_list(self.actes_inconnu_1515)
-        # invoice.show_data()
-        # Le test de la facture nécessite une base de facture, une base de nabm
-        # et une version de nomenclature.
-    
-        T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
-                                            nabm_version=43)
-        T.attach_invoice_database()
-     
-        self.assertTrue(T.inv_test_actes_trop_repetes(nabm_version=43))        
- 
+        
 def test_suite():
     """retourne la liste des tests à traiter."""
     
