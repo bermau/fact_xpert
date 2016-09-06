@@ -72,7 +72,7 @@ class GestionBD:
           except:
              print("Rien à afficher")
     def commit(self):
-        if self.con:
+        # if self.con:
             self.con.commit()         # transfert curseur -> disque
 
     def close(self):
