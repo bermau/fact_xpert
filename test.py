@@ -62,53 +62,64 @@ test, sont des tests unitaires."""
         self.test = TestInvoiceAccordingToReference(self.invoice.INVOICE_DB,
                                                     self.act_ref.NABM_DB,
                                                     nabm_version=43)
-        self.test.attach_invoice_database()     
-
-    def test_5_nabm(self):
+        self.test.attach_invoice_database()
+    def test_01_toujours_correct(self):
+        """Toujours OK"""
+        print("Un message durant test01")
+        self.assertTrue(True)
+        print("Un autre message durant test01")
+        
+    def test_05_nabm(self):
         """Une facture entirèrement correcte."""
         self.common_set_of_tests(facture= actes_ok)
       
         self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
    
-    def test_6_nabm(self):
+    def test_06_nabm(self):
         """Une facture avec des actes inconnus."""
         self.common_set_of_tests(facture= actes_inconnu_1515)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
-    def test_7_nabm(self):
+    def test_07_nabm(self):
         """Une facture avec des actes trop répétés."""
         self.common_set_of_tests(facture= actes_703_repete_plus_de_3_fois)
         self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
-    def test_8_nabm(self):
+
+    def test_08_nabm(self):
         """Une facture avec répétitions autorisées mais un acte inconnu."""
         facture = actes_703_repete_3_fois_plus_inconnu
         self.common_set_of_tests(facture=facture)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
         self.assertTrue(detecter_plus_de_trois_sero_hepatite_b(
-            facture))
+             facture))
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
-    def test_8_nabm(self):
+
+    def test_09_nabm(self):
         """Une facture avec des erreurs hépatite B."""
         facture = actes_avec_plus_de_3_seros_hepatite
         self.common_set_of_tests(facture=facture)
         self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
-        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
-        self.assertFalse(detecter_plus_de_trois_sero_hepatite_b(
-            facture))
+        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))
+        result = detecter_plus_de_trois_sero_hepatite_b(facture)
+        self.assertEqual(result, (False, ['0323', '0353', '0354', '0351']))
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
-    def test_8_nabm(self):
+
+    def test_10_nabm(self):
         """Une facture avec 3 types d'erreurs."""
         facture = actes_plus_2_prot_plus_3_hep_inconnu_1517_1518
         self.common_set_of_tests(facture=facture)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
-        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
-        self.assertFalse(detecter_plus_de_trois_sero_hepatite_b(
-            facture))
-        self.assertFalse(detecter_plus_de_deux_proteines(facture))
+        self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))
+        # Je ne sais pas comment ne tester que le début du tupple.
+        (rep, void) = detecter_plus_de_trois_sero_hepatite_b(
+            facture)
+        self.assertFalse(rep)
+        (rep2, void2) = detecter_plus_de_deux_proteines(facture)
+        self.assertFalse(rep2)
                         
     
         

@@ -37,7 +37,6 @@ La facture est implémentée dans une base sqlite pour réaliser des requêtes""
 SELECT * from nabm ; """
         
     def create_table_invoice_in_database(self):
-        print ("JE PASSE PAR LA")
         sql = """CREATE TABLE IF NOT EXISTS invoice_list
 (id INTEGER PRIMARY KEY, code VARCHAR(4))
 """
@@ -55,8 +54,9 @@ DROP TABLE invoice_list
         """Test if table of invoices is defined."""
         return True
     
-    def load_invoice_list(self,act_list):
+    def load_invoice_list(self, act_list):
         """Constitue une table (id, acte_1), (id, acte2) ... """
+        self.act_list = act_list
         sys.stderr.write("Loading data\n")
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
         for act in act_list:
@@ -264,8 +264,45 @@ WHERE id=?""". format(ref_name=nabm_file)
                     print("ERREUR maxcode")
                     noerror=False
         return noerror     
-           
+    def get_list_of_actes(self):
+        req = """SELECT id, code FROM inv.invoice_list"""
+        # PAS Efficace. Il faudrait mieux renvoyer à l'objet existant.
+        self.ref.con.row_factory = sqlite3.Row
+        cur = self.ref.con.cursor()
+        cur.execute(req)
+        code_lst = [ row['code'] for row in cur]
+        return code_lst
+    
+    def verif_hepatites(self):
+        """Test s'il ny a pas plus de 3 codes de la liste des hépatites.
 
+Renvoie True si oui, et False s'il y a plus de 3 codes."""
+        
+        code_lst = self.get_list_of_actes() # PAS Efficace.
+        response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(code_lst)
+        if response is True:
+            print("La règle des hépatites n'est pas enfreinte")
+            return True
+        else:
+            (void , liste) = response
+            print("Règles de hépatites non respectée : {}".format(liste))
+            return False
+
+    def verif_proteines(self):
+        """Test s'il n'y a pas plus de 2 codes de la liste des protéines.
+
+Renvoie True si oui, et False s'il y a plus de 2 codes."""
+        
+        code_lst = self.get_list_of_actes() # PAS Efficace.
+        response = lib_nabm.detecter_plus_de_deux_proteines(code_lst)
+        if response is True:
+            print("La règle des protéines n'est pas enfreinte")
+            return True
+        else:
+            (void , liste) = response
+            print("Règles de protéines non respectée : {}".format(liste))
+            return False
+            
     def rech_codes(self): 
         """Recherche de codes particulier.
 
@@ -312,8 +349,16 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     '0323', '4332', '4355', '4362', '4362']
     liste_ok = ['0323', '9105', '1208']
     actes_inconnu1515 = ['0323', '9105', '1515', '1208']
+    actes_avec_plus_de_3_seros_hepatite =['0323', # hep
+                                      '9105', '1208',
+                                      '1806', # prot
+                                      '1805', # prot
+                                      '0353', # hep
+                                      '0354', # hep
+                                      '0351', # hep                                    '
+                                     ]
 
-    a = a_inconnus_512_1245_2145
+    a = actes_avec_plus_de_3_seros_hepatite
     # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
     # 3 représentations : la facture, la référence, les Test entre facture
     # et référence.
@@ -341,6 +386,16 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     print("Conlusion du test : {}".format(rep4))
     T.affiche_conclusion_d_un_test(rep4)
 
+    title("Vérifie la règles des hépatites est respectée")
+    rep_hep = T.verif_hepatites()
+    print("Conlusion du test : {}".format(rep_hep))
+    T.affiche_conclusion_d_un_test(rep_hep)
+
+    title("Vérifie la règles des protéines est respectée")
+    rep_hep = T.verif_proteines()
+    print("Conlusion du test : {}".format(rep_hep))
+    T.affiche_conclusion_d_un_test(rep_hep)
+    
     title("Conclusion générale")
     T.conclude()
 

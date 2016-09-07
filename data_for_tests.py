@@ -26,22 +26,33 @@ actes_inconnu_1515 = ['0323', '9105', '1515', '1208']
 actes_703_repete_plus_de_3_fois = [ '0323','0703', '9105', '0703',
                                     '1208','0703', '0703',]
 actes_703_repete_3_fois_plus_inconnu = [ '0323','0703', '9105',
-                            '1806', # err
+                            '1806', # prot
+                            '1789', # inc              
                             '1208','0703', '0703',]
 
-actes_avec_plus_de_3_seros_hepatite =['0323', '9105', '1208',
-                                     '1806', # err
-                                     '1805', # err
-                                     '0353',
-                                     '0354'  # err
+actes_avec_plus_de_3_seros_hepatite =['0323', # hep
+                                      '9105', '1208',
+                                      '1806', # prot
+                                      '1805', # prot
+                                      '0353', # hep
+                                      '0354', # hep
+                                      '0351', # hep                                    '
                                      ]
 
-actes_avec_plus_de_2_prots = ['0323', '9105', '1208']
+actes_avec_plus_de_2_prots = ['0323', '9105', '1208'] # FAUX
 
 actes_plus_2_prot_plus_3_hep_inconnu_1517_1518 = [
-    '0323', '9105',
-    '1518', # error
+    '0322', # hep
+    '0323', # hep
+    '9105',
+    '0352', # hep
+    '0354', # hep
+    '0354', # hep répétée
+    '0324', # prot
     '1208',
-    '1517' # error
+    '1518', # inc
+    '1808', # prot
+    '1813', # prot
+    '1517' # inc
     ,
     ] 
