@@ -67,6 +67,7 @@ test, sont des tests unitaires."""
     def test_5_nabm(self):
         """Une facture entirèrement correcte."""
         self.common_set_of_tests(facture= actes_ok)
+      
         self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
    

@@ -25,11 +25,17 @@ La facture est implémentée dans une base sqlite pour réaliser des requêtes""
 
     def __init__(self):
         # Création de la base dans un fichier réel ou en RAM 
-        # self.INVOICE_DB = lib_sqlite.GestionBD('tempo.sqlite')
-        self.INVOICE_DB = lib_sqlite.GestionBD(in_memory=True)
+        # pour l'instant l'attachement d'une base RAM ne fonctionne pas.
+        self.INVOICE_DB = lib_sqlite.GestionBD('tempo.sqlite')
+        # self.INVOICE_DB = lib_sqlite.GestionBD(in_memory=True)
         if not self.table_invoice_exists():
             self.create_table_invoice_in_database()
-            
+
+    def create_view_for_nabm(self):
+        """Tool to create e view."""
+        sql = """CREATE VIEW IF NOT EXISTS nabm_view AS
+SELECT * from nabm ; """
+        
     def create_table_invoice_in_database(self):
         print ("JE PASSE PAR LA")
         sql = """CREATE TABLE IF NOT EXISTS invoice_list
@@ -37,7 +43,9 @@ La facture est implémentée dans une base sqlite pour réaliser des requêtes""
 """
         # sys.stderr.write("sql = {}".format(sql))
         self.INVOICE_DB.execute_sql(sql)
-
+        self.INVOICE_DB.commit()
+        
+  
     def drop_table_invoice(self):
         self.INVOICE_DB.execute_sql("""
 DROP TABLE invoice_list 
@@ -45,10 +53,11 @@ DROP TABLE invoice_list
             )
     def table_invoice_exists(self):
         """Test if table of invoices is defined."""
-        return False
+        return True
     
     def load_invoice_list(self,act_list):
         """Constitue une table (id, acte_1), (id, acte2) ... """
+        sys.stderr.write("Loading data\n")
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
         for act in act_list:
             # print("Traitemnt : ", act)
@@ -105,7 +114,10 @@ On utilise pour cela la commande attach dans Sqlite."""
     def attach_invoice_database(self):
         """Attacher la base de la facture à la base de nomenclature."""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
- 
+        
+        # self.ref.execute_sql("attach database ':memory:' as inv")
+        sys.stderr.write("Invoice db attached \n")
+        
     def affiche_etude_select(self, sql , comment='', param=None):
         """Affiche une liste des lignes de Select éventuellement vide.
 -> Liste des résultats ou None.
@@ -172,36 +184,8 @@ Si anomalie, retourne False, sinon True"""
 """
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
         return res_lst is None
-
-    def inv_test3(self, nabm_version=43):
-        """Test de codes répétés CODE TRES LAID"""
-        noerror=True
-        
-        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(
-            nabm_version)
-        self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
-        req="""SELECT  code AS code_NABM,
-        count(code) AS 'occurence' 
-        FROM inv.invoice_list GROUP BY code
-        HAVING occurence> 1""";
-
-        lst = self.affiche_etude_select(req)
-        
-        self.prt_buf("Le référentiel indique : ")
-        for acte  in [ line[0] for line in lst ]:
-           sql = """Select id, MaxCode  from {ref_name}
-        WHERE id=?""". format(ref_name=nabm_file)
-           
-           res = self.affiche_etude_select(sql, param =(acte, ))
-           # self.prt_buf(self.ref.resultat_req())
-           # Un accès par nom serait préférable !
-           maxcode =  int(res[0][1])
-           print(maxcode)
-           if maxcode !=  0:
-               print("non nul")
-
                
-    def verif_actes_trop_repetes(self, nabm_version=43):
+    def verif_actes_trop_repetes_OK(self, nabm_version=43):
         """Test de codes répétés.
 MEILLEUR CODE avec appel par nom
 
@@ -227,7 +211,50 @@ MEILLEUR CODE avec appel par nom
             print(rowa['code'], rowa['occurence'])
             # lancer une seconde requête.
             cur2 = self.ref.con.cursor()
-            sql2 = """Select id, MaxCode  from {ref_name} 
+            sql2 = """Select id, MaxCode  from {ref_name}
+WHERE id=?""". format(ref_name=nabm_file)
+            cur2.execute(sql2, (rowa['code'],))
+            for rowb in cur2:
+                print("Ref indique : ", (rowb['id']), (rowb['MaxCode']))
+                if (rowb['MaxCode'] > 0) and \
+                   (int(rowa['occurence']) > int(rowb['MaxCode'])):
+                    print("ERREUR maxcode")
+                    noerror=False
+        return noerror
+
+    def verif_actes_trop_repetes(self, nabm_version=43):
+        """Test de codes répétés.
+Amélioration requête
+
+-> True si pas d'anomalie, False sinon."""
+        # On peut sans doute faire beaucoup plus simple avec une vue SQL.
+        noerror=True
+        
+        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(
+            nabm_version)
+        self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
+        req="""SELECT  code,
+        count(code) AS 'occurence',
+        N.MaxCode
+        
+        FROM inv.invoice_list
+        LEFT JOIN nabm AS N ON inv.invoice_list.code = N.id
+    
+        GROUP BY code    
+        HAVING occurence> 1
+        """
+
+        # self.ref est l'objet qui contient un connecteur (nommé con).
+        self.ref.con.row_factory = sqlite3.Row
+        cur = self.ref.con.cursor()
+        
+        cur.execute(req)
+        for rowa in cur:
+            print(rowa['code'], rowa['occurence'], rowa['MaxCode'])
+            # Si on pouvait inclure un WHERE, 
+            # lancer une seconde requête deviendrait inutile.
+            cur2 = self.ref.con.cursor()
+            sql2 = """Select id, MaxCode  from {ref_name}
 WHERE id=?""". format(ref_name=nabm_file)
             cur2.execute(sql2, (rowa['code'],))
             for rowb in cur2:
@@ -238,6 +265,7 @@ WHERE id=?""". format(ref_name=nabm_file)
                     noerror=False
         return noerror     
            
+
     def rech_codes(self): 
         """Recherche de codes particulier.
 
@@ -302,6 +330,7 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
+
     title("Vérifie si tous les codes sont dans la NABM")    
     rep = T.verif_tous_codes_dans_nabm()
     print("Réponse du test :", rep)
