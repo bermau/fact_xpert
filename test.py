@@ -71,6 +71,8 @@ test, sont des tests unitaires."""
         print("Un message durant test01")
         self.assertTrue(True)
         print("Un autre message durant test01")
+
+    
         
     def test_05_nabm(self):
         """Une facture entirèrement correcte."""

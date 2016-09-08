@@ -26,7 +26,7 @@ def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
     if len(sous_liste) > N:
         return False, sous_liste
     else:
-        return True
+        return True, sous_liste
 
 def detecter_plus_de_deux_proteines(actes_lst):
     """Renvoie si la liste contient plus de 2 protéines.
@@ -38,7 +38,8 @@ def detecter_plus_de_deux_proteines(actes_lst):
 
 def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
     """Renvoie si la liste contient plus de 3 sérologies hépatite B.
-    >>> detecter_plus_de_trois_sero_hepatite_b(['1806','1805','0323', '0353', '0354'])
+    >>> a = detecter_plus_de_trois_sero_hepatite_b(['1806','1805','0323', '0353', '0354'])
+    >>> a[0]
     True
 
     """
@@ -122,4 +123,4 @@ def _test():
 
 if __name__=='__main__':
     _test()
-    Nabm()
+    # Nabm()

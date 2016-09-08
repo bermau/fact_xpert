@@ -100,7 +100,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         if rep:
             self.prt_buf("Conclusion : correct")
         else:
-            self.prt_buf("Conclusion : incorrect")
+            self.prt_buf("Conclusion :"+" "*40+"******** incorrect ******")
         
     def conclude(self):
         """Imprime le rapport le sauve éventuellement."""
@@ -157,6 +157,17 @@ Puis affiche le nombre de B."""
 """
         res_lst = self.affiche_etude_select(req, comment=' dans la facture')
 
+        
+        # self.prt_buf("Autres présentations") # BUG ??
+        # sub_title("Autres presentations")
+        self.prt_buf('')
+        self.prt_buf('Autre pres')
+        self.prt_buf(res_lst)
+
+        self.prt_buf('')
+        self.prt_buf('Autre pres (pour AMZ): ')
+        self.prt_buf(" ".join([code[1] for code in res_lst]))
+        
         sub_title("Somme théorique des B")
         self.prt_buf("d'après le code de facture, montant de la référence")
         if res_lst:
@@ -228,13 +239,14 @@ Renvoie True si oui, et False s'il y a plus de 3 codes."""
         print("liste étudiée", self.invoice.act_list)
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
-        print("response", response)
-        if response :
-            print("Règles de hépatites non respectée : {}".format(response[1]))
-            return False 
-        else:
+        print("response", response) # response = (bool, liste)
+        if response[0] :
             print("La règle des hépatites n'est pas enfreinte")
             return True
+        else:
+
+            print("Règles de hépatites non respectée : {}".format(response[1]))
+            return False 
         
     def verif_proteines(self):
         """Test s'il n'y a pas plus de 2 codes de la liste des protéines.
@@ -245,12 +257,12 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
         response = lib_nabm.detecter_plus_de_deux_proteines(
             self.invoice.act_list)
         print("response", response)
-        if response :
-            print("Règles de protéines non respectée : {}".format(response[1]))
-            return False
-        else:
+        if response[0] :
             print("La règle des protéines n'est pas enfreinte")
             return True   
+        else:
+            print("Règles de protéines non respectée : {}".format(response[1]))
+            return False
          
             
     def rech_codes(self): 
@@ -278,6 +290,14 @@ Pour bien tester, j'ai besoin d'actes dont le max soit de
 Renvoie True si aucun erreur, False sinon.
 """
         self.test_in_nabm(nabm_version=nabm_version)
+
+def get_affiche_liste_codes(code_liste):
+    """Utilisaire qui retour une liste de codes épurée.
+
+    >>> get_affiche_liste_codes(['9105', '1104', '1610', '0126', ])
+    '9105 1104 1610 0126'
+    """
+    return(" ".join([code for code in code_liste]))
         
 def _test():
     """Execute doctests."""
@@ -285,30 +305,8 @@ def _test():
     (failures, tests) = doctest.testmod(verbose=False)
     print((failures, tests))
 
-def _demo():
-    """Exemple d'utilisation.
-On définit une liste de codes d'exemples, on en choisit un (a), on teste.
-"""
-    a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
-    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323','2145', '4332', '4355', '4362', '4362']
-    actes_repetes = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0352', '0353',
-     '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323', '4332', '4355', '4362', '4362']
-    liste_ok = ['0323', '9105', '1208']
-    actes_inconnu1515 = ['0323', '9105', '1515', '1208']
-    actes_avec_plus_de_3_seros_hepatite =['0323', # hep
-                                      '9105', '1208',
-                                      '1806', # prot
-                                      '1805', # prot
-                                      '0353', # hep
-                                      '0354', # hep
-                                      '0351', # hep                                    '
-                                     ]
-
-    a = actes_avec_plus_de_3_seros_hepatite
+def model_etude_1(act_lst):
+    """Un modèle un initial."""
     # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
     # 3 représentations : la facture, la référence, les Test entre facture
     # et référence.
@@ -317,7 +315,7 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     # et une version de nomenclature.
     act_ref = lib_nabm.Nabm()
     invoice = Invoice()
-    invoice.load_invoice_list(a)
+    invoice.load_invoice_list(act_lst)
     # invoice.show_data()
     
 #    T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
@@ -352,9 +350,56 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     title("Conclusion générale")
     T.conclude()
 
+def _demo():
+    """Exemple d'utilisation.
+On définit une liste de codes d'exemples, on en choisit un (a), on teste.
+"""
+    a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
+    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
+    '0323','2145', '4332', '4355', '4362', '4362']
+    actes_repetes = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    '0996','0552', '1208', '0593', '0578', '0352', '0353',
+     '1806', '1207', '9105', '4340', '1465', '0322',
+    '0323', '4332', '4355', '4362', '4362']
+    liste_ok = ['0323', '9105', '1208']
+    actes_inconnu1515 = ['0323', '9105', '1515', '1208']
+    actes_avec_plus_de_3_seros_hepatite =['0323', # hep
+                                      '9105', '1208',
+                                      '1806', # prot
+                                      '1805', # prot
+                                      '0353', # hep
+                                      '0354', # hep
+                                      '0351', # hep                                    '
+                                     ]
+    test_6020510511_ok =  ['9105', '0322', '0351', '0388','9005']
+    test_6020510511 =  ['9105', '0322', '0351', '0388','9005', '9005']
+    # test
+    # import data_for_tests
+    # On peut aussi utiliser les listes déja programmées comme :
+    a = lib_nabm.HEP_B_LST_REF
+    # lib_nabm.PROT_LST_REF
+    # a = lib_nabm.PROT_LST_REF
+    # a = actes_avec_plus_de_3_seros_hepatite
+    model_etude_1(a)
+
+def saisie_manuelle():
+    """Demande une saisie manuelle et l'expertise.
+
+    >>> saisie_manuelle()
+
+    
+"""
+    saisie = input("Saisir une liste de codes séparés par des espaces ")
+    # saisie.replace("  "," ")
+    act_lst = [ code.rjust(4,'0') for code in saisie.split(" ") if code not in ('', ' ')]
+    print(act_lst)
+    model_etude_1(act_lst)
+
 if __name__=='__main__':
-    #_test()
-    _demo()
+    _test()
+    #_demo()
+    # saisie_manuelle()
     pass
     
 
