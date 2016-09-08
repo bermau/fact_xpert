@@ -59,7 +59,10 @@ test, sont des tests unitaires."""
         self.act_ref=Nabm() 
         self.invoice = Invoice()
         self.invoice.load_invoice_list(facture)
-        self.test = TestInvoiceAccordingToReference(self.invoice.INVOICE_DB,
+##        self.test = TestInvoiceAccordingToReference(self.invoice.INVOICE_DB,
+##                                                    self.act_ref.NABM_DB,
+##                                                    nabm_version=43)
+        self.test = TestInvoiceAccordingToReference(self.invoice,
                                                     self.act_ref.NABM_DB,
                                                     nabm_version=43)
         self.test.attach_invoice_database()
@@ -98,6 +101,8 @@ test, sont des tests unitaires."""
              facture))
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
 
+        self.assertTrue(self.test.verif_hepatites_B())
+
     def test_09_nabm(self):
         """Une facture avec des erreurs hépatite B."""
         facture = actes_avec_plus_de_3_seros_hepatite
@@ -107,6 +112,7 @@ test, sont des tests unitaires."""
         result = detecter_plus_de_trois_sero_hepatite_b(facture)
         self.assertEqual(result, (False, ['0323', '0353', '0354', '0351']))
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
+        self.assertFalse(self.test.verif_hepatites_B())
 
     def test_10_nabm(self):
         """Une facture avec 3 types d'erreurs."""
