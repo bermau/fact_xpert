@@ -17,6 +17,19 @@ from bm_u import title
 def sub_title(msg):
     print("     **** "+msg+" ***")
 
+advice = sub_title
+
+def strip_brackets(liste):
+            """Take off brackets in a list.
+            >> msg = ['abc', 'bla', '12']
+            >> z = strip_brackets(msg)
+            "'abc','bla', '12'"
+            
+"""
+            # print(liste)
+            return ', '.join(liste)
+            # return False
+        
 class Invoice():
     """Gestion d'une facture NABM.
 
@@ -32,9 +45,13 @@ La facture est implémentée dans une base sqlite pour réaliser des requêtes""
         self.act_list = []
         
     def create_view_for_nabm(self):
-        """Tool to create e view."""
+        """Tool to create a view.
+
+Il peu existe plusierus tables notées nabmXX.
+Il faut créer des vues nabmXX_view"""
         sql = """CREATE VIEW IF NOT EXISTS nabm_view AS
 SELECT * from nabm ; """
+        # pas terminé
         
     def create_table_invoice_in_database(self):
         sql = """CREATE TABLE IF NOT EXISTS invoice_list
@@ -81,7 +98,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         
         self.ref = REF_DB
         self.nabm_version = nabm_version
-        (self.nabm_file,
+        (self.nabm_table,
          self.incompatility_file) = lib_nabm.get_name_of_nabm_files(nabm_version)
         
         # self.invoice = INV_DB
@@ -149,23 +166,20 @@ Puis affiche le nombre de B."""
         SELECT
            inv.invoice_list.id,
            inv.invoice_list.code,
-           nabm.libelle AS 'libelle_NABM',
-           nabm.coef
+           N.libelle AS 'libelle_NABM',
+           N.coef
         FROM inv.invoice_list
-        LEFT JOIN nabm 
-        ON inv.invoice_list.code=nabm.id 
-"""
-        res_lst = self.affiche_etude_select(req, comment=' dans la facture')
-
-        
-        # self.prt_buf("Autres présentations") # BUG ??
-        # sub_title("Autres presentations")
+        LEFT JOIN {nabm_table} AS N 
+        ON inv.invoice_list.code=N.id 
+""".format(nabm_table=self.nabm_table)
+       
+        res_lst = self.affiche_etude_select(req, comment=' dans la facture')       
         self.prt_buf('')
-        self.prt_buf('Autre pres')
+        self.prt_buf('Autre présentation :')
         self.prt_buf(res_lst)
 
         self.prt_buf('')
-        self.prt_buf('Autre pres (pour AMZ): ')
+        self.prt_buf('Format pour AMZ: ')
         self.prt_buf(" ".join([code[1] for code in res_lst]))
         
         sub_title("Somme théorique des B")
@@ -208,7 +222,7 @@ Si anomalie, retourne False, sinon True"""
             FROM inv.invoice_list
             LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
             GROUP BY code    
-            HAVING occurence> 1""".format(ref_name=self.nabm_file)
+            HAVING occurence> 1""".format(ref_name=self.nabm_table)
         
         # self.ref instance d'objet qui contient le connecteur con.
         self.ref.con.row_factory = sqlite3.Row
@@ -218,6 +232,7 @@ Si anomalie, retourne False, sinon True"""
             print(row['code'], row['occurence'], row['MaxCode'])
             if row['occurence']> int(row['MaxCode']):
                 noerror = False
+            advice('Supprimer un ou des codes : '+ row['code'])            
         return noerror
     
     def get_list_of_actes(self):
@@ -230,8 +245,39 @@ Si anomalie, retourne False, sinon True"""
         # return code_lst
         return self.invoice.act_list
     
+    def _print_order_by_value(self, act_lst, max_allowed):
+        """Calculate acts ordered by value."""
+    
+        req = """
+        SELECT
+           N.id, N.coef, N.libelle AS 'libelle_NABM'
+        FROM {table} AS N
+        WHERE N.id in ({my_list}) 
+        ORDER BY N.coef DESC
+        """.format(table=self.nabm_table, my_list=', '.join(act_lst))    
+
+        res_lst = self.affiche_etude_select(req,
+                                            comment=' classées par valeurs')
+        col0 = [ ligne[0] for ligne in res_lst ]
+        trois_plus_chers = col0[0:max_allowed]
+        self.prt_buf("Conseille de garder : " + str(trois_plus_chers))
+
+
+
+    def print_recommandation_erreur_hepatites(self, act_lst):
+        """Affiche une solution pour la règle des séro hépatites."""
+        # print("Suggestion de correction pour les sérologies hépatites.")
+               
+        advice("Suggestion de correction pour les sérologies hépatites.");
+        self._print_order_by_value(act_lst, 3)
+
+    def print_recommandation_erreur_proteines(self, act_lst):
+        """Affiche une solution pour la règle des protéines."""
+        advice("Suggestion de correction pour les sérologies hépatites.")
+        self._print_order_by_value(act_lst, 2)
+        
     def verif_hepatites_B(self):
-        """Test s'il ny a pas plus de 3 codes de la liste des hépatites.
+        """Test s'il n'y a pas plus de 3 codes de la liste des hépatites.
 
 Renvoie True si oui, et False s'il y a plus de 3 codes."""
         
@@ -244,8 +290,8 @@ Renvoie True si oui, et False s'il y a plus de 3 codes."""
             print("La règle des hépatites n'est pas enfreinte")
             return True
         else:
-
             print("Règles de hépatites non respectée : {}".format(response[1]))
+            self.print_recommandation_erreur_hepatites(response[1])
             return False 
         
     def verif_proteines(self):
@@ -262,6 +308,7 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
             return True   
         else:
             print("Règles de protéines non respectée : {}".format(response[1]))
+            self.print_recommandation_erreur_proteines(response[1])
             return False
          
             
@@ -271,10 +318,10 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
 Pour bien tester, j'ai besoin d'actes dont le max soit de
          1, 2 et 3, voire plus."""
 
-        (nabm_file, incompatility_file) = lib_nabm.get_name_of_nabm_files(43)
+        # (nabm_table, incompatility_file) = lib_nabm.get_name_of_nabm_tables(43)
         self.prt_buf("quelques codes avec MaxCode > 0");
-        sql = """Select id, Libelle,MaxCode  from {ref_name}
-        WHERE MaxCode > 5 """. format(ref_name=nabm_file)
+        sql = """Select id, Libelle, MaxCode  from {ref_name}
+        WHERE MaxCode > 5 """. format(ref_name=self.nabm_table)
         self.ref.execute_sql(sql)
         self.prt_buf(self.ref.resultat_req())
         # Je retiens comme exemples :
@@ -318,8 +365,6 @@ def model_etude_1(act_lst):
     invoice.load_invoice_list(act_lst)
     # invoice.show_data()
     
-#    T = TestInvoiceAccordingToReference(invoice.INVOICE_DB, act_ref.NABM_DB,
-#                                        nabm_version=43)
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
                                         nabm_version=43)
     T.attach_invoice_database()
@@ -354,6 +399,7 @@ def _demo():
     """Exemple d'utilisation.
 On définit une liste de codes d'exemples, on en choisit un (a), on teste.
 """
+    import data_for_tests
     a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
     '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
     '1245', '1806', '1207', '9105', '4340', '1465', '0322',
@@ -376,20 +422,17 @@ On définit une liste de codes d'exemples, on en choisit un (a), on teste.
     test_6020510511 =  ['9105', '0322', '0351', '0388','9005', '9005']
     # test
     # import data_for_tests
-    # On peut aussi utiliser les listes déja programmées comme :
-    a = lib_nabm.HEP_B_LST_REF
-    # lib_nabm.PROT_LST_REF
+    # On peut aussi utiliser les listes déja programmées comme en dédiésant
+    # a = actes_avec_plus_de_3_seros_hepatite
     # a = lib_nabm.PROT_LST_REF
+    a = data_for_tests.actes_plus_2_prot_plus_3_hep_inconnu_1517_1518
     # a = actes_avec_plus_de_3_seros_hepatite
     model_etude_1(a)
 
 def saisie_manuelle():
-    """Demande une saisie manuelle et l'expertise.
-
-    >>> saisie_manuelle()
-
+    """Demande une saisie manuelle et l'expertise."""
     
-"""
+    print("Mode de saisie : manuel")
     saisie = input("Saisir une liste de codes séparés par des espaces ")
     # saisie.replace("  "," ")
     act_lst = [ code.rjust(4,'0') for code in saisie.split(" ") if code not in ('', ' ')]
@@ -398,7 +441,7 @@ def saisie_manuelle():
 
 if __name__=='__main__':
     _test()
-    #_demo()
+    _demo()
     # saisie_manuelle()
     pass
     
