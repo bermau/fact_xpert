@@ -285,7 +285,12 @@ def fac_de_IPP_date(IPP, date):
     # save_pickle(cumule,"cumule", IPP, date)
     # prt_lst(cumule)
     # Présentation de la facture cumulée (cumule) sous diverses formes
-    prt_list_tab(cumule) 
+    prt_list_tab(cumule)
+
+    print("Cumule vaut : ")
+    print(cumule) 
+    print()
+    print()
     actes_lst = [ ligne[1] for ligne in cumule if ligne[1] ]
     print()
     print("IMPORTANT : élimination des actes HN")
@@ -372,17 +377,18 @@ L'ordre de traitement diffère de l'ordre de création des dossiers."""
     aset_IPP = set(lst_IPP)
     prt("Ces dossiers concernent {} patients avec un IPP".format(
         str(len(aset_IPP))))
-
     # Pour chaque IPP, je veux l'étude de la facture le jour donné.
+    # Je limite volontairement à quelques dossiers.
     for ipp in list(aset_IPP)[4:10]:
     #for ipp in aset_IPP: 
         if ipp is not None:
             fac_de_IPP_date(ipp, collection_date)
 
 def _test():
-    """Lancer les tests doctests"""
+    """Execute doctests."""
     import doctest
-    doctest.testmod(verbose=False )
+    (failures, tests) = doctest.testmod(verbose=False)
+    print("{} tests performed, {} failed.".format(tests, failures))
     
 if __name__=='__main__':
     CONNEXION = MyODBC_to_infocentre()

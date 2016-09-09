@@ -350,7 +350,7 @@ def _test():
     """Execute doctests."""
     import doctest
     (failures, tests) = doctest.testmod(verbose=False)
-    print((failures, tests))
+    print("{} tests performed, {} failed.".format(tests, failures))
 
 def model_etude_1(act_lst):
     """Un modèle un initial."""
