@@ -397,8 +397,8 @@ def saisie_manuelle():
     model_etude_1(act_lst)
 
 if __name__=='__main__':
-    _test()
-    #_demo()
+    #_test()
+    _demo()
     # saisie_manuelle()
     pass
     
