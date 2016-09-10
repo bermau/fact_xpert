@@ -122,5 +122,5 @@ def _test():
     doctest.testmod(verbose=True)
 
 if __name__=='__main__':
-    _test()
-    # Nabm()
+    # _test()
+    Nabm()

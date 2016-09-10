@@ -19,16 +19,6 @@ def sub_title(msg):
 
 advice = sub_title
 
-def strip_brackets(liste):
-            """Take off brackets in a list.
-            >> msg = ['abc', 'bla', '12']
-            >> z = strip_brackets(msg)
-            "'abc','bla', '12'"
-            
-"""
-            # print(liste)
-            return ', '.join(liste)
-            # return False
         
 class Invoice():
     """Gestion d'une facture NABM.
@@ -47,7 +37,7 @@ La facture est implémentée dans une base sqlite pour réaliser des requêtes""
     def create_view_for_nabm(self):
         """Tool to create a view.
 
-Il peu existe plusierus tables notées nabmXX.
+Il peut existe plusierus tables notées nabmXX.
 Il faut créer des vues nabmXX_view"""
         sql = """CREATE VIEW IF NOT EXISTS nabm_view AS
 SELECT * from nabm ; """
@@ -352,7 +342,7 @@ def _test():
     (failures, tests) = doctest.testmod(verbose=False)
     print("{} tests performed, {} failed.".format(tests, failures))
 
-def model_etude_1(act_lst):
+def model_etude_1(act_lst, model_type='MOD01'):
     """Un modèle un initial."""
     # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
     # 3 représentations : la facture, la référence, les Test entre facture
@@ -395,40 +385,36 @@ def model_etude_1(act_lst):
     title("Conclusion générale")
     T.conclude()
 
-def _demo():
+def _demo_1_for_simple_list():
     """Exemple d'utilisation.
-On définit une liste de codes d'exemples, on en choisit un (a), on teste.
+On définit une liste python de codes, on en choisit un (a), on teste.
 """
     import data_for_tests
-    a_inconnus_512_1245_2145 = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
-    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323','2145', '4332', '4355', '4362', '4362']
-    actes_repetes = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0352', '0353',
-     '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323', '4332', '4355', '4362', '4362']
-    liste_ok = ['0323', '9105', '1208']
-    actes_inconnu1515 = ['0323', '9105', '1515', '1208']
-    actes_avec_plus_de_3_seros_hepatite =['0323', # hep
-                                      '9105', '1208',
-                                      '1806', # prot
-                                      '1805', # prot
-                                      '0353', # hep
-                                      '0354', # hep
-                                      '0351', # hep                                    '
-                                     ]
-    test_6020510511_ok =  ['9105', '0322', '0351', '0388','9005']
-    test_6020510511 =  ['9105', '0322', '0351', '0388','9005', '9005']
-    # test
-    # import data_for_tests
-    # On peut aussi utiliser les listes déja programmées comme en dédiésant
-    # a = actes_avec_plus_de_3_seros_hepatite
-    # a = lib_nabm.PROT_LST_REF
-    a = data_for_tests.actes_plus_2_prot_plus_3_hep_inconnu_1517_1518
-    # a = actes_avec_plus_de_3_seros_hepatite
-    model_etude_1(a)
 
+    # On peut aussi utiliser les listes déja programmées comme en dédiésant
+    model_1 = data_for_tests.acts_ok
+    # model_1 a = lib_nabm.PROT_LST_REF
+    # model_1 = data_for_tests.data_for_tests.acts_prots_false_hep_b_false_and_unknown_1517_1518
+    # model_1 a = data_for_tests.acts_with_more_than_3_hep_B_serologies
+    model_etude_1(model_1)
+    
+
+def _demo_2_data_from_synergy():
+    """Données extraites de synergy.
+
+La facture est sur le modèle suivant dit 'MOD01'.
+Chaque ligne de facture contient le numéro de dossier, nom d'acte, la lettre type,
+le nombre de lettres.
+La facture vient par exmeple du programme syn_odbc_connexion.py
+    
+"""
+    import data_for_tests
+    model_2 = data_for_tests.FACT1
+    print(model_2)
+    act_lst = [item[1] for item in model_2 ]
+    # temps1 :
+    model_etude_1(model_2, model_type='MOD02')
+    
 def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""
     
@@ -442,10 +428,8 @@ def saisie_manuelle():
 if __name__=='__main__':
 
     #_test()
-
-    _test()
-
-    _demo()
+    _demo_1_for_simple_list()
+    _demo_2_data_from_synergy()
     # saisie_manuelle()
     pass
     
