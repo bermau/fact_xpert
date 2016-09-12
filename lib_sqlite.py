@@ -22,6 +22,8 @@ class GestionBD:
             if not os.path.isfile(dbName): 
                 print("Error : Database {} does not exist".format(dbName))   
             try:
+                # IMPORTANT la connection est10 fois plus longue si le fichier 
+                # est verrouillé en écriture.
                 self.con = sqlite3.connect(dbName)
             except Exception as err:
                 sys.stderr.write(('Connexion to database failed :\n'\
@@ -76,6 +78,7 @@ class GestionBD:
         self.con.commit()         # transfert curseur -> disque
         print("Database modified")
     def close(self):
+        pass
         if self.con:
             self.con.close()
             print("Database {} has been closed".format(self.dbname))

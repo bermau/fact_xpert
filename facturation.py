@@ -6,6 +6,10 @@
 Elle peut même être protégée en écriture, ce qui garantit son intégrité.
 La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
+
+
+# Les mots PEU EFFICACE indique les axes d'améliorations
+
 import sys
 import lib_sqlite
 import sqlite3
@@ -43,7 +47,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         self.report = []
         self.buf = [] # buffer pour toutes les impressions temporaires.
         self.error = 0 # Nombre de résultats anormaux.
-        
+        self.debug = True
     def prt_buf(self, msg):
         """Imprimer dans un buffer ou ailleurs."""
         # self.buf.append(msg)
@@ -138,38 +142,41 @@ Si anomalie, retourne False, sinon True"""
         SELECT
            inv.invoice_list.id,
            inv.invoice_list.code,
-           nabm.libelle AS 'libelle_NABM',
-           nabm.coef
+           N.libelle AS 'libelle_NABM',
+           N.coef
         FROM inv.invoice_list
-        LEFT JOIN nabm 
-        ON inv.invoice_list.code=nabm.id
-        WHERE nabm.libelle IS NULL
-"""
+        LEFT JOIN {} AS N 
+        ON inv.invoice_list.code=N.id
+        WHERE N.libelle IS NULL
+""".format(self.nabm_table)
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
         return res_lst is None
-
+         
     def verif_codes_et_montants(self, nabm_version=43):
         """Test de la valeur des codes.
 possible si MOD02
 -> True si valeur anomale, sinon False."""
         if self.invoice.model_type !='MOD02':
-            print("Vérificaion du montant impossible.")
+            print("Vérification du montant impossible.")
             # raise ValueError('Verification du montant impossible')
             return True # A améliorer.
         else:
             sql = """SELECT I.code, I.nb_letters, I.letter, N.coef
                      FROM inv.invoice_list AS I
-                     LEFT JOIN nabm41 AS N
+                     LEFT JOIN {} AS N
                      ON I.code=N.id
                      WHERE I.nb_letters <> N.coef
                      OR I.letter <>N.lettre
-                     """
+                     """.format(self.nabm_table)
             self.ref.con.row_factory = sqlite3.Row
             cur = self.ref.con.cursor()
             cur.execute(sql)
             noerror = True
             for row in cur:
                 print(row['code'], row['nb_letters'], row['coef'])
+                print("Erreur")
+                print("RECOMMANTATION : dans l'acte {} Remplacer la valeur {} par la valeur {}"\
+                      .format(row['code'],row['nb_letters'],row['coef'] ))
                 noerror = False
             return noerror            
                      
@@ -196,16 +203,7 @@ possible si MOD02
                 noerror = False
             advice('Supprimer un ou des codes : '+ row['code'])            
         return noerror
-    
-##    def get_list_of_actes(self):
-##        req = """SELECT id, code FROM inv.invoice_list"""
-##        # PAS Efficace. Il faudrait mieux renvoyer à l'objet existant.
-##        self.ref.con.row_factory = sqlite3.Row
-##        cur = self.ref.con.cursor()
-##        cur.execute(req)
-##        code_lst = [ row['code'] for row in cur]
-##        # return code_lst
-##        return self.invoice.act_list
+
     
     def _print_order_by_value(self, act_lst, max_allowed):
         """Calculate acts ordered by value."""
@@ -243,7 +241,7 @@ possible si MOD02
 
 Renvoie True si oui, et False s'il y a plus de 3 codes."""
         
-        # code_lst = self.get_list_of_actes() # PAS Efficace.
+        # code_lst = self.get_list_of_actes() # PAS EFFICIENT.
         # print("liste étudiée", self.invoice.act_list)
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
@@ -261,7 +259,7 @@ Renvoie True si oui, et False s'il y a plus de 3 codes."""
 
 Renvoie True si oui, et False s'il y a plus de 2 codes."""
         
-        # code_lst = self.get_list_of_actes() # PAS Efficace.
+        # code_lst = self.get_list_of_actes() # PAS EFFICIENT.
         response = lib_nabm.detecter_plus_de_deux_proteines(
             self.invoice.act_list)
         print("response", response)
@@ -272,9 +270,39 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
             print("Règles de protéines non respectée : {}".format(response[1]))
             self.print_recommandation_erreur_proteines(response[1])
             return False
-         
+        
+    def verif_compatibilites(self):
+        """Test la présence d'incompabilités.
+Retourne True si aucune, et False s'il y a des incompatibilités."""
+        noerror = True
+        sql = """SELECT I.code, INC.incompatible_code
+                 FROM inv.invoice_list AS I
+                 JOIN {} AS INC
+                 ON I.code=INC.id
+                 """.format(self.incompatibility_table)
+        self.ref.con.row_factory = sqlite3.Row
+        cur = self.ref.con.cursor()
+        cur.execute(sql)
+        for row in cur:
+            print(row['code'], row['incompatible_code'])
+            # PEU EFFICIENT : lancer une seconde requête.
+            # PEU EFFICIENT : la bases des incompatilibités est mal codée :
+            # les codes sont en format string alors que la table nabm a des
+            # au format numérique.
             
-    def _rech_codes(self): 
+            cur2 = self.ref.con.cursor()
+            sql2 = """SELECT * FROM inv.invoice_list
+WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
+            cur2.execute(sql2)
+            for row2 in cur2:
+                sub_title("Erreur d'incompatibilité")
+                for a in row2:
+                    sys.stdout.write(str(a)+" ")
+                print()
+                noerror = False
+        return noerror    
+        
+    def _rech_code(self): 
         """Recherche de codes particulier.
 
 Pour bien tester, j'ai besoin d'actes dont le max soit de
@@ -284,6 +312,25 @@ Pour bien tester, j'ai besoin d'actes dont le max soit de
         self.prt_buf("quelques codes avec MaxCode > 0");
         sql = """Select id, Libelle, MaxCode  from {ref_name}
         WHERE MaxCode > 5 """. format(ref_name=self.nabm_table)
+        self.ref.execute_sql(sql)
+        self.prt_buf(self.ref.resultat_req())
+        # Je retiens comme exemples :
+        # (557, 'LITHIUM (LI , LITHIEMIE , LI SERIQUE , LI ERYTHROCYTAIRE) (SANG)', 2)
+        # (1374, 'VITAMINE B 12 (DOSAGE) (SANG)', 1),
+        # (1137, 'C-PEPTIDE (SANG)', 3)
+        # (703, 'INSULINE LIBRE (SANG)', 3)
+        # (1154, 'TEST DIRECT DE COOMBS (ANTIGLOBULINE SPECIFIQUE)', 4)
+        # (274, "MYCOBACTERIE : SENSIBILITE VIS A VIS D'UN ANTIBIO PAR ANTIBIO", 5)
+
+    def _sql_divers(self): 
+        """Recherche de codes particulier.
+
+Pour bien tester, j'ai besoin d'actes dont le max soit de
+         1, 2 et 3, voire plus."""
+
+        # (nabm_table, incompatibilities_table) = lib_nabm.get_name_of_nabm_tables(43)
+        self.prt_buf("SQL Divers");
+        sql = """Select * from nabm WHERE id='1610' """
         self.ref.execute_sql(sql)
         self.prt_buf(self.ref.resultat_req())
         # Je retiens comme exemples :
@@ -309,6 +356,8 @@ def _test():
     (failures, tests) = doctest.testmod(verbose=False)
     print("{} tests performed, {} failed.".format(tests, failures))
 
+DEBUG = True
+
 def model_etude_1(act_lst, model_type='MOD01'):
     """Un modèle un initial."""
     # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
@@ -317,6 +366,9 @@ def model_etude_1(act_lst, model_type='MOD01'):
     # Déclaration et initilisation de la facture:
     # Le test de la facture nécessite une base de facture, une base de nabm
     # et une version de nomenclature.
+    title("                                 ====== > LANCEMENT EXPERTISE ")
+    if DEBUG:
+        print("ACTES etudiés", act_lst)
     act_ref = lib_nabm.Nabm()
     invoice = lib_invoice.Invoice( model_type=model_type)
     invoice.load_invoice_list(act_lst )
@@ -325,33 +377,41 @@ def model_etude_1(act_lst, model_type='MOD01'):
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
                                         nabm_version=43)
     T.attach_invoice_database()
-    
+
+    print("Debut tests")
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
 
-    title("Vérifie si tous les codes sont dans la NABM")    
-    rep = T.verif_tous_codes_dans_nabm()
-    print("Réponse du test :", rep)
-    T.affiche_conclusion_d_un_test(rep)
+##    title("Vérifie si tous les codes sont dans la NABM")    
+##    rep = T.verif_tous_codes_dans_nabm()
+##    print("Réponse du test :", rep)
+##    T.affiche_conclusion_d_un_test(rep)
+##
+##    title("Vérifie si certains actes ne sont pas trop répétés")
+##    rep4 = T.verif_actes_trop_repetes()
+##    print("Conclusion du test : {}".format(rep4))
+##    T.affiche_conclusion_d_un_test(rep4)
+##
+##    title("Vérifie si la règles des hépatites est respectée")
+##    rep_hep = T.verif_hepatites_B()
+##    print("Conclusion du test : {}".format(rep_hep))
+##    T.affiche_conclusion_d_un_test(rep_hep)
+##
+##    title("Vérifie si la règles des protéines est respectée")
+##    rep_hep = T.verif_proteines()
+##    print("Conclusion du test : {}".format(rep_hep))
+##    T.affiche_conclusion_d_un_test(rep_hep)
+##
+##    title("Montants")
+##    rep_mont = T.verif_codes_et_montants()
+##    T.affiche_conclusion_d_un_test(rep_mont)
 
-    title("Vérifie si certains actes ne sont pas trop répétés")
-    rep4 = T.verif_actes_trop_repetes()
-    print("Conclusion du test : {}".format(rep4))
-    T.affiche_conclusion_d_un_test(rep4)
+    title("Incompatilibités")
+    rep_comp = T.verif_compatibilites()
+    T.affiche_conclusion_d_un_test(rep_comp)    
 
-    title("Vérifie si la règles des hépatites est respectée")
-    rep_hep = T.verif_hepatites_B()
-    print("Conclusion du test : {}".format(rep_hep))
-    T.affiche_conclusion_d_un_test(rep_hep)
-
-    title("Vérifie si la règles des protéines est respectée")
-    rep_hep = T.verif_proteines()
-    print("Conclusion du test : {}".format(rep_hep))
-    T.affiche_conclusion_d_un_test(rep_hep)
-
-    title("Montants")
-    rep_mont = T.verif_codes_et_montants()
-    T.affiche_conclusion_d_un_test(rep_mont)
+##    title("RECHERCHER SQL")
+##    T._sql_divers()
     
     title("Conclusion générale")
     T.conclude()
@@ -360,6 +420,7 @@ def _demo_1_for_simple_list():
     """Exemple d'utilisation.
 On définit une liste python de codes, on en choisit un (a), on teste.
 """
+    title("DEMO 1")
     import data_for_tests
 
     # On peut aussi utiliser les listes déja programmées comme en dédiésant
@@ -368,7 +429,6 @@ On définit une liste python de codes, on en choisit un (a), on teste.
     # model_1 = data_for_tests.data_for_tests.acts_prots_false_hep_b_false_and_unknown_1517_1518
     # model_1 a = data_for_tests.acts_with_more_than_3_hep_B_serologies
     model_etude_1(model_1, model_type='MOD01')
-    
 
 def _demo_2_data_from_synergy():
     """Données extraites de synergy.
@@ -380,13 +440,26 @@ le nombre de lettres.
 La facture vient par exmeple du programme syn_odbc_connexion.py
     
 """
+    title("DEMO 2")
     import data_for_tests
     model_2 = data_for_tests.FACT2
-    print(model_2)
-    act_lst = [item[1] for item in model_2 ]
-    # temps1 :
     model_etude_1(model_2, model_type='MOD02')
+
+def _demo_3_several_record_form_synergy():
+    """ Traitement de plusieurs factures de suite.
+
+But : Eviter de refermer la base si possible."""
+    title("DEMO 3 : several_record_form_synergy")
+    import data_for_tests    
+    #model_etude_1(data_for_tests.FACT1, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
+    # model_etude_1(data_for_tests.FACT2, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT3, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT3_INCOMP, model_type='MOD02')
+
+
     
+       
 def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""
     
@@ -400,8 +473,9 @@ def saisie_manuelle():
 if __name__=='__main__':
 
     #_test()
-    # _demo_1_for_simple_list()
-    _demo_2_data_from_synergy()
+    #_demo_1_for_simple_list()
+    # _demo_2_data_from_synergy()
+    _demo_3_several_record_form_synergy()
     # saisie_manuelle()
     pass
     
