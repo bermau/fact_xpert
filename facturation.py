@@ -6,72 +6,21 @@
 Elle peut même être protégée en écriture, ce qui garantit son intégrité.
 La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
-
+import sys
 import lib_sqlite
 import sqlite3
 import lib_nabm
 import conf_file as Cf
-import sys
+import lib_invoice
+
 from bm_u import title
 
 def sub_title(msg):
     print("     **** "+msg+" ***")
 
-advice = sub_title
-
-        
-class Invoice():
-    """Gestion d'une facture NABM.
-
-La facture est implémentée dans une base sqlite pour réaliser des requêtes"""
-
-    def __init__(self):
-        # Création de la base dans un fichier réel ou en RAM 
-        # pour l'instant l'attachement d'une base RAM ne fonctionne pas.
-        self.INVOICE_DB = lib_sqlite.GestionBD('tempo.sqlite')
-        # self.INVOICE_DB = lib_sqlite.GestionBD(in_memory=True)
-        if not self.table_invoice_exists():
-            self.create_table_invoice_in_database()
-        self.act_list = []
-        
-    def create_view_for_nabm(self):
-        """Tool to create a view.
-
-Il peut existe plusierus tables notées nabmXX.
-Il faut créer des vues nabmXX_view"""
-        sql = """CREATE VIEW IF NOT EXISTS nabm_view AS
-SELECT * from nabm ; """
-        # pas terminé
-        
-    def create_table_invoice_in_database(self):
-        sql = """CREATE TABLE IF NOT EXISTS invoice_list
-(id INTEGER PRIMARY KEY, code VARCHAR(4))
-"""
-        # sys.stderr.write("sql = {}".format(sql))
-        self.INVOICE_DB.execute_sql(sql)
-        self.INVOICE_DB.commit() # QUESTION est-ce indispensable ?
-  
-    def drop_table_invoice(self):
-        self.INVOICE_DB.execute_sql("""DROP TABLE invoice_list""")
-        
-    def table_invoice_exists(self):
-        """Test if table of invoices is defined."""
-        return True
-    
-    def load_invoice_list(self, act_simple_list):
-        """Constitue une table (id, acte_1), (id, acte2) ... """
-        self.act_list = act_simple_list
-        sys.stderr.write("Loading data\n")
-        self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
-        for act in act_simple_list:
-            self.INVOICE_DB.execute_sql("""INSERT INTO invoice_list
-                                     (code) VALUES (?) """, (act,))
-        self.INVOICE_DB.commit()
-            
-    def show_data(self):
-        """Affiche les datas"""
-        self.INVOICE_DB.quick_sql("SELECT * FROM invoice_list")
-
+def advice(msg):
+    print("                *** CONSEIL :    +"+msg + "   ****")
+   
 
 class TestInvoiceAccordingToReference():
     """Tests d'une facture selon une référence.
@@ -89,9 +38,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         self.ref = REF_DB
         self.nabm_version = nabm_version
         (self.nabm_table,
-         self.incompatility_file) = lib_nabm.get_name_of_nabm_files(nabm_version)
-        
-        # self.invoice = INV_DB
+         self.incompatibility_table) = lib_nabm.get_name_of_nabm_files(nabm_version)
         self.invoice = invoice
         self.report = []
         self.buf = [] # buffer pour toutes les impressions temporaires.
@@ -103,14 +50,14 @@ On utilise pour cela la commande attach dans Sqlite."""
         print(msg)
 
     def affiche_conclusion_d_un_test(self, rep):
-        """Affiche le résultat en clair à l'utilisateur."""
+        """Affiche la conclusion d'un test en clair à l'utilisateur."""
         if rep:
             self.prt_buf("Conclusion : correct")
         else:
             self.prt_buf("Conclusion :"+" "*40+"******** incorrect ******")
         
     def conclude(self):
-        """Imprime le rapport le sauve éventuellement."""
+        """Imprime le rapport et le sauve éventuellement."""
         for line in self.buf:
             print(line)
         if self.error == []:
@@ -124,7 +71,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
         
         # self.ref.execute_sql("attach database ':memory:' as inv")
-        sys.stderr.write("Invoice db attached \n")
+        sys.stderr.write("Invoice db attached\n")
         
     def affiche_etude_select(self, sql , comment='', param=None):
         """Affiche une liste des lignes de Select éventuellement vide.
@@ -179,7 +126,6 @@ Puis affiche le nombre de B."""
                           if line[3] is not None ])
             self.prt_buf("Somme des B : {}".format(str(total_B)))
         
-    
     def verif_tous_codes_dans_nabm(self, nabm_version=43):
         """"Les actes sont-ils présent dans la nomenclature ?
 
@@ -201,7 +147,33 @@ Si anomalie, retourne False, sinon True"""
 """
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
         return res_lst is None
-               
+
+    def verif_codes_et_montants(self, nabm_version=43):
+        """Test de la valeur des codes.
+possible si MOD02
+-> True si valeur anomale, sinon False."""
+        if self.invoice.model_type !='MOD02':
+            print("Vérificaion du montant impossible.")
+            # raise ValueError('Verification du montant impossible')
+            return True # A améliorer.
+        else:
+            sql = """SELECT I.code, I.nb_letters, I.letter, N.coef
+                     FROM inv.invoice_list AS I
+                     LEFT JOIN nabm41 AS N
+                     ON I.code=N.id
+                     WHERE I.nb_letters <> N.coef
+                     OR I.letter <>N.lettre
+                     """
+            self.ref.con.row_factory = sqlite3.Row
+            cur = self.ref.con.cursor()
+            cur.execute(sql)
+            noerror = True
+            for row in cur:
+                print(row['code'], row['nb_letters'], row['coef'])
+                noerror = False
+            return noerror            
+                     
+
     def verif_actes_trop_repetes(self, nabm_version=43):
         """Test de codes répétés.
 
@@ -209,10 +181,10 @@ Si anomalie, retourne False, sinon True"""
         noerror = True
         self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
         req="""SELECT  code, count(code) AS 'occurence', N.MaxCode
-            FROM inv.invoice_list
-            LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
-            GROUP BY code    
-            HAVING occurence> 1""".format(ref_name=self.nabm_table)
+               FROM inv.invoice_list
+               LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
+               GROUP BY code    
+               HAVING occurence> 1""".format(ref_name=self.nabm_table)
         
         # self.ref instance d'objet qui contient le connecteur con.
         self.ref.con.row_factory = sqlite3.Row
@@ -225,15 +197,15 @@ Si anomalie, retourne False, sinon True"""
             advice('Supprimer un ou des codes : '+ row['code'])            
         return noerror
     
-    def get_list_of_actes(self):
-        req = """SELECT id, code FROM inv.invoice_list"""
-        # PAS Efficace. Il faudrait mieux renvoyer à l'objet existant.
-        self.ref.con.row_factory = sqlite3.Row
-        cur = self.ref.con.cursor()
-        cur.execute(req)
-        code_lst = [ row['code'] for row in cur]
-        # return code_lst
-        return self.invoice.act_list
+##    def get_list_of_actes(self):
+##        req = """SELECT id, code FROM inv.invoice_list"""
+##        # PAS Efficace. Il faudrait mieux renvoyer à l'objet existant.
+##        self.ref.con.row_factory = sqlite3.Row
+##        cur = self.ref.con.cursor()
+##        cur.execute(req)
+##        code_lst = [ row['code'] for row in cur]
+##        # return code_lst
+##        return self.invoice.act_list
     
     def _print_order_by_value(self, act_lst, max_allowed):
         """Calculate acts ordered by value."""
@@ -272,7 +244,7 @@ Si anomalie, retourne False, sinon True"""
 Renvoie True si oui, et False s'il y a plus de 3 codes."""
         
         # code_lst = self.get_list_of_actes() # PAS Efficace.
-        print("liste étudiée", self.invoice.act_list)
+        # print("liste étudiée", self.invoice.act_list)
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
         print("response", response) # response = (bool, liste)
@@ -302,13 +274,13 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
             return False
          
             
-    def rech_codes(self): 
+    def _rech_codes(self): 
         """Recherche de codes particulier.
 
 Pour bien tester, j'ai besoin d'actes dont le max soit de
          1, 2 et 3, voire plus."""
 
-        # (nabm_table, incompatility_file) = lib_nabm.get_name_of_nabm_tables(43)
+        # (nabm_table, incompatibilities_table) = lib_nabm.get_name_of_nabm_tables(43)
         self.prt_buf("quelques codes avec MaxCode > 0");
         sql = """Select id, Libelle, MaxCode  from {ref_name}
         WHERE MaxCode > 5 """. format(ref_name=self.nabm_table)
@@ -321,12 +293,7 @@ Pour bien tester, j'ai besoin d'actes dont le max soit de
         # (703, 'INSULINE LIBRE (SANG)', 3)
         # (1154, 'TEST DIRECT DE COOMBS (ANTIGLOBULINE SPECIFIQUE)', 4)
         # (274, "MYCOBACTERIE : SENSIBILITE VIS A VIS D'UN ANTIBIO PAR ANTIBIO", 5)
-    def macro_test(self, nabm_version_43):
-        """Comprends plusieurs tests.
 
-Renvoie True si aucun erreur, False sinon.
-"""
-        self.test_in_nabm(nabm_version=nabm_version)
 
 def get_affiche_liste_codes(code_liste):
     """Utilisaire qui retour une liste de codes épurée.
@@ -351,12 +318,12 @@ def model_etude_1(act_lst, model_type='MOD01'):
     # Le test de la facture nécessite une base de facture, une base de nabm
     # et une version de nomenclature.
     act_ref = lib_nabm.Nabm()
-    invoice = Invoice()
-    invoice.load_invoice_list(act_lst)
+    invoice = lib_invoice.Invoice( model_type=model_type)
+    invoice.load_invoice_list(act_lst )
     # invoice.show_data()
     
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
-                                        nabm_version=43)
+                                        nabm_version=4)
     T.attach_invoice_database()
     
     title("Affichage")
@@ -381,6 +348,11 @@ def model_etude_1(act_lst, model_type='MOD01'):
     rep_hep = T.verif_proteines()
     print("Conlusion du test : {}".format(rep_hep))
     T.affiche_conclusion_d_un_test(rep_hep)
+
+    title("Montants")
+    rep_mont = T.verif_codes_et_montants()
+    T.affiche_conclusion_d_un_test(rep_mont)
+
     
     title("Conclusion générale")
     T.conclude()
@@ -396,20 +368,21 @@ On définit une liste python de codes, on en choisit un (a), on teste.
     # model_1 a = lib_nabm.PROT_LST_REF
     # model_1 = data_for_tests.data_for_tests.acts_prots_false_hep_b_false_and_unknown_1517_1518
     # model_1 a = data_for_tests.acts_with_more_than_3_hep_B_serologies
-    model_etude_1(model_1)
+    model_etude_1(model_1, model_type='MOD01')
     
 
 def _demo_2_data_from_synergy():
     """Données extraites de synergy.
 
-La facture est sur le modèle suivant dit 'MOD01'.
+Une démonstration.
+La facture est sur le modèle suivant dit 'MOD02'.
 Chaque ligne de facture contient le numéro de dossier, nom d'acte, la lettre type,
 le nombre de lettres.
 La facture vient par exmeple du programme syn_odbc_connexion.py
     
 """
     import data_for_tests
-    model_2 = data_for_tests.FACT1
+    model_2 = data_for_tests.FACT2
     print(model_2)
     act_lst = [item[1] for item in model_2 ]
     # temps1 :
@@ -428,7 +401,7 @@ def saisie_manuelle():
 if __name__=='__main__':
 
     #_test()
-    _demo_1_for_simple_list()
+    # _demo_1_for_simple_list()
     _demo_2_data_from_synergy()
     # saisie_manuelle()
     pass

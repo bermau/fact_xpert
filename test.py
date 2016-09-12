@@ -17,6 +17,7 @@
 # Le jeux de données des tests est dans data_for_tests.py
 
 import unittest, os, sys, pdb
+import lib_invoice
 
 dirname=os.path.dirname(__file__) # __file__ n'est pas défini sous IDLE 2.7. 
 # if dirname=='':
@@ -57,7 +58,7 @@ test, sont des tests unitaires."""
     def common_set_of_tests(self, facture=acts_unknown_1515):
         """Une fonction pour aider à écrire des tests."""
         self.act_ref=Nabm() 
-        self.invoice = Invoice()
+        self.invoice = lib_invoice.Invoice(model_type='MOD01')
         self.invoice.load_invoice_list(facture)
         self.test = TestInvoiceAccordingToReference(self.invoice,
                                                     self.act_ref.NABM_DB,

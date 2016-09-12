@@ -109,6 +109,7 @@ que votre liste de codes contient un code qui a disparu de la nomenclature.");
         """Enregiste une liste dans la base de données.
 
 La table est nommée : nabm_sheet
+Ne semble plus servir à rien.
 """
         pass
         
