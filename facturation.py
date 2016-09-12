@@ -323,7 +323,7 @@ def model_etude_1(act_lst, model_type='MOD01'):
     # invoice.show_data()
     
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
-                                        nabm_version=4)
+                                        nabm_version=43)
     T.attach_invoice_database()
     
     title("Affichage")
@@ -336,23 +336,22 @@ def model_etude_1(act_lst, model_type='MOD01'):
 
     title("Vérifie si certains actes ne sont pas trop répétés")
     rep4 = T.verif_actes_trop_repetes()
-    print("Conlusion du test : {}".format(rep4))
+    print("Conclusion du test : {}".format(rep4))
     T.affiche_conclusion_d_un_test(rep4)
 
     title("Vérifie si la règles des hépatites est respectée")
     rep_hep = T.verif_hepatites_B()
-    print("Conlusion du test : {}".format(rep_hep))
+    print("Conclusion du test : {}".format(rep_hep))
     T.affiche_conclusion_d_un_test(rep_hep)
 
     title("Vérifie si la règles des protéines est respectée")
     rep_hep = T.verif_proteines()
-    print("Conlusion du test : {}".format(rep_hep))
+    print("Conclusion du test : {}".format(rep_hep))
     T.affiche_conclusion_d_un_test(rep_hep)
 
     title("Montants")
     rep_mont = T.verif_codes_et_montants()
     T.affiche_conclusion_d_un_test(rep_mont)
-
     
     title("Conclusion générale")
     T.conclude()

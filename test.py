@@ -57,7 +57,8 @@ test, sont des tests unitaires."""
                          
     def common_set_of_tests(self, facture=acts_unknown_1515):
         """Une fonction pour aider à écrire des tests."""
-        self.act_ref=Nabm() 
+        self.act_ref=Nabm()
+        print("La facture étudiée est ", facture)
         self.invoice = lib_invoice.Invoice(model_type='MOD01')
         self.invoice.load_invoice_list(facture)
         self.test = TestInvoiceAccordingToReference(self.invoice,
@@ -67,12 +68,10 @@ test, sont des tests unitaires."""
         
     def test_01_toujours_correct(self):
         """Toujours OK"""
-        print("Un message durant test01")
         self.assertTrue(True)
-        print("Un autre message durant test01")
-    
+          
     def test_05_nabm(self):
-        """Une facture entirèrement correcte."""
+        """Une facture entièrement correcte."""
         self.common_set_of_tests(facture= acts_ok)
         self.assertTrue(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
@@ -90,15 +89,14 @@ test, sont des tests unitaires."""
         self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
     def test_08_nabm(self):
-        """Une facture avec répétitions autorisées mais un acte inconnu."""
+        """Une facture avec répétitions non autorisées mais un acte inconnu."""
         facture = acts_703_more_than_thrice_plus_unknown
         self.common_set_of_tests(facture=facture)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
-        self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
+        self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
         self.assertTrue(detecter_plus_de_trois_sero_hepatite_b(
              facture))
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
-
         self.assertTrue(self.test.verif_hepatites_B())
 
     def test_09_nabm(self):
@@ -118,14 +116,12 @@ test, sont des tests unitaires."""
         self.common_set_of_tests(facture=facture)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm(nabm_version=43))
         self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))
-        # Je ne sais pas comment ne tester que le début du tupple.
+        # Je ne teste que le début du tupple.
         (rep, void) = detecter_plus_de_trois_sero_hepatite_b(
             facture)
         self.assertFalse(rep)
         (rep2, void2) = detecter_plus_de_deux_proteines(facture)
         self.assertFalse(rep2)
-                        
-    
         
 def test_suite():
     """retourne la liste des tests à traiter."""
