@@ -54,7 +54,7 @@ et __exit__ (en sortie).
 
 # Sur les décorateurs avec arguments, 
 # lire http://gillesfabio.com/blog/2010/12/16/python-et-les-decorateurs/
-def record_if_important(filename='sortie2.txt'):
+def record_if_true(filename='sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
 Enregistre la sortie standard si le résultat de la fonction est True.
@@ -74,7 +74,7 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-@record_if_important(filename='ma_sortie.txt')  
+@record_if_true(filename='ma_sortie.txt')  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
@@ -91,6 +91,10 @@ def _demo_context_manager():
     print("ligne 4 à ne pas retenir")  
         
 def _demo_decorator():
+    """Exemple de fonctionnement :
+Si la fonction_qui_écrit_et_fait_des_tests, reçoit l'argument "à enregistrer",
+alors elle retourne True et le décorateur @record_if_true écrit le
+rapport dans le fichier indiqué."""
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer (1)")
     fonction_qui_ecrit_et_fait_des_tests("à enregistrer")
     fonction_qui_ecrit_et_fait_des_tests("NON à enregistrer (2)")

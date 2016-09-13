@@ -16,6 +16,7 @@ import sqlite3
 import lib_nabm
 import conf_file as Cf
 import lib_invoice
+import lib_smart_stdout
 
 from bm_u import title
 
@@ -56,9 +57,9 @@ On utilise pour cela la commande attach dans Sqlite."""
     def affiche_conclusion_d_un_test(self, rep):
         """Affiche la conclusion d'un test en clair à l'utilisateur."""
         if rep:
-            self.prt_buf("Conclusion : correct")
+            print(" : correct")
         else:
-            self.prt_buf("Conclusion :"+" "*40+"******** incorrect ******")
+            print(" :"+" "*40+"******** incorrect ******")
         
     def conclude(self):
         """Imprime le rapport et le sauve éventuellement."""
@@ -88,7 +89,7 @@ On utilise pour cela la commande attach dans Sqlite."""
             self.ref.execute_sql(sql, param=param)
         res_as_list =  self.ref.resultat_req()
         if len(res_as_list) == 0:
-            self.prt_buf("RAS")
+            # self.prt_buf("RAS")
             return None # Mieux que False
         else:
             self.prt_buf("{} lignes{} :".format(str(len(res_as_list)),comment))
@@ -101,8 +102,7 @@ On utilise pour cela la commande attach dans Sqlite."""
 
 Puis affiche le nombre de B."""
         # BUG : il faut pouvoir indiquer la version de nabm
-        
-        self.prt_buf("Liste des actes de la facture.");
+        # self.prt_buf("Liste des actes de la facture.");
         req = """
         SELECT
            inv.invoice_list.id,
@@ -116,7 +116,7 @@ Puis affiche le nombre de B."""
        
         res_lst = self.affiche_etude_select(req, comment=' dans la facture')       
         self.prt_buf('')
-        self.prt_buf('Autre présentation :')
+        self.prt_buf('Format python :')
         self.prt_buf(res_lst)
 
         self.prt_buf('')
@@ -130,14 +130,15 @@ Puis affiche le nombre de B."""
                           if line[3] is not None ])
             self.prt_buf("Somme des B : {}".format(str(total_B)))
         
-    def verif_tous_codes_dans_nabm(self, nabm_version=43):
-        """"Les actes sont-ils présent dans la nomenclature ?
+    def verif_tous_codes_dans_nabm(self, nabm_table=None):
+        """"Les actes sont-ils présents dans la nomenclature ?
 
 Recherche des lignes absentes de la NABM.
 Si anomalie, retourne False, sinon True"""
-        
-        self.prt_buf("Recherche des lignes absentes de la NABM");
-        self.prt_buf("Question : toutes les lignes sont à la NABM ? ");
+        if nabm_table is None:
+            nabm_table=self.nabm_table
+        # self.prt_buf("Recherche des lignes absentes de la NABM");
+        # self.prt_buf("Question : toutes les lignes sont à la NABM ? ");
         req = """
         SELECT
            inv.invoice_list.id,
@@ -148,7 +149,7 @@ Si anomalie, retourne False, sinon True"""
         LEFT JOIN {} AS N 
         ON inv.invoice_list.code=N.id
         WHERE N.libelle IS NULL
-""".format(self.nabm_table)
+""".format(nabm_table)
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
         return res_lst is None
          
@@ -174,19 +175,17 @@ possible si MOD02
             noerror = True
             for row in cur:
                 print(row['code'], row['nb_letters'], row['coef'])
-                print("Erreur")
-                print("RECOMMANTATION : dans l'acte {} Remplacer la valeur {} par la valeur {}"\
+                print("Erreur : dans l'acte {} remplacer la valeur {} par la valeur {}"\
                       .format(row['code'],row['nb_letters'],row['coef'] ))
                 noerror = False
-            return noerror            
-                     
+            return noerror
 
     def verif_actes_trop_repetes(self, nabm_version=43):
         """Test de codes répétés.
 
 -> True si pas d'anomalie, False sinon."""
         noerror = True
-        self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
+        # self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
         req="""SELECT  code, count(code) AS 'occurence', N.MaxCode
                FROM inv.invoice_list
                LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
@@ -220,9 +219,7 @@ possible si MOD02
                                             comment=' classées par valeurs')
         col0 = [ ligne[0] for ligne in res_lst ]
         trois_plus_chers = col0[0:max_allowed]
-        self.prt_buf("Conseille de garder : " + str(trois_plus_chers))
-
-
+        print("Conseil : garder"  + str(trois_plus_chers))
 
     def print_recommandation_erreur_hepatites(self, act_lst):
         """Affiche une solution pour la règle des séro hépatites."""
@@ -245,9 +242,9 @@ Renvoie True si oui, et False s'il y a plus de 3 codes."""
         # print("liste étudiée", self.invoice.act_list)
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
-        print("response", response) # response = (bool, liste)
+        # ATTENTION:  response = (bool, liste)
         if response[0] :
-            print("La règle des hépatites n'est pas enfreinte")
+            # print("La règle des hépatites n'est pas enfreinte")
             return True
         else:
             print("Règles de hépatites non respectée : {}".format(response[1]))
@@ -262,9 +259,9 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
         # code_lst = self.get_list_of_actes() # PAS EFFICIENT.
         response = lib_nabm.detecter_plus_de_deux_proteines(
             self.invoice.act_list)
-        print("response", response)
+        # ATTENTION:  response = (bool, liste)
         if response[0] :
-            print("La règle des protéines n'est pas enfreinte")
+            # print("La règle des protéines n'est pas enfreinte")
             return True   
         else:
             print("Règles de protéines non respectée : {}".format(response[1]))
@@ -284,7 +281,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
         cur = self.ref.con.cursor()
         cur.execute(sql)
         for row in cur:
-            print(row['code'], row['incompatible_code'])
+            # print(row['code'], row['incompatible_code'])
             # PEU EFFICIENT : lancer une seconde requête.
             # PEU EFFICIENT : la bases des incompatilibités est mal codée :
             # les codes sont en format string alors que la table nabm a des
@@ -295,7 +292,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)
             for row2 in cur2:
-                sub_title("Erreur d'incompatibilité")
+                print("\n          ***** Erreur d'incompatibilité    ****")
                 for a in row2:
                     sys.stdout.write(str(a)+" ")
                 print()
@@ -356,9 +353,10 @@ def _test():
     (failures, tests) = doctest.testmod(verbose=False)
     print("{} tests performed, {} failed.".format(tests, failures))
 
-DEBUG = True
+DEBUG = False
 
-def model_etude_1(act_lst, model_type='MOD01'):
+@lib_smart_stdout.record_if_true(filename='erreur.txt')
+def model_etude_OK(act_lst, model_type='MOD01'):
     """Un modèle un initial."""
     # lib_nabm.Nabm().expertise_liste(a, nabm_version=43)
     # 3 représentations : la facture, la référence, les Test entre facture
@@ -366,6 +364,7 @@ def model_etude_1(act_lst, model_type='MOD01'):
     # Déclaration et initilisation de la facture:
     # Le test de la facture nécessite une base de facture, une base de nabm
     # et une version de nomenclature.
+    main_conclusion = True
     title("                                 ====== > LANCEMENT EXPERTISE ")
     if DEBUG:
         print("ACTES etudiés", act_lst)
@@ -382,39 +381,127 @@ def model_etude_1(act_lst, model_type='MOD01'):
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
 
-##    title("Vérifie si tous les codes sont dans la NABM")    
-##    rep = T.verif_tous_codes_dans_nabm()
-##    print("Réponse du test :", rep)
-##    T.affiche_conclusion_d_un_test(rep)
-##
-##    title("Vérifie si certains actes ne sont pas trop répétés")
-##    rep4 = T.verif_actes_trop_repetes()
-##    print("Conclusion du test : {}".format(rep4))
-##    T.affiche_conclusion_d_un_test(rep4)
-##
-##    title("Vérifie si la règles des hépatites est respectée")
-##    rep_hep = T.verif_hepatites_B()
-##    print("Conclusion du test : {}".format(rep_hep))
-##    T.affiche_conclusion_d_un_test(rep_hep)
-##
-##    title("Vérifie si la règles des protéines est respectée")
-##    rep_hep = T.verif_proteines()
-##    print("Conclusion du test : {}".format(rep_hep))
-##    T.affiche_conclusion_d_un_test(rep_hep)
-##
-##    title("Montants")
-##    rep_mont = T.verif_codes_et_montants()
-##    T.affiche_conclusion_d_un_test(rep_mont)
+    title("Vérifie si tous les codes sont dans la NABM")    
+    resp1 = T.verif_tous_codes_dans_nabm()
+    if DEBUG:
+        print("Réponse du test :", resp1)
+    T.affiche_conclusion_d_un_test(resp1)
+    main_conclusion = main_conclusion and resp1
+
+    title("Vérifie si certains actes ne sont pas trop répétés")
+    resp2 = T.verif_actes_trop_repetes()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp2))
+    T.affiche_conclusion_d_un_test(resp2)
+    main_conclusion = main_conclusion and resp2
+
+    title("Vérifie si la règles des hépatites est respectée")
+    resp3 = T.verif_hepatites_B()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp3))
+    T.affiche_conclusion_d_un_test(resp3)
+    main_conclusion = main_conclusion and resp3
+
+    title("Vérifie si la règles des protéines est respectée")
+    resp4 = T.verif_proteines()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp4))
+    T.affiche_conclusion_d_un_test(resp4)
+    main_conclusion = main_conclusion and resp4
+
+    title("Montants")
+    resp5 = T.verif_codes_et_montants()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp5))
+    T.affiche_conclusion_d_un_test(resp5)
+    
+    main_conclusion = main_conclusion and resp5
+    print(main_conclusion, resp5)
 
     title("Incompatilibités")
-    rep_comp = T.verif_compatibilites()
-    T.affiche_conclusion_d_un_test(rep_comp)    
+    resp6 = T.verif_compatibilites()
 
+    T.affiche_conclusion_d_un_test(resp6)    
+    main_conclusion = main_conclusion and resp6
+    print(main_conclusion, resp6)
 ##    title("RECHERCHER SQL")
 ##    T._sql_divers()
     
     title("Conclusion générale")
-    T.conclude()
+    T.affiche_conclusion_d_un_test(main_conclusion)
+    return not main_conclusion
+
+    #T.conclude(main_conclusion)
+
+@lib_smart_stdout.record_if_true(filename='erreur.txt')
+def model_etude_1(act_lst, model_type='MOD01'):
+    """Une xexpertise mieux présentée."""
+
+    main_conclusion = True
+    print()
+    print("                                 ====== > LANCEMENT EXPERTISE ")
+    if DEBUG:
+        print("ACTES etudiés", act_lst)
+    act_ref = lib_nabm.Nabm()
+    invoice = lib_invoice.Invoice(model_type=model_type)
+    invoice.load_invoice_list(act_lst)
+    # invoice.show_data()
+
+    T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
+                                        nabm_version=43)
+    T.attach_invoice_database()
+
+    print("Debut tests")
+    title("Affichage")
+    T.affiche_liste_et_somme_theorique()
+    title("Vérifications")
+    print("Vérifie si tous les codes sont dans la NABM", end='')    
+    resp1 = T.verif_tous_codes_dans_nabm()
+    if DEBUG:
+        print("Réponse du test :", resp1)
+    T.affiche_conclusion_d_un_test(resp1)
+    main_conclusion = main_conclusion and resp1
+
+    print("Vérifie si certains actes ne sont pas trop répétés", end='')
+    resp2 = T.verif_actes_trop_repetes()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp2))
+    T.affiche_conclusion_d_un_test(resp2)
+    main_conclusion = main_conclusion and resp2
+
+    print("Vérifie si la règles des hépatites est respectée", end='')
+    resp3 = T.verif_hepatites_B()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp3))
+    T.affiche_conclusion_d_un_test(resp3)
+    main_conclusion = main_conclusion and resp3
+
+    print("Vérifie si la règles des protéines est respectée", end='')
+    resp4 = T.verif_proteines()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp4))
+    T.affiche_conclusion_d_un_test(resp4)
+    main_conclusion = main_conclusion and resp4
+
+    print("Montants", end='')
+    resp5 = T.verif_codes_et_montants()
+    if DEBUG:
+        print("Conclusion du test : {}".format(resp5))
+    T.affiche_conclusion_d_un_test(resp5)
+    
+    main_conclusion = main_conclusion and resp5
+    
+    print("Incompatilibités", end='')
+    resp6 = T.verif_compatibilites()
+    T.affiche_conclusion_d_un_test(resp6)    
+    main_conclusion = main_conclusion and resp6
+    
+    print("Conclusion générale", end='')
+    T.affiche_conclusion_d_un_test(main_conclusion)
+    return not main_conclusion
+
+    #T.conclude(main_conclusion)
+
 
 def _demo_1_for_simple_list():
     """Exemple d'utilisation.
@@ -445,20 +532,19 @@ La facture vient par exmeple du programme syn_odbc_connexion.py
     model_2 = data_for_tests.FACT2
     model_etude_1(model_2, model_type='MOD02')
 
+
 def _demo_3_several_record_form_synergy():
     """ Traitement de plusieurs factures de suite.
 
 But : Eviter de refermer la base si possible."""
     title("DEMO 3 : several_record_form_synergy")
     import data_for_tests    
-    #model_etude_1(data_for_tests.FACT1, model_type='MOD02')
-    #model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
-    # model_etude_1(data_for_tests.FACT2, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT1, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT2, model_type='MOD02')
     model_etude_1(data_for_tests.FACT3, model_type='MOD02')
     model_etude_1(data_for_tests.FACT3_INCOMP, model_type='MOD02')
-
-
-    
+   
        
 def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""

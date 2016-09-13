@@ -11,7 +11,9 @@ del(CONNEXION)
 import pyodbc
 import conf_file as Cf
 import lib_nabm # utilitaires pour la NABM
-import datetime, sys 
+import facturation
+import datetime, sys
+
 
 CONNEXION = '' # sera utilisé pour la connexion à la base
 
@@ -287,18 +289,18 @@ def fac_de_IPP_date(IPP, date):
     # Présentation de la facture cumulée (cumule) sous diverses formes
     prt_list_tab(cumule)
 
-    print("Cumule vaut : ")
-    print(cumule) 
-    print()
-    print()
-    actes_lst = [ ligne[1] for ligne in cumule if ligne[1] ]
-    print()
-    print("IMPORTANT : élimination des actes HN")
-    print(" ".join(actes_lst))
-    print("Test de la règle des protéines:")
-    print(lib_nabm.detecter_plus_de_deux_proteines(actes_lst))
-    print("Test de la règle des sérologie:")
-    print(lib_nabm.detecter_plus_de_trois_sero_hepatite_b(actes_lst))
+##    print("Cumule vaut : ")
+##    print(cumule) 
+##    actes_lst = [ ligne[1] for ligne in cumule if ligne[1] ]
+##    print("IMPORTANT : élimination des actes HN")
+##    print(" ".join(actes_lst))
+##    print("Test de la règle des protéines:")
+##    print(lib_nabm.detecter_plus_de_deux_proteines(actes_lst))
+##    print("Test de la règle des sérologie:")
+##    print(lib_nabm.detecter_plus_de_trois_sero_hepatite_b(actes_lst))
+
+    # lancer la vérification du module facturation
+    facturation.model_etude_1(cumule, model_type='MOD02')
     
 def essai_sur_base():
     """Récupérer un nom de colonne"""
@@ -395,5 +397,5 @@ if __name__=='__main__':
     #_test()
     
     
-    _demo_etude_facturation_d_un_jour("30/05/2016")
+    _demo_etude_facturation_d_un_jour("01/09/2016")
     del(CONNEXION)
