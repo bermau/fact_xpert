@@ -61,7 +61,7 @@ def le_lendemain(jour_fr_str):
 
 def req_example_via_class(dos_id=None):
     """Un exemple de requête vers infocentre
-    <<>>> a=req_example_via_class(25)
+    <<>>> a = req_example_via_class(25)
     (1, 2)
     """
     cursor = CONNEXION.query("SELECT 1,2",None)
@@ -72,7 +72,7 @@ def req_example_via_class(dos_id=None):
 
 def req_verbosing_invoice(req_id=None):
     """Un essai de requête vers infocentre
-    <<>>> a=req_verbosing_invoice(req_id=6040831088) ; a[0][1]
+    <<>>> a = req_verbosing_invoice(req_id=6040831088) ; a[0][1]
     'IDEXT'
     
     """

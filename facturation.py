@@ -10,7 +10,7 @@ La fonction SQL attache permet de réaliser des opérations entre les 2 bases.""
 
 # Les mots PEU EFFICACE indique les axes d'améliorations
 
-import sys
+import sys, os , datetime
 import lib_sqlite
 import sqlite3
 import lib_nabm
@@ -347,11 +347,6 @@ def get_affiche_liste_codes(code_liste):
     """
     return(" ".join([code for code in code_liste]))
         
-def _test():
-    """Execute doctests."""
-    import doctest
-    (failures, tests) = doctest.testmod(verbose=False)
-    print("{} tests performed, {} failed.".format(tests, failures))
 
 DEBUG = False
 
@@ -388,21 +383,21 @@ def model_etude_OK(act_lst, model_type='MOD01'):
     T.affiche_conclusion_d_un_test(resp1)
     main_conclusion = main_conclusion and resp1
 
-    title("Vérifie si certains actes ne sont pas trop répétés")
+    title("Vérifie si certains actes ne sont pas trop répétés : ")
     resp2 = T.verif_actes_trop_repetes()
     if DEBUG:
         print("Conclusion du test : {}".format(resp2))
     T.affiche_conclusion_d_un_test(resp2)
     main_conclusion = main_conclusion and resp2
 
-    title("Vérifie si la règles des hépatites est respectée")
+    title("Vérifie si la règles des hépatites est respectée : ")
     resp3 = T.verif_hepatites_B()
     if DEBUG:
         print("Conclusion du test : {}".format(resp3))
     T.affiche_conclusion_d_un_test(resp3)
     main_conclusion = main_conclusion and resp3
 
-    title("Vérifie si la règles des protéines est respectée")
+    title("Vérifie si la règles des protéines est respectée : ")
     resp4 = T.verif_proteines()
     if DEBUG:
         print("Conclusion du test : {}".format(resp4))
@@ -418,7 +413,7 @@ def model_etude_OK(act_lst, model_type='MOD01'):
     main_conclusion = main_conclusion and resp5
     print(main_conclusion, resp5)
 
-    title("Incompatilibités")
+    title("Incompatilibités : ")
     resp6 = T.verif_compatibilites()
 
     T.affiche_conclusion_d_un_test(resp6)    
@@ -440,6 +435,7 @@ def model_etude_1(act_lst, model_type='MOD01'):
     main_conclusion = True
     print()
     print("                                 ====== > LANCEMENT EXPERTISE ")
+    print_version_and_date()
     if DEBUG:
         print("ACTES etudiés", act_lst)
     act_ref = lib_nabm.Nabm()
@@ -545,7 +541,12 @@ But : Eviter de refermer la base si possible."""
     model_etude_1(data_for_tests.FACT3, model_type='MOD02')
     model_etude_1(data_for_tests.FACT3_INCOMP, model_type='MOD02')
    
-       
+def print_version_and_date():
+    """Print version and execution datetime"""
+    version = "Programme : " + os.path.basename(__file__)
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), end='   ')
+    print(version)
+
 def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""
     
@@ -555,6 +556,11 @@ def saisie_manuelle():
     act_lst = [ code.rjust(4,'0') for code in saisie.split(" ") if code not in ('', ' ')]
     print(act_lst)
     model_etude_1(act_lst)
+def _test():
+    """Execute doctests."""
+    import doctest
+    (failures, tests) = doctest.testmod(verbose=False)
+    print("{} tests performed, {} failed.".format(tests, failures))
 
 if __name__=='__main__':
 
