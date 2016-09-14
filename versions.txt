@@ -1,5 +1,9 @@
-VERSION :
+VERSIONS :
 
 0.02 : simplifcation du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
+
+0.03 : correction de la base de données
+
+0.04 : correction d'un bug sur le nombre de codes maximums.
 

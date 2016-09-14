@@ -24,7 +24,7 @@ def sub_title(msg):
     print("     **** "+msg+" ***")
 
 def advice(msg):
-    print("                *** CONSEIL :    +"+msg + "   ****")
+    print("*** CONSEIL *** :    +"+msg + "   ****")
    
 
 class TestInvoiceAccordingToReference():
@@ -36,7 +36,6 @@ on attache une base temporaire contenant la facture, ce qui permet
 d'utiliser des instruction SQL.
 
 On utilise pour cela la commande attach dans Sqlite."""
-#    def __init__(self, INV_DB, REF_DB, nabm_version):
     def __init__(self, invoice, REF_DB, nabm_version):
         """Enregistrement de 2 connecteurs"""
         
@@ -49,6 +48,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         self.buf = [] # buffer pour toutes les impressions temporaires.
         self.error = 0 # Nombre de résultats anormaux.
         self.debug = True
+        
     def prt_buf(self, msg):
         """Imprimer dans un buffer ou ailleurs."""
         # self.buf.append(msg)
@@ -57,9 +57,9 @@ On utilise pour cela la commande attach dans Sqlite."""
     def affiche_conclusion_d_un_test(self, rep):
         """Affiche la conclusion d'un test en clair à l'utilisateur."""
         if rep:
-            print(" : correct")
+            print("correct")
         else:
-            print(" :"+" "*40+"******** incorrect ******")
+            print(" "*40 + "******** incorrect ******")
         
     def conclude(self):
         """Imprime le rapport et le sauve éventuellement."""
@@ -198,9 +198,9 @@ possible si MOD02
         cur.execute(req)
         for row in cur:
             print(row['code'], row['occurence'], row['MaxCode'])
-            if row['occurence']> int(row['MaxCode']):
+            if int(row['MaxCode'])> 0 and row['occurence']> int(row['MaxCode']):
                 noerror = False
-            advice('Supprimer un ou des codes : '+ row['code'])            
+                advice("Supprimer un ou des codes : {} (Maximum autorisé : {})". format(row['code'],row['MaxCode']))            
         return noerror
 
     
@@ -451,35 +451,35 @@ def model_etude_1(act_lst, model_type='MOD01'):
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
-    print("Vérifie si tous les codes sont dans la NABM", end='')    
+    print("Vérifie si tous les codes sont dans la NABM : ", end='')    
     resp1 = T.verif_tous_codes_dans_nabm()
     if DEBUG:
         print("Réponse du test :", resp1)
     T.affiche_conclusion_d_un_test(resp1)
     main_conclusion = main_conclusion and resp1
 
-    print("Vérifie si certains actes ne sont pas trop répétés", end='')
+    print("Vérifie si certains actes ne sont pas trop répétés : ", end='')
     resp2 = T.verif_actes_trop_repetes()
     if DEBUG:
         print("Conclusion du test : {}".format(resp2))
     T.affiche_conclusion_d_un_test(resp2)
     main_conclusion = main_conclusion and resp2
 
-    print("Vérifie si la règles des hépatites est respectée", end='')
+    print("Vérifie si la règles des hépatites est respectée : ", end='')
     resp3 = T.verif_hepatites_B()
     if DEBUG:
         print("Conclusion du test : {}".format(resp3))
     T.affiche_conclusion_d_un_test(resp3)
     main_conclusion = main_conclusion and resp3
 
-    print("Vérifie si la règles des protéines est respectée", end='')
+    print("Vérifie si la règles des protéines est respectée : ", end='')
     resp4 = T.verif_proteines()
     if DEBUG:
         print("Conclusion du test : {}".format(resp4))
     T.affiche_conclusion_d_un_test(resp4)
     main_conclusion = main_conclusion and resp4
 
-    print("Montants", end='')
+    print("Montants : ", end='')
     resp5 = T.verif_codes_et_montants()
     if DEBUG:
         print("Conclusion du test : {}".format(resp5))
@@ -487,7 +487,7 @@ def model_etude_1(act_lst, model_type='MOD01'):
     
     main_conclusion = main_conclusion and resp5
     
-    print("Incompatilibités", end='')
+    print("Incompatilibités : ", end='')
     resp6 = T.verif_compatibilites()
     T.affiche_conclusion_d_un_test(resp6)    
     main_conclusion = main_conclusion and resp6
@@ -535,11 +535,11 @@ def _demo_3_several_record_form_synergy():
 But : Eviter de refermer la base si possible."""
     title("DEMO 3 : several_record_form_synergy")
     import data_for_tests    
-    model_etude_1(data_for_tests.FACT1, model_type='MOD02')
-    model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
-    model_etude_1(data_for_tests.FACT2, model_type='MOD02')
-    model_etude_1(data_for_tests.FACT3, model_type='MOD02')
-    model_etude_1(data_for_tests.FACT3_INCOMP, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT1, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT2, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT3, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02')
    
 def print_version_and_date():
     """Print version and execution datetime"""
