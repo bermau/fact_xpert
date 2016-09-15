@@ -97,7 +97,7 @@ On utilise pour cela la commande attach dans Sqlite."""
                 print(line)
             return res_as_list
         
-    def affiche_liste_et_somme_theorique(self, nabm_version=43):
+    def affiche_liste_et_somme_theorique(self, nabm_version=43, verbose=None):
         """"Les actes sont-ils dans la nomenclature.
 
 Puis affiche le nombre de B."""
@@ -114,10 +114,13 @@ Puis affiche le nombre de B."""
         ON inv.invoice_list.code=N.id 
 """.format(nabm_table=self.nabm_table)
        
-        res_lst = self.affiche_etude_select(req, comment=' dans la facture')       
-        self.prt_buf('')
-        self.prt_buf('Format python :')
-        self.prt_buf(res_lst)
+        res_lst = self.affiche_etude_select(req, comment=' dans la facture')
+        if res_lst is None:
+            return
+        if verbose:
+            self.prt_buf('')
+            self.prt_buf('Format python :')
+            self.prt_buf(res_lst)
 
         self.prt_buf('')
         self.prt_buf('Format pour AMZ: ')
@@ -340,7 +343,7 @@ Pour bien tester, j'ai besoin d'actes dont le max soit de
 
 
 def get_affiche_liste_codes(code_liste):
-    """Utilisaire qui retour une liste de codes épurée.
+    """Utilitaire qui retourne une liste épurée de codes.
 
     >>> get_affiche_liste_codes(['9105', '1104', '1610', '0126', ])
     '9105 1104 1610 0126'
@@ -422,16 +425,19 @@ def model_etude_OK(act_lst, model_type='MOD01'):
 ##    title("RECHERCHER SQL")
 ##    T._sql_divers()
     
-    title("Conclusion générale")
+    title("*************** Conclusion générale : ")
     T.affiche_conclusion_d_un_test(main_conclusion)
     return not main_conclusion
 
     #T.conclude(main_conclusion)
 
-@lib_smart_stdout.record_if_true(filename='erreur.txt')
-def model_etude_1(act_lst, model_type='MOD01'):
-    """Une xexpertise mieux présentée."""
+# @lib_smart_stdout.record_if_true(filename='erreur.txt')
+def model_etude_1(act_lst, label=None, model_type='MOD01'):
+    """Une expertise mieux présentée.
 
+Retourne True si erreur, False sinon"""
+    if label:
+        print(label)
     main_conclusion = True
     print()
     print("                                 ====== > LANCEMENT EXPERTISE ")
@@ -447,7 +453,6 @@ def model_etude_1(act_lst, model_type='MOD01'):
                                         nabm_version=43)
     T.attach_invoice_database()
 
-    print("Debut tests")
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
@@ -536,8 +541,8 @@ But : Eviter de refermer la base si possible."""
     title("DEMO 3 : several_record_form_synergy")
     import data_for_tests    
     #model_etude_1(data_for_tests.FACT1, model_type='MOD02')
-    #model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
-    #model_etude_1(data_for_tests.FACT2, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT1_ERR_0578, model_type='MOD02')
+    model_etude_1(data_for_tests.FACT2, model_type='MOD02')
     #model_etude_1(data_for_tests.FACT3, model_type='MOD02')
     model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02')
    

@@ -13,6 +13,7 @@ import conf_file as Cf
 import lib_nabm # utilitaires pour la NABM
 import facturation
 import datetime, sys
+import lib_smart_stdout
 
 
 CONNEXION = '' # sera utilisé pour la connexion à la base
@@ -171,33 +172,6 @@ AND T.RESVALUE IS NOT NULL""", id  )
     return rows
 
 
-def req_main_results_from_id_A_REVOIR(id=None):
-    """Essai pour le DIM : principaux résultats de chimie et hémato.
-
-- retrouver des résultats depuis une ID.
-- Comme on ne veut que que quelques résultats, je filtre sur certains
-chapitres.
-
-Cette fonction est appelée par self.essai_flux_pour_dim().
-"""
-    cnxn = pyodbc.connect(Cf.CONNEXION_BASE_PROD)
-    cursor = cnxn.cursor()
-    output=[]
-    print("id reçu" , id)
-    cursor.execute("""SELECT P.REFHOSPNUMBER,DT.TESTCODE, DT.SHORTTEXT, T.RESVALUE, DT.UNITS, R.REQDATE
-FROM TESTS T, REQUESTS R, PATIENTS P, DICT_TESTS DT
-WHERE R.PATID=P.PATID
-AND R.ACCESSNUMBER= ?
-AND DT.CHAPID in (12,14,16,22,23,24,25,28)
-AND R.REQUESTID=T.REQUESTID
-AND DT.TESTID=T.TESTID
-AND T.RESVALUE IS NOT NULL""", id  )
-
-    rows = cursor.fetchall()  # lit toute la suite
-    cursor.close()
-    return rows
-
-
 
 def save_pickle(rows, titre, arg1, arg2):
     import pickle
@@ -212,9 +186,9 @@ def save_pickle_v2(rows, titre, *args):
     print(*args)
 
 def req_ids_from_patid(IPP, date):
-    """Liste des numéros ID long à partir d'un IPP pour une date donnée.
+    """Liste des numéros ID longs à partir d'un IPP pour une date donnée.
 
-Les arguments de date doivnent être fournis au format français. 
+Les arguments de date doivent être fournis au format français. 
 La requête retourne des dates en format ISO.
       
 """
@@ -234,32 +208,62 @@ AND R.COLLECTIONDATE BETWEEN ? AND ?
 ORDER BY R.ACCESSNUMBER
 """
     
-    cursor = CONNEXION.query(sql,(patid, date,lendemain))
+    cursor = CONNEXION.query(sql,(patid, date, lendemain))
     rows = cursor.fetchall()
     # save_pickle(rows,"ID", IPP, date)
     return rows
 
-def req_ids_of_a_collectiondate(date):
-    """Liste les ID pour une date de prélèvement."""
+
+
+
+def req_ids_of_a_collectiondate(date, location_filter=None):
+    """Liste les ID pour une date de prélèvement.
+date : format français
+On extrait aussi l'UF + filtre de service."""
 
     lendemain = le_lendemain(date)
-    sql=r"""SELECT  TOP 500 
-  R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER
+    if location_filter :
+        sql=r"""SELECT  TOP 500 
+  R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER, DL.LOCCODE
 FROM REQUESTS R
 RIGHT JOIN PATIENTS P
    ON R.PATID=P.PATID
    
+LEFT JOIN LOCATIONS L
+   ON R.REQUESTID=L.REQUESTID
+ LEFT JOIN DICT_LOCATIONS DL
+   ON L.LOCID=DL.LOCID
+   
+WHERE R.COLLECTIONDATE BETWEEN ? AND ?
+      AND DL.LOCCODE = '{}'
+ORDER BY R.ACCESSNUMBER
+""".format(location_filter)
+    else :
+        sql=r"""SELECT  TOP 500 
+  R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER, DL.LOCCODE
+FROM REQUESTS R
+RIGHT JOIN PATIENTS P
+   ON R.PATID=P.PATID
+   
+LEFT JOIN LOCATIONS L
+   ON R.REQUESTID=L.REQUESTID
+ LEFT JOIN DICT_LOCATIONS DL
+   ON L.LOCID=DL.LOCID
+   
 WHERE R.COLLECTIONDATE BETWEEN ? AND ?
 ORDER BY R.ACCESSNUMBER
-"""
+"""        
     cursor = CONNEXION.query(sql, (date, lendemain))
     rows = cursor.fetchall()
     # save_pickle(rows,"activite_par_collection", '',date)
     return rows
 
 
+@lib_smart_stdout.record_if_true(filename='erreurs.txt')
 def fac_de_IPP_date(IPP, date):
-    """Etudie les factures cumulées d'un patient pour un jour donné"""
+    """Etudie les factures cumulées d'un patient pour un jour donné
+
+Retourne True en cas d'erreur, False Sinon"""
 
     def prt_list_tab(lst):
         """Imprime une liste tabulée"""
@@ -283,29 +287,27 @@ def fac_de_IPP_date(IPP, date):
          print ("Traitement du dossier {}".format(request_id))
          cumule.extend(req_invoice(req_id=request_id))
          # a = req_invoice(req_id=request_id)
-    prt()
-    # save_pickle(cumule,"cumule", IPP, date)
+    # save_pickle(cumule, "cumule", IPP, date)
     # prt_lst(cumule)
     # Présentation de la facture cumulée (cumule) sous diverses formes
-    prt_list_tab(cumule)
+    # prt_list_tab(cumule)
 
 ##    print("Cumule vaut : ")
 ##    print(cumule) 
 ##    actes_lst = [ ligne[1] for ligne in cumule if ligne[1] ]
 ##    print("IMPORTANT : élimination des actes HN")
 ##    print(" ".join(actes_lst))
-##    print("Test de la règle des protéines:")
-##    print(lib_nabm.detecter_plus_de_deux_proteines(actes_lst))
-##    print("Test de la règle des sérologie:")
-##    print(lib_nabm.detecter_plus_de_trois_sero_hepatite_b(actes_lst))
 
     # lancer la vérification du module facturation
-    facturation.model_etude_1(cumule, model_type='MOD02')
-    
+    res = facturation.model_etude_1(cumule, model_type='MOD02')
+    # note : res vaut True si model_etude_1 a trouvé une erreur.
+    print("Résultat de {}, le {} : {}".format(IPP, date, res))
+    return res
+
 def essai_sur_base():
     """Récupérer un nom de colonne"""
     
-    cursor = CONNEXION.query(sql,None)
+    cursor = CONNEXION.query(sql, None)
     row = cursor.execute("select count(*) as user_count from users").fetchone()
     print('{} users'.format(row.user_count))
 
@@ -317,30 +319,9 @@ def get_range_of_id(date, from_id, to_id):
     """
     return [ date+str(a).rjust(5,'0') for a in range(from_id,to_id+1) ]
 
-def essai_flux_pour_dim():
-    """Création d'un fichier CSV d'essai pour le DIM."""
-    import lib_utilitaires_synergy
-    date = '60110'
-    debut = 1627
-    fin = 1636
-    nom_fichier = 'res_' + date + str(debut).rjust(5,'0') + '_' \
-                  + date + str(fin-1).rjust(5,'0') + '.csv'
-    print("Le fichier de sortie sera : {}".format(nom_fichier))
-    
-    la_liste = lib_utilitaires_synergy.get_range_of_id(date,debut,fin)
-    print(la_liste)
-    with open(nom_fichier, 'w', encoding='utf-8') as fichier:
-        for dossier in la_liste:
-            print("je traite le dossier : {}".format(dossier))
-            # les_res=req_results_from_id(id=dossier)
-            les_res = req_main_results_from_id(id=dossier)
-            for line in les_res:
-                a= str(line[0]), str(line[1]), str(line[2]),str(line[3]), \
-                   str(line[4]),line[5].strftime('%Y%m%d')
-                b= ";".join(a)
-                print(b)
-                fichier.write(b + "\n")
+
 def prt_lst(une_liste):
+    """Print a list in a readable format."""
     for line in une_liste:
         print(line)
 
@@ -359,32 +340,49 @@ def _demo_pickle():
 def _demo_facturation_pour_IPP_un_jour():
     fac_de_IPP_date(IPP='00000000000002135656', date = '29/01/2014') # B hep
     fac_de_IPP_date(IPP='00000000000002135656', date = '21/07/2009') # B div
+
+
  
 def _demo_etude_facturation_d_un_jour(french_date):
-    """Etude de Facturation pour un jour donnée.
+    """Etude de facturation pour un jour donnée.
 
-Pour un jour donnée (date en français), trouve les dossiers prélevé ce jour.
-Pour ces dossier, groupe par patient, récupère les factures et les vérifie.
-L'ordre de traitement diffère de l'ordre de création des dossiers."""
+Pour un jour donnée (date en français), trouve les dossiers prélevés ce jour.
+Ces dossiers sont groupés par patient. Récupère les factures cumulées et les
+vérifie.
+Note : l'ordre de traitement diffère de l'ordre de création des dossiers."""
     collection_date = french_date
     # Recupération de la liste des ID à un jour donné
-    lst_id = req_ids_of_a_collectiondate(collection_date)
-    prt("Le {}, {} dossiers ont été prélevés.\n".format(
-        collection_date,str(len(lst_id)) ))
-    # prt_lst(lst_id)
-    prt()
-    # Je veux : la liste des IPP des différents patients.
+    FILTER  = "6048"
+    
+    lst_id = req_ids_of_a_collectiondate(collection_date, location_filter=FILTER)
+    prt("Le {}, {} dossiers ont été prélevés sur le(s) service(s) {} .\n".format(
+        collection_date,str(len(lst_id)), FILTER ))
+    prt_lst(lst_id)
+    
     lst_IPP = [ item[4] for item in lst_id if item[4] is not None]
     prt("{} dossiers ont un IPP.\n".format(str(len(lst_IPP))))
-    aset_IPP = set(lst_IPP)
+
+    # Je veux : la liste des IPP des différents patients.
+    aset_of_IPP = set(lst_IPP)
     prt("Ces dossiers concernent {} patients avec un IPP".format(
-        str(len(aset_IPP))))
+        str(len(aset_of_IPP))))
+    
     # Pour chaque IPP, je veux l'étude de la facture le jour donné.
     # Je limite volontairement à quelques dossiers.
-    for ipp in list(aset_IPP)[4:10]:
+
+    # sub_set= list(aset_of_IPP)[4:10]
+    sub_set= list(aset_of_IPP)
+    errors = 0
+    
+    for IPP in sub_set:
     #for ipp in aset_IPP: 
-        if ipp is not None:
-            fac_de_IPP_date(ipp, collection_date)
+        if IPP is not None:
+            res = fac_de_IPP_date(IPP, collection_date)
+            if res: # True si erreur
+                errors = errors +1
+    print("Nombre d'IPP en erreur ", errors)
+    print("Nombre d'IPP vérifiées", len(sub_set)) 
+
 
 def _test():
     """Execute doctests."""
