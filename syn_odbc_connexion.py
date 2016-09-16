@@ -129,7 +129,7 @@ WHERE R.ACCESSNUMBER = ?"""
     
     cursor = CONNEXION.query(sql,(req_id))
     rows = cursor.fetchall()
-    # save_pickle(rows,"ID", IPP, date)
+    # save_as_pickle(rows,"ID", IPP, date)
     return rows
 
 
@@ -173,17 +173,6 @@ AND T.RESVALUE IS NOT NULL""", id  )
 
 
 
-def save_pickle(rows, titre, arg1, arg2):
-    import pickle
-    file_name = titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
-    with open(file_name,mode='wb') as fichier:
-         pickle.dump(rows, fichier)
-         
-def save_pickle_v2(rows, titre, *args):
-    """Sauvegarde des données"""
-    import pickle
-    file_name = titre + "_" + str(args) + "_" + str(arg2.replace("/","")) + ".pickle"
-    print(*args)
 
 def req_ids_from_patid(IPP, date):
     """Liste des numéros ID longs à partir d'un IPP pour une date donnée.
@@ -255,7 +244,7 @@ ORDER BY R.ACCESSNUMBER
 """        
     cursor = CONNEXION.query(sql, (date, lendemain))
     rows = cursor.fetchall()
-    # save_pickle(rows,"activite_par_collection", '',date)
+    save_as_pickle(rows,"activite_par_collection", '',date)
     return rows
 
 
@@ -275,6 +264,11 @@ Retourne True en cas d'erreur, False Sinon"""
     prt("Patient :   IPP : {} ". format(IPP))
     prt("Patient : venue : {} (date de prel)".format(date)) 
     dossiers_lst = req_ids_from_patid(IPP, date)
+
+    # save_pickle
+    save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
+
+    
     prt("NOM : {}    prénom : {}    NJF : {}".format(
         dossiers_lst[0][1],dossiers_lst[0][2],dossiers_lst[0][3] ))
     # Pour débugguer :          
@@ -325,6 +319,14 @@ def prt_lst(une_liste):
     for line in une_liste:
         print(line)
 
+def save_as_pickle(rows, titre, arg1, arg2):
+    import pickle
+    file_name = "pickle/"+titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
+    with open(file_name, mode='wb') as fichier:
+         pickle.dump(rows, fichier)
+         
+
+
 def _demo_pickle():
     import pickle
     file_name=r'data.pickle'
@@ -355,6 +357,7 @@ Note : l'ordre de traitement diffère de l'ordre de création des dossiers."""
     FILTER  = "6048"
     
     lst_id = req_ids_of_a_collectiondate(collection_date, location_filter=FILTER)
+    save_as_pickle(lst_id,"demo_lst_id", '', french_date)
     prt("Le {}, {} dossiers ont été prélevés sur le(s) service(s) {} .\n".format(
         collection_date,str(len(lst_id)), FILTER ))
     prt_lst(lst_id)
@@ -370,7 +373,7 @@ Note : l'ordre de traitement diffère de l'ordre de création des dossiers."""
     # Pour chaque IPP, je veux l'étude de la facture le jour donné.
     # Je limite volontairement à quelques dossiers.
 
-    # sub_set= list(aset_of_IPP)[4:10]
+    #sub_set= list(aset_of_IPP)[4:10]
     sub_set= list(aset_of_IPP)
     errors = 0
     
@@ -395,5 +398,6 @@ if __name__=='__main__':
     #_test()
     
     
-    _demo_etude_facturation_d_un_jour("01/09/2016")
+    # _demo_etude_facturation_d_un_jour("02/06/2016") # plante
+    _demo_etude_facturation_d_un_jour("05/06/2016") # plante
     del(CONNEXION)
