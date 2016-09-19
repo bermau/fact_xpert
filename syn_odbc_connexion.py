@@ -6,10 +6,13 @@ Pour que le programme fontionne il faut créer une connexion avec la base:
 CONNEXION = MyODBC_to_infocentre()
 ... le programme
 del(CONNEXION)
+
+Ce programme sauve uniquement les fichiers en erreurs.
 """
 
 import pyodbc
 import conf_file as Cf
+import bm_u 
 import lib_nabm # utilitaires pour la NABM
 import facturation
 import datetime, sys
@@ -17,6 +20,11 @@ import lib_smart_stdout
 
 
 CONNEXION = '' # sera utilisé pour la connexion à la base
+SAVE_PICKLE = False # True poru sauver les donnes en format pickle.
+# Nom du fichier de sauvegarde de la sauvegarde intelligente.
+SMART_NAME_EXPORT = "err_"+datetime.date.today().strftime("%Y_%m_%d")+".txt"
+# Nom complet pour le rapport.
+REPORT= Cf.EXPORT_REP + SMART_NAME_EXPORT
 
 class MyODBC_to_infocentre(object):
     """Une classe pour gérer la connexion"""
@@ -59,6 +67,16 @@ def le_lendemain(jour_fr_str):
     
     return demain.date().strftime('%d/%m/%Y')
     
+def quoted_joiner(lst):
+    """
+    >>> quoted_joiner([ 6048, 2015, 'UHCD'])
+    "'6048', '2015', 'UHCD'"
+    
+"""
+    quoted_strings_lst = [ "'"+str(code)+"'" for code in lst] 
+    return ", ".join(quoted_strings_lst)
+
+
 
 def req_example_via_class(dos_id=None):
     """Un exemple de requête vers infocentre
@@ -172,8 +190,6 @@ AND T.RESVALUE IS NOT NULL""", id  )
     return rows
 
 
-
-
 def req_ids_from_patid(IPP, date):
     """Liste des numéros ID longs à partir d'un IPP pour une date donnée.
 
@@ -202,53 +218,47 @@ ORDER BY R.ACCESSNUMBER
     # save_pickle(rows,"ID", IPP, date)
     return rows
 
-
-
-
+# def req_ids_of_a_collectiondate(date, location_filter=None, location_list_filter=None):
 def req_ids_of_a_collectiondate(date, location_filter=None):
     """Liste les ID pour une date de prélèvement.
 date : format français
+location_filter : str ou list of str.
+Exemples :   
+    location_filter = '6048',
+    location_filter = ['6048','2001']
 On extrait aussi l'UF + filtre de service."""
 
     lendemain = le_lendemain(date)
-    if location_filter :
-        sql=r"""SELECT  TOP 500 
+    sql_start = r"""SELECT  TOP 500 
   R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER, DL.LOCCODE
 FROM REQUESTS R
 RIGHT JOIN PATIENTS P
-   ON R.PATID=P.PATID
-   
+   ON R.PATID=P.PATID 
 LEFT JOIN LOCATIONS L
    ON R.REQUESTID=L.REQUESTID
  LEFT JOIN DICT_LOCATIONS DL
    ON L.LOCID=DL.LOCID
-   
-WHERE R.COLLECTIONDATE BETWEEN ? AND ?
-      AND DL.LOCCODE = '{}'
-ORDER BY R.ACCESSNUMBER
-""".format(location_filter)
-    else :
-        sql=r"""SELECT  TOP 500 
-  R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER, DL.LOCCODE
-FROM REQUESTS R
-RIGHT JOIN PATIENTS P
-   ON R.PATID=P.PATID
-   
-LEFT JOIN LOCATIONS L
-   ON R.REQUESTID=L.REQUESTID
- LEFT JOIN DICT_LOCATIONS DL
-   ON L.LOCID=DL.LOCID
-   
-WHERE R.COLLECTIONDATE BETWEEN ? AND ?
-ORDER BY R.ACCESSNUMBER
-"""        
+WHERE R.COLLECTIONDATE BETWEEN ? AND ?"""
+    
+    if isinstance(location_filter, str) :
+        
+        sql=sql_start +r"""
+AND DL.LOCCODE = '{}' ORDER BY R.ACCESSNUMBER""".format(location_filter)
+    elif  isinstance(location_filter, list) :
+        sql=sql_start +r"""
+AND DL.LOCCODE in  ({}) ORDER BY R.ACCESSNUMBER""".format(quoted_joiner(location_filter))
+    else:
+        print("Filtre UF est faux : ", location_filter)
+        sql=sql_start +r"""
+ORDER BY R.ACCESSNUMBER"""
+
     cursor = CONNEXION.query(sql, (date, lendemain))
     rows = cursor.fetchall()
     save_as_pickle(rows,"activite_par_collection", '',date)
     return rows
 
 
-@lib_smart_stdout.record_if_true(filename='erreurs.txt')
+@lib_smart_stdout.record_if_true(filename=REPORT)
 def fac_de_IPP_date(IPP, date):
     """Etudie les factures cumulées d'un patient pour un jour donné
 
@@ -259,16 +269,18 @@ Retourne True en cas d'erreur, False Sinon"""
         for line in lst:
             a = [ str(mot) for mot in line ]
             print("\t".join(a))
-    prt()
-    prt("************************************************************")
+    prt() ;  prt() ;  prt()
+    prt("***************************************************************************************")
+    bm_u.title("Nouvelle étude")
     prt("Patient :   IPP : {} ". format(IPP))
     prt("Patient : venue : {} (date de prel)".format(date)) 
     dossiers_lst = req_ids_from_patid(IPP, date)
 
+    # Qui a saisit le dossier ?
+
     # save_pickle
     save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
 
-    
     prt("NOM : {}    prénom : {}    NJF : {}".format(
         dossiers_lst[0][1],dossiers_lst[0][2],dossiers_lst[0][3] ))
     # Pour débugguer :          
@@ -280,23 +292,53 @@ Retourne True en cas d'erreur, False Sinon"""
     for request_id in request_id_lst:
          print ("Traitement du dossier {}".format(request_id))
          cumule.extend(req_invoice(req_id=request_id))
-         # a = req_invoice(req_id=request_id)
-    # save_pickle(cumule, "cumule", IPP, date)
-    # prt_lst(cumule)
-    # Présentation de la facture cumulée (cumule) sous diverses formes
-    # prt_list_tab(cumule)
-
-##    print("Cumule vaut : ")
-##    print(cumule) 
-##    actes_lst = [ ligne[1] for ligne in cumule if ligne[1] ]
-##    print("IMPORTANT : élimination des actes HN")
-##    print(" ".join(actes_lst))
 
     # lancer la vérification du module facturation
     res = facturation.model_etude_1(cumule, model_type='MOD02')
+    # si l'étude du cumule montre une erreur, il faut identifier ceux qui ont enregistré.
+    #     Le pb est que l'on ne l'enregistre pas !
+    # l'audit est à faire sur les dossiers en erreur, c'est à dire ceux dont res vaut True
+    if res:
+        print("Dossiers enregistrés par : ")
+        for dossier in  dossiers_lst:
+            print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))
+        
+    
     # note : res vaut True si model_etude_1 a trouvé une erreur.
-    print("Résultat de {}, le {} : {}".format(IPP, date, res))
+    # print("Résultat de {}, le {} : {}".format(IPP, date, res))
     return res
+
+def req_audit_trail_for_id(id_str):
+    """Retourne l'enregistreur d'un dossier
+    >>> req_audit_trail_for_id('6060248167')
+    'JC'
+
+    """
+    sql = r"""SELECT STEPDATE,
+STEPTYPE, ATR_ACCESSNUMBER, INITUSER, LIS_SESSION, INITUSER2, VALIDATION
+FROM AUDIT_TRAIL
+WHERE ATR_ACCESSNUMBER = ?
+AND STEPTYPE=1
+"""
+    cursor = CONNEXION.query(sql, (id_str,))
+    rows = cursor.fetchone()
+    if rows:
+       print(rows)
+       return(rows.INITUSER) 
+
+def req_full_audit_trail_for_id(id_str):
+    """Retourne l'audit assez complet d'un dossier"""
+    sql = r"""SELECT 
+STEPDATE, STEPTYPE, ATR_ACCESSNUMBER, INITUSER, LIS_SESSION, INITUSER2, VALIDATION
+FROM AUDIT_TRAIL
+WHERE ATR_ACCESSNUMBER = ?
+ORDER BY STEPTYPE
+"""
+    cursor = CONNEXION.query(sql, (id_str))
+    rows = cursor.fetchall()
+    for line in rows:
+        print(line)    
+
 
 def essai_sur_base():
     """Récupérer un nom de colonne"""
@@ -306,7 +348,7 @@ def essai_sur_base():
     print('{} users'.format(row.user_count))
 
 def get_range_of_id(date, from_id, to_id):
-    """Retourne une séquence de dossier pour un jour donné.
+    """Retourne une séquence de dossiers pour un jour donné.
 
     >>> get_range_of_id('60201',117, 119 )
     ['6020100117', '6020100118', '6020100119']
@@ -320,13 +362,12 @@ def prt_lst(une_liste):
         print(line)
 
 def save_as_pickle(rows, titre, arg1, arg2):
-    import pickle
-    file_name = "pickle/"+titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
-    with open(file_name, mode='wb') as fichier:
-         pickle.dump(rows, fichier)
+    if SAVE_PICKLE:
+        import pickle
+        file_name = "pickle/"+titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
+        with open(file_name, mode='wb') as fichier:
+             pickle.dump(rows, fichier)
          
-
-
 def _demo_pickle():
     import pickle
     file_name=r'data.pickle'
@@ -343,48 +384,53 @@ def _demo_facturation_pour_IPP_un_jour():
     fac_de_IPP_date(IPP='00000000000002135656', date = '29/01/2014') # B hep
     fac_de_IPP_date(IPP='00000000000002135656', date = '21/07/2009') # B div
 
-
  
-def _demo_etude_facturation_d_un_jour(french_date):
+def _demo_etude_facturation_d_un_jour(french_date,  uf_filter=None):
     """Etude de facturation pour un jour donnée.
 
 Pour un jour donnée (date en français), trouve les dossiers prélevés ce jour.
 Ces dossiers sont groupés par patient. Récupère les factures cumulées et les
 vérifie.
+uf_filter='6048'
+uf_filter=[ 6048, 2105, 'UHCD']
 Note : l'ordre de traitement diffère de l'ordre de création des dossiers."""
     collection_date = french_date
     # Recupération de la liste des ID à un jour donné
-    FILTER  = "6048"
-    
-    lst_id = req_ids_of_a_collectiondate(collection_date, location_filter=FILTER)
-    save_as_pickle(lst_id,"demo_lst_id", '', french_date)
-    prt("Le {}, {} dossiers ont été prélevés sur le(s) service(s) {} .\n".format(
-        collection_date,str(len(lst_id)), FILTER ))
-    prt_lst(lst_id)
-    
-    lst_IPP = [ item[4] for item in lst_id if item[4] is not None]
-    prt("{} dossiers ont un IPP.\n".format(str(len(lst_IPP))))
+    # La sortie standard du niveau ci dessous est redirigée 
+    with lib_smart_stdout.PersistentStdout(filename=REPORT) as buf:
+        facturation.print_version_and_date()
+        lst_id = req_ids_of_a_collectiondate(collection_date,
+                                             location_filter=uf_filter)
+        save_as_pickle(lst_id,"demo_lst_id", '', french_date)  
+        prt("Le {}, {} dossiers ont été prélevés sur le(s) \
+service(s) {} .\n".format(collection_date,str(len(lst_id)), uf_filter)) 
+        prt_lst(lst_id)
+        lst_IPP = [ item[4] for item in lst_id if item[4] is not None]
+        prt("{} dossiers ont un IPP.\n".format(str(len(lst_IPP))))
 
-    # Je veux : la liste des IPP des différents patients.
-    aset_of_IPP = set(lst_IPP)
-    prt("Ces dossiers concernent {} patients avec un IPP".format(
-        str(len(aset_of_IPP))))
-    
+        # Je veux : la liste des IPP des différents patients.
+        aset_of_IPP = set(lst_IPP)
+        prt("Ces dossiers concernent {} patients avec un IPP".format(
+            str(len(aset_of_IPP))))
+        print("Ci dessous, seuls les dossiers avec erreur sont enregistrés.")
+        print("Note : l'ordre de traitement des dossiers n'est pas fixe.")
+        buf.important = True # force l'enregistrement du buffer.
     # Pour chaque IPP, je veux l'étude de la facture le jour donné.
-    # Je limite volontairement à quelques dossiers.
-
-    #sub_set= list(aset_of_IPP)[4:10]
+    # Je limite volontairement à quelques dossiers.      
+    #sub_set= list(aset_of_IPP)[4:10] # pour la mise au point
     sub_set= list(aset_of_IPP)
     errors = 0
-    
     for IPP in sub_set:
     #for ipp in aset_IPP: 
         if IPP is not None:
             res = fac_de_IPP_date(IPP, collection_date)
             if res: # True si erreur
                 errors = errors +1
-    print("Nombre d'IPP en erreur ", errors)
-    print("Nombre d'IPP vérifiées", len(sub_set)) 
+    with lib_smart_stdout.PersistentStdout(filename=REPORT) as buf:
+        bm_u.title("Conclusion finale")
+        print("Nombre d'IPP en erreur ", errors)
+        print("Nombre d'IPP vérifiées", len(sub_set))
+        buf.important = True
 
 
 def _test():
@@ -395,9 +441,11 @@ def _test():
     
 if __name__=='__main__':
     CONNEXION = MyODBC_to_infocentre()
-    #_test()
+    # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
+    #_test()   
+    _demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
+    #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
+    #_demo_etude_facturation_d_un_jour("05/06/2016")
+    req_audit_trail_for_id('6060248167')
     
-    
-    # _demo_etude_facturation_d_un_jour("02/06/2016") # plante
-    _demo_etude_facturation_d_un_jour("05/06/2016") # plante
     del(CONNEXION)
