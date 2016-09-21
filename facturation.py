@@ -190,7 +190,6 @@ possible si MOD02
 
 -> True si pas d'anomalie, False sinon."""
         noerror = True
-        # self.prt_buf("Certains codes sont-ils présents plus d'une fois ?");
         req="""SELECT  code, count(code) AS 'occurence', N.MaxCode
                FROM inv.invoice_list
                LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
@@ -297,11 +296,19 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)
             for row2 in cur2:
+                
                 print("\n          ***** Erreur d'incompatibilité    ****")
-                for a in row2:
-                    sys.stdout.write(str(a)+" ")
-                print()
+                # PEU EFFICIENT :  MAL ECRIT.
+                print("Acte {} {} {} codé par {} ". format(row2[2],
+                                                             row2[5],
+                                                             row2[4],
+                                                             row2[3]))
+##                for a in row2:
+##                    sys.stdout.write(str(a)+" ")
+##                print()
                 noerror = False
+        if not noerror:
+            print("Conseil : conserver l'acte le plus cher.")
         return noerror    
         
     def _rech_code(self): 
@@ -355,77 +362,6 @@ def get_affiche_liste_codes(code_liste):
 
 DEBUG = False
 
-# @lib_smart_stdout.record_if_true(filename='erreur.txt')
-def model_etude_1_OK(act_lst, label=None, model_type='MOD01', nabm_version=None):
-    """Une expertise mieux présentée.
-Si nabm_version n'est pas défini, utilise version la plus récente.
-
-Retourne True si erreur, False sinon."""
-    if label:
-        print(label)
-    main_conclusion = True
-    print_version_and_date()
-    if DEBUG:
-        print("ACTES etudiés", act_lst)
-    if nabm_version is None:
-        nabm_version=43
-        
-    act_ref = lib_nabm.Nabm()
-    invoice = lib_invoice.Invoice(model_type=model_type)
-    invoice.load_invoice_list(act_lst)
-    # invoice.show_data()
-
-    T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
-                                        nabm_version=nabm_version)
-    T.attach_invoice_database()
-    title("Affichage")
-    T.affiche_liste_et_somme_theorique()
-    title("Vérifications")
-    print("Codes exsitants dans la NABM :      ", end='')    
-    resp1 = T.verif_tous_codes_dans_nabm()
-    if DEBUG:
-        print("Réponse du test :", resp1)
-    T.affiche_conclusion_d_un_test(resp1)
-    main_conclusion = main_conclusion and resp1
-
-    print("Répétition de codes :               ", end='')
-    resp2 = T.verif_actes_trop_repetes()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp2))
-    T.affiche_conclusion_d_un_test(resp2)
-    main_conclusion = main_conclusion and resp2
-
-    print("Règle des sérologie hépatites :     ", end='')
-    resp3 = T.verif_hepatites_B()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp3))
-    T.affiche_conclusion_d_un_test(resp3)
-    main_conclusion = main_conclusion and resp3
-
-    print("Règle des protéines :               ", end='')
-    resp4 = T.verif_proteines()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp4))
-    T.affiche_conclusion_d_un_test(resp4)
-    main_conclusion = main_conclusion and resp4
-
-    print("Montants :                          ", end='')
-    resp5 = T.verif_codes_et_montants()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp5))
-    T.affiche_conclusion_d_un_test(resp5)
-    
-    main_conclusion = main_conclusion and resp5
-    
-    print("Incompatilibités :                  ", end='')
-    resp6 = T.verif_compatibilites()
-    T.affiche_conclusion_d_un_test(resp6)    
-    main_conclusion = main_conclusion and resp6
-    
-    print("Conclusion générale : ", end='')
-    T.affiche_conclusion_d_un_test(main_conclusion)
-    return not main_conclusion
-    #T.conclude(main_conclusion)
 
 # @lib_smart_stdout.record_if_true(filename='erreur.txt')
 def model_etude_1(act_lst, label=None, model_type='MOD01',
@@ -452,7 +388,7 @@ Retourne True si erreur, False sinon."""
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
-    print("Codes exsitants dans la NABM :      ", end='')    
+    print("Codes existants dans la NABM :      ", end='')    
     resp1 = T.verif_tous_codes_dans_nabm()
     if DEBUG:
         print("Réponse du test :", resp1)
@@ -524,8 +460,9 @@ La facture vient par exmeple du programme syn_odbc_connexion.py
 """
     title("DEMO 2")
     import data_for_tests
-    model_2 = data_for_tests.FACT2
-    model_etude_1(model_2, model_type='MOD02')
+    model_2 = data_for_tests.FACT6_PROT
+    model_etude_1(model_2, model_type='MOD02', nabm_version=42)
+ 
 
 
 def _demo_3_several_record_form_synergy():
@@ -541,7 +478,7 @@ But : Eviter de refermer la base si possible."""
                   nabm_version=41)
     #model_etude_1(data_for_tests.FACT2, model_type='MOD02')
     #model_etude_1(data_for_tests.FACT3, model_type='MOD02')
-    #model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02')
+    #model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02', nabm_version=)
    
 def print_version_and_date():
     """Print version and execution datetime"""
@@ -568,8 +505,8 @@ if __name__=='__main__':
 
     #_test()
     #_demo_1_for_simple_list()
-    # _demo_2_data_from_synergy()
-    _demo_3_several_record_form_synergy()
+    _demo_2_data_from_synergy()
+    # _demo_3_several_record_form_synergy()
     # saisie_manuelle()
     pass
     

@@ -17,6 +17,7 @@ import lib_nabm # utilitaires pour la NABM
 import facturation
 import datetime, sys
 import lib_smart_stdout
+import lib_synergy # utilitaires pour Synergy
 
 
 CONNEXION = '' # sera utilisé pour la connexion à la base
@@ -258,55 +259,6 @@ ORDER BY R.ACCESSNUMBER"""
     return rows
 
 
-@lib_smart_stdout.record_if_true(filename=REPORT)
-def fac_de_IPP_date(IPP, date):
-    """Etudie les factures cumulées d'un patient pour un jour donné
-
-Retourne True en cas d'erreur, False Sinon"""
-
-    def prt_list_tab(lst):
-        """Imprime une liste tabulée"""
-        for line in lst:
-            a = [ str(mot) for mot in line ]
-            print("\t".join(a))
-    prt() ;  prt() ;  prt()
-    prt("***************************************************************************************")
-    bm_u.title("Nouvelle étude")
-    prt("Patient :   IPP : {} ". format(IPP))
-    prt("Patient : venue : {} (date de prel)".format(date)) 
-    dossiers_lst = req_ids_from_patid(IPP, date)
-
-    # Qui a saisit le dossier ?
-
-    # save_pickle
-    save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
-
-    prt("NOM : {}    prénom : {}    NJF : {}".format(
-        dossiers_lst[0][1],dossiers_lst[0][2],dossiers_lst[0][3] ))
-    # Pour débugguer :          
-    # dossiers_lst = [('9072132939', ), ('9072132971', )]
-    request_id_lst = [ ligne[0] for ligne in dossiers_lst ]
-    prt()
-    prt("Liste des dossiers Synergy à traiter : \n{}".format(request_id_lst)) ; prt()
-    cumule = []
-    for request_id in request_id_lst:
-         print ("Traitement du dossier {}".format(request_id))
-         cumule.extend(req_invoice(req_id=request_id))
-
-    # lancer la vérification du module facturation
-    res = facturation.model_etude_1(cumule, model_type='MOD02')
-    # si l'étude du cumule montre une erreur, il faut identifier ceux qui ont enregistré.
-    #     Le pb est que l'on ne l'enregistre pas !
-    # l'audit est à faire sur les dossiers en erreur, c'est à dire ceux dont res vaut True
-    if res:
-        print("Dossiers enregistrés par : ")
-        for dossier in  dossiers_lst:
-            print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))
-        
-    
-    # note : res vaut True si model_etude_1 a trouvé une erreur.
-    # print("Résultat de {}, le {} : {}".format(IPP, date, res))
-    return res
 
 def req_audit_trail_for_id(id_str):
     """Retourne l'enregistreur d'un dossier
@@ -367,6 +319,66 @@ def save_as_pickle(rows, titre, arg1, arg2):
         file_name = "pickle/"+titre + "_" + str(arg1) + "_" + str(arg2.replace("/","")) + ".pickle"
         with open(file_name, mode='wb') as fichier:
              pickle.dump(rows, fichier)
+
+
+@lib_smart_stdout.record_if_true(filename=REPORT)
+def fac_de_IPP_date(IPP, date, nabm_version=None):
+#def fac_de_IPP_date(IPP, date, nabm_version=Cf.NABM_DEFAULT_VERSION):
+    """Etudie les factures cumulées d'un patient pour un jour donné
+la date doit être au format français type 31/12/2016.
+Retourne True en cas d'erreur, False Sinon"""
+
+    def prt_list_tab(lst):
+        """Imprime une liste tabulée"""
+        for line in lst:
+            a = [ str(mot) for mot in line ]
+            print("\t".join(a))
+    # verifier ou corriger les entrées
+    IPP=lib_synergy.verif_IPP(IPP)
+    prt("***************************************************************************")
+    bm_u.title("Nouvelle étude d'IPP à une date donnée")
+    if not bm_u.date_is_fr(date):
+        print("Erreur saisie de date :", IPP, date)
+    elif  nabm_version is None:
+        nabm_version = lib_nabm.nabm_version_from_dt(lib_nabm.frdate2datetime(date))
+        print("NABM sera déduite de la date : ", nabm_version)
+        prt("Patient :   IPP : {} ". format(IPP))
+        prt("Patient : venue : {} (date de prel)".format(date)) 
+        dossiers_lst = req_ids_from_patid(IPP, date)
+        # print(dossiers_lst)
+        if dossiers_lst:            
+            # save_pickle
+            save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
+
+            prt("NOM : {}    prénom : {}    NJF : {}".format(
+                dossiers_lst[0][1],dossiers_lst[0][2],dossiers_lst[0][3] ))
+            # Pour débugguer :          
+            # dossiers_lst = [('9072132939', ), ('9072132971', )]
+            request_id_lst = [ ligne[0] for ligne in dossiers_lst ]
+            prt()
+            prt("Liste des dossiers Synergy à traiter : \n{}".format(request_id_lst)) ; prt()
+            cumule = []
+            for request_id in request_id_lst:
+                 print ("Traitement du dossier {}".format(request_id))
+                 cumule.extend(req_invoice(req_id=request_id))        
+            # lancer la vérification du module facturation
+            res = facturation.model_etude_1(cumule, model_type='MOD02',
+                                            nabm_version=nabm_version)
+            # si l'étude du cumule montre une erreur, il faut identifier ceux qui ont enregistré.
+            #     Le pb est que l'on ne l'enregistre pas !
+            # l'audit est à faire sur les dossiers en erreur, c'est à dire ceux dont res vaut True
+            if res:
+                print("Dossiers enregistrés par : ")
+                for dossier in  dossiers_lst:
+                    print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))
+                
+            
+            # note : res vaut True si model_etude_1 a trouvé une erreur.
+            # print("Résultat de {}, le {} : {}".format(IPP, date, res))
+            return res
+        else:
+            print("Requête vide")
+            return True # (car erreur)
          
 def _demo_pickle():
     import pickle
@@ -432,7 +444,6 @@ service(s) {} .\n".format(collection_date,str(len(lst_id)), uf_filter))
         print("Nombre d'IPP vérifiées", len(sub_set))
         buf.important = True
 
-
 def _test():
     """Execute doctests."""
     import doctest
@@ -443,9 +454,16 @@ if __name__=='__main__':
     CONNEXION = MyODBC_to_infocentre()
     # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
     #_test()   
-    _demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
+    #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
     #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     #_demo_etude_facturation_d_un_jour("05/06/2016")
-    req_audit_trail_for_id('6060248167')
-    
-    del(CONNEXION)
+    #req_audit_trail_for_id('6060248167')
+    #fac_de_IPP_date(IPP='0000000000001951052', date = '12/07/2016', nabm_version=43)
+    #fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
+    #fac_de_IPP_date(IPP='1005841021', date = '12/07/2016') # requête vide, mais ne plante pas
+    fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
+    fac_de_IPP_date(IPP='100584102', date = '33/07/2016')
+
+    # 20/04/2016	486423
+    fac_de_IPP_date(IPP='486423', date = '20/04/2016')
+    # del(CONNEXION)

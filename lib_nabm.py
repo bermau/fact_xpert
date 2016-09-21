@@ -12,6 +12,7 @@ import lib_sqlite
 import conf_file as Cf
 import sys
 from bm_u import title as titrer
+import datetime
 
 PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
                 '1809', '1810', '1811', '1812', '1813', '1814', '1815',
@@ -45,17 +46,7 @@ def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
     """
     return _detect_more_than_n_objects_in_a_list(actes_lst, HEP_B_LST_REF, 3)
 
-def _demo():
-    """Une démonstration des possibilité de ce module"""
-    a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
-    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
-    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
-    '0323','2145', '4332', '4355', '4362', '4362']
-    print("Voilà une liste d'actes : ", a)
-    print("Test des protéines : ")
-    print(detecter_plus_de_deux_proteines(a))
-    print("Test des sérologies Hépatite B :")
-    print(detecter_plus_de_trois_sero_hepatite_b(a))    
+  
 
 def get_name_of_nabm_files(nabm_version):
     """Renvoie le nom des tables de la nabm en fonction de la version.
@@ -71,6 +62,64 @@ def get_name_of_nabm_files(nabm_version):
                42:('nabm42', 'incompatibility42'),
           }
     return tables[int(nabm_version)]
+
+    
+def nabm_version_from_dt(dt):
+    """Retourne le numéro de version de nabm pour un datetime.
+
+A AMELIORER.
+
+    >>> nabm_version_from_dt(frdate2datetime('14/04/2014'))
+    41
+    >>> nabm_version_from_dt(datetime.date(2014,4,18))
+    41
+    >>> nabm_version_from_dt(datetime.date(2016,4,19))
+    42
+    >>> nabm_version_from_dt(datetime.date(2016,4,20))
+    43
+    >>> nabm_version_from_dt(datetime.date(2016,4,25))
+    43
+    >>> nabm_version_from_dt(datetime.date(2000,4,19))
+    'avant'
+"""
+    """
+    
+NABM_38_exigible_17_avr_2013
+NABM_39_exigible_11_juilet_2013
+NABM_40 
+NABM_41_exigible_14_avril_2014
+NABM_42_exigible_au_04_sept_2014
+NABM_43_exigible_20_avril_2016
+"""
+    table = [
+        [datetime.date(2014, 4, 14), 41],
+        [datetime.date(2014, 9, 4), 42],
+        [datetime.date(2016, 4, 20), 43],
+        ]
+    
+    prec = table[0]
+    if dt < prec[0]:
+        return 'avant'
+    else:
+        for line in table:
+            if dt < line[0]:
+                return prec[1]
+            else:
+                prec = line
+        return prec[1]
+
+
+# get_nabm_version_from_fr_date(datetime.date())   
+def frdate2datetime(fr_date):
+    """Return a datetime.date from a french date
+Entrée : 01/02/2016
+    >>> frdate2datetime("02/05/2015")
+    datetime.date(2015, 5, 2)
+"""
+    year = int(fr_date[6:10]) # On convertit la chaine de caractère en integer   
+    month = int(fr_date[3:5])
+    day = int(fr_date[0:2])
+    return datetime.date(year, month, day)
 
 
 class Nabm():
@@ -116,6 +165,18 @@ Ne semble plus servir à rien.
     def __del__(self):
         self.NABM_DB.close()
         # print("POURQUOI ? Fermeture de la base {base} terminée".format(base=Cf.NABM_DB))
+
+def _demo():
+    """Une démonstration des possibilité de ce module"""
+    a = ['9105', '1104', '1610', '0126', '1127', '0174', '9005',
+    '0996','0552', '1208', '0593', '0578', '0512','0352', '0353',
+    '1245', '1806', '1207', '9105', '4340', '1465', '0322',
+    '0323','2145', '4332', '4355', '4362', '4362']
+    print("Voilà une liste d'actes : ", a)
+    print("Test des protéines : ")
+    print(detecter_plus_de_deux_proteines(a))
+    print("Test des sérologies Hépatite B :")
+    print(detecter_plus_de_trois_sero_hepatite_b(a))  
                            
 def _test():
     """Execute doctests."""
@@ -123,5 +184,5 @@ def _test():
     doctest.testmod(verbose=True)
 
 if __name__=='__main__':
-    # _test()
-    Nabm()
+    _test()
+    # Nabm()

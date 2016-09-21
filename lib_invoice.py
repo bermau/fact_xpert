@@ -97,7 +97,7 @@ Record is as followinf : [('5305051750', '1610', 'SIONO', 24, 'B') ... ]"""
         """Constitue une table (id, acte_1), (id, acte_2) ...
 Adapté au modèle MOD02."""
         self.act_list = act_list
-        sys.stderr.write("Loading data\n")
+        # sys.stderr.write("Loading data\n")
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
         for line in act_list:
             print(line)

@@ -15,3 +15,6 @@ Le nom du fichier de la sortie est déduit de la date d'exécution.
 Correction d'un bug : cas où l'acte retourne None est corrigé.
 Mise en place d'une possibilité pour identifier la personne ayant enregistré le dossier.
 
+0.07 : Début de mise en place d'un traitement en liste pour Synergy. Le fichier n'est 
+pas encore inclus dans cette version.
+

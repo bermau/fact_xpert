@@ -76,12 +76,12 @@ class GestionBD:
     def commit(self):
         # if self.con: # ??
         self.con.commit()         # transfert curseur -> disque
-        # print("Database modified")
+
     def close(self):
         pass
         if self.con:
             self.con.close()
-            sys.stderr.write("Database {} has been closed\n".format(self.dbname))
+            # sys.stderr.write("Database {} has been closed\n".format(self.dbname))
 
 if __name__ == '__main__': 
     print("Connexion à base de donnée")
