@@ -5,7 +5,7 @@ la fonction verif_actes_trop_repetes.
 
 0.03 : correction de la base de données
 
-0.04 : correction d'un bug sur le nombre de codes maximums.
+0.04 : correction d'un bug sur le nombre de codes maximums(erreurs par excès).
 
 0.05 : mise en place de traitement d'une journée pour un service.
 Amélioration de la sortie intelligente (ou contextuelle).
@@ -17,4 +17,8 @@ Mise en place d'une possibilité pour identifier la personne ayant enregistré l
 
 0.07 : Début de mise en place d'un traitement en liste pour Synergy. Le fichier n'est 
 pas encore inclus dans cette version.
+
+0.08 : bug corrigé : correction de la détection des règles protéines et 
+sérologies. Explication : le bug était lié à une mauvaise initialisation de 
+invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests. 
 

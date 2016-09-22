@@ -47,7 +47,8 @@ test, sont des tests unitaires."""
         print("Setting Up Class environment")
 
     def setUp(self):
-       """Crée l'environnemnt en ouvrant l'application et insère une chaine dans la premier fenetre"""
+       """Crée l'environnemnt en ouvrant l'application et insère une chaine dans
+la premier fenetre"""
        print("SetUp environment")
        autre_actes_ok = ['0323', '9105', '1208']
        
@@ -55,15 +56,16 @@ test, sont des tests unitaires."""
         print("Tearing down environment.\n")
 
                          
-    def common_set_of_tests(self, facture=acts_unknown_1515):
+    def common_set_of_tests(self, facture=acts_unknown_1515, model_type='MOD01',
+                            nabm_version=43):
         """Une fonction pour aider à écrire des tests."""
         self.act_ref=Nabm()
         print("La facture étudiée est ", facture)
-        self.invoice = lib_invoice.Invoice(model_type='MOD01')
+        self.invoice = lib_invoice.Invoice(model_type=model_type)
         self.invoice.load_invoice_list(facture)
         self.test = TestInvoiceAccordingToReference(self.invoice,
                                                     self.act_ref.NABM_DB,
-                                                    nabm_version=43)
+                                                    nabm_version=nabm_version)
         self.test.attach_invoice_database()
         
     def test_01_toujours_correct(self):
@@ -122,6 +124,32 @@ test, sont des tests unitaires."""
         self.assertFalse(rep)
         (rep2, void2) = detecter_plus_de_deux_proteines(facture)
         self.assertFalse(rep2)
+
+    def test_11_nabm_MOD02(self):
+        """Facture avec une facture de type MOD02.
+Erreur prot"""
+        # facture = FACT6_PROT_ERR
+        self.common_set_of_tests(facture=FACT6_PROT_ERR_MONTANT_ERR,
+                                 nabm_version=42,
+                                 model_type='MOD02'
+                                 )
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
+        self.assertFalse(self.test.verif_codes_et_montants(nabm_version=42))
+        self.assertTrue(self.test.verif_hepatites_B())
+        self.assertFalse(self.test.verif_proteines())
+        
+    def test_12_nabm_MOD02(self):
+        """Facture avec une facture de type MOD02.
+Erreur prot et erreur hépatites"""
+        # facture = FACT6_PROT_ERR
+        self.common_set_of_tests(facture=FACT6_PROT_ERR_HEP_ERR_MONTANT_ERR,
+                                 nabm_version=42,
+                                 model_type='MOD02'
+                                 )
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
+        self.assertFalse(self.test.verif_codes_et_montants(nabm_version=42))
+        self.assertFalse(self.test.verif_hepatites_B())
+        self.assertFalse(self.test.verif_proteines())
         
 def test_suite():
     """retourne la liste des tests à traiter."""

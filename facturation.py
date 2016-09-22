@@ -25,7 +25,7 @@ def sub_title(msg):
     print("     **** "+msg+" ***")
 
 def advice(msg):
-    print("*** CONSEIL *** :    +"+msg + "   ****")
+    print("*** CONSEIL *** :", msg, "***")
    
 
 class TestInvoiceAccordingToReference():
@@ -223,7 +223,7 @@ possible si MOD02
                                             comment=' classées par valeurs')
         col0 = [ ligne[0] for ligne in res_lst ]
         trois_plus_chers = col0[0:max_allowed]
-        print("Conseil : garder"  + str(trois_plus_chers))
+        advice("Garder"  + str(trois_plus_chers))
 
     def print_recommandation_erreur_hepatites(self, act_lst):
         """Affiche une solution pour la règle des séro hépatites."""
@@ -234,7 +234,7 @@ possible si MOD02
 
     def print_recommandation_erreur_proteines(self, act_lst):
         """Affiche une solution pour la règle des protéines."""
-        advice("Suggestion de correction pour les sérologies hépatites.")
+        advice("Suggestion de correction pour les protéines.")
         self._print_order_by_value(act_lst, 2)
         
     def verif_hepatites_B(self):
@@ -303,12 +303,9 @@ WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
                                                              row2[5],
                                                              row2[4],
                                                              row2[3]))
-##                for a in row2:
-##                    sys.stdout.write(str(a)+" ")
-##                print()
                 noerror = False
         if not noerror:
-            print("Conseil : conserver l'acte le plus cher.")
+            advice("Conserver l'acte le plus cher.")
         return noerror    
         
     def _rech_code(self): 
@@ -359,9 +356,7 @@ def get_affiche_liste_codes(code_liste):
     """
     return(" ".join([code for code in code_liste]))
         
-
 DEBUG = False
-
 
 # @lib_smart_stdout.record_if_true(filename='erreur.txt')
 def model_etude_1(act_lst, label=None, model_type='MOD01',
@@ -384,7 +379,6 @@ Retourne True si erreur, False sinon."""
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
                                         nabm_version=nabm_version)
     T.attach_invoice_database()
-
     title("Affichage")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
@@ -410,7 +404,10 @@ Retourne True si erreur, False sinon."""
     main_conclusion = main_conclusion and resp3
 
     print("Règle des protéines :               ", end='')
+##    import pdb
+##    pdb.set_trace()
     resp4 = T.verif_proteines()
+    
     if DEBUG:
         print("Conclusion du test : {}".format(resp4))
     T.affiche_conclusion_d_un_test(resp4)
@@ -460,10 +457,8 @@ La facture vient par exmeple du programme syn_odbc_connexion.py
 """
     title("DEMO 2")
     import data_for_tests
-    model_2 = data_for_tests.FACT6_PROT
+    model_2 = data_for_tests.FACT6_PROT_ERR_MONTANT_ERR
     model_etude_1(model_2, model_type='MOD02', nabm_version=42)
- 
-
 
 def _demo_3_several_record_form_synergy():
     """ Traitement de plusieurs factures de suite.
