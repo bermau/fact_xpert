@@ -30,3 +30,14 @@ Version du 02/09/2016 :
   - contient une base NABM (NABM 41, 42, 43)dans une bae sqlite.
   - contient un décorateur pour n'enregistrer que les dossiers en anomalies.
 
+version 0.08 : 
+Depuis le programme syn_odbc_connexion, on peut réaliser les opérations suivantes:
+
+Etudier la facturation d'un jour donné.
+    _demo_etude_facturation_d_un_jour("05/06/2016")
+Cette fonction accepter un filtre de service. 
+Le filtre est soit une seule UF (noter le format), ou une série d'UF (noter le format).
+    _demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
+    _demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
+
+

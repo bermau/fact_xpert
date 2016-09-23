@@ -67,6 +67,19 @@ def le_lendemain(jour_fr_str):
     demain = jour + duree_de_un_jour
     
     return demain.date().strftime('%d/%m/%Y')
+
+def sequence_of_dates(date, n):
+    """Return a sequence of dates :
+    >>> sequence_of_dates("02/03/2015", 5)
+    ['02/03/2015', '03/03/2015', '04/03/2015', '05/03/2015', '06/03/2015']
+    """
+    la_liste = [ date ]
+    curs = date
+    for n in range(n - 1,0,-1):
+        lendemain = le_lendemain(curs)
+        curs = lendemain
+        la_liste.append(lendemain)
+    return la_liste
     
 def quoted_joiner(lst):
     """
@@ -370,9 +383,7 @@ Retourne True en cas d'erreur, False Sinon"""
             if res:
                 print("Dossiers enregistrés par : ")
                 for dossier in  dossiers_lst:
-                    print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))
-                
-            
+                    print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))                         
             # note : res vaut True si model_etude_1 a trouvé une erreur.
             # print("Résultat de {}, le {} : {}".format(IPP, date, res))
             return res
@@ -397,7 +408,8 @@ def _demo_facturation_pour_IPP_un_jour():
     fac_de_IPP_date(IPP='00000000000002135656', date = '21/07/2009') # B div
 
  
-def _demo_etude_facturation_d_un_jour(french_date,  uf_filter=None):
+def _demo_etude_facturation_d_un_jour(french_date,  uf_filter=None,
+                                      synthesis=None):
     """Etude de facturation pour un jour donnée.
 
 Pour un jour donnée (date en français), trouve les dossiers prélevés ce jour.
@@ -441,8 +453,26 @@ service(s) {} .\n".format(collection_date,str(len(lst_id)), uf_filter))
     with lib_smart_stdout.PersistentStdout(filename=REPORT) as buf:
         bm_u.title("Conclusion finale")
         print("Nombre d'IPP en erreur ", errors)
-        print("Nombre d'IPP vérifiées", len(sub_set))
+        ipp_verif = len(sub_set)
+        print("Nombre d'IPP vérifiées", ipp_verif)
         buf.important = True
+    if synthesis is not None:
+        global NB_ERREUR, NB_IPP
+        NB_ERREUR += errors
+        NB_IPP += ipp_verif
+        
+        #synthesis.add("erreurs", errors)
+        #synthesis.add("verif", ipp_verif)
+        
+
+class Synthesis():
+    """Une classe pour accumuler des résultats de synthèse."""
+    def __init__(self):
+        pass
+    def add(self, quoi, nombre):
+        self.quoi +=nombre
+    
+    
 
 def _test():
     """Execute doctests."""
@@ -453,7 +483,8 @@ def _test():
 if __name__=='__main__':
     CONNEXION = MyODBC_to_infocentre()
     # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
-    #_test()   
+    #_test()
+    
     #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
     #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     #_demo_etude_facturation_d_un_jour("05/06/2016")
@@ -461,9 +492,16 @@ if __name__=='__main__':
     #fac_de_IPP_date(IPP='0000000000001951052', date = '12/07/2016', nabm_version=43)
     #fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
     #fac_de_IPP_date(IPP='1005841021', date = '12/07/2016') # requête vide, mais ne plante pas
-    fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
-    fac_de_IPP_date(IPP='100584102', date = '33/07/2016')
+    # fac_de_IPP_date(IPP='100584102', date = '33/07/2016') # ne plante pas.
+    # fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
+    # fac_de_IPP_date(IPP='486423', date = '20/04/2016')
 
-    # 20/04/2016	486423
-    fac_de_IPP_date(IPP='486423', date = '20/04/2016')
-    # del(CONNEXION)
+    global NB_ERREUR, NB_IPP # très laid
+    NB_ERREUR = 0
+    NB_IPP = 0
+    for date in sequence_of_dates("01/02/2016", 5):
+        _demo_etude_facturation_d_un_jour(date,  uf_filter='6048', synthesis=True)
+        # input("Etude pour "+ date + "terminée.")
+    print("Nombre d'erreur totales : {} pour {} IPP". format(str(NB_ERREUR),
+                                                             str(NB_IPP)))
+    del(CONNEXION)
