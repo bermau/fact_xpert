@@ -12,7 +12,7 @@ la sortie standard ne sera sauvé que si self.important est True.
 
 Cette classe fonctionne en contexte manager.
 Le contexte manager nécessite l'usage :
-for XXX as f:
+with XXX as f:
    dans le contexte
 Le contexte manager exécute automatiquement les fonctions __enter__ (en entrée)
 et __exit__ (en sortie).
@@ -20,7 +20,7 @@ et __exit__ (en sortie).
 
     old_stdout = sys.stdout
     
-    def __init__(self, filename='sortie2.txt'):
+    def __init__(self, filename='essai_sortie.txt'):
         # sys.stderr.write("Dans PersistentStdout.__init__\n")
         self.filename=filename
         self.important = False
@@ -54,7 +54,7 @@ et __exit__ (en sortie).
 
 # Sur les décorateurs avec arguments, 
 # lire http://gillesfabio.com/blog/2010/12/16/python-et-les-decorateurs/
-def record_if_true(filename='sortie2.txt'):
+def record_if_true(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
 Enregistre la sortie standard si le résultat de la fonction est True.
@@ -72,7 +72,7 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-def record_if_false(filename='sortie2.txt'):
+def record_if_false(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
 Enregistre la sortie standard si le résultat de la fonction est False.
@@ -92,7 +92,7 @@ Enregistre la sortie standard si le résultat de la fonction est False.
 
 
 
-@record_if_true(filename='ma_sortie.txt')  
+@record_if_true(filename='essai_ma_sortie.txt')  
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
