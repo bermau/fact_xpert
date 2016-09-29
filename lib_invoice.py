@@ -100,10 +100,10 @@ Adapté au modèle MOD02."""
         # sys.stderr.write("Loading data\n")
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
         for line in act_list:
-            print(line)
+            print(str(line)+',')
             self.INVOICE_DB.execute_sql("""INSERT INTO invoice_list
-                                     (record, code, analyse, nb_letters, letter)
-                                     VALUES (?, ?, ?, ?, ?) """, line)
+                            (record, code, analyse, nb_letters, letter)
+                             VALUES (?, ?, ?, ?, ?) """, line)
         self.INVOICE_DB.commit()
         
     def show_data(self):

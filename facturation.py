@@ -39,13 +39,12 @@ d'utiliser des instruction SQL.
 On utilise pour cela la commande attach dans Sqlite."""
     def __init__(self, invoice, REF_DB, nabm_version):
         """Enregistrement de 2 connecteurs"""
-        
+
         self.ref = REF_DB
         self.nabm_version = nabm_version
         (self.nabm_table,
          self.incompatibility_table) = lib_nabm.get_name_of_nabm_files(nabm_version)
-        print((self.nabm_table,
-         self.incompatibility_table))
+        print((self.nabm_table,self.incompatibility_table))
         self.invoice = invoice
         self.report = []
         self.buf = [] # buffer pour toutes les impressions temporaires.
@@ -92,12 +91,11 @@ On utilise pour cela la commande attach dans Sqlite."""
             self.ref.execute_sql(sql, param=param)
         res_as_list =  self.ref.resultat_req()
         if len(res_as_list) == 0:
-            # self.prt_buf("RAS")
             return None # Mieux que False
         else:
             self.prt_buf("{} lignes{} :".format(str(len(res_as_list)),comment))
             for line in res_as_list:
-                print(line)
+                print(str(line)+',')
             return res_as_list
         
     def affiche_liste_et_somme_theorique(self, nabm_version=43, verbose=None):
@@ -457,8 +455,9 @@ La facture vient par exmeple du programme syn_odbc_connexion.py
 """
     title("DEMO 2")
     import data_for_tests
-    model_2 = data_for_tests.FACT6_PROT_ERR_MONTANT_ERR
-    model_etude_1(model_2, model_type='MOD02', nabm_version=42)
+    model_etude_1(data_for_tests.FACT6_PROT_ERR_MONTANT_ERR,
+                  model_type='MOD02',
+                  nabm_version=42)
 
 def _demo_3_several_record_form_synergy():
     """ Traitement de plusieurs factures de suite.

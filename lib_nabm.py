@@ -13,7 +13,7 @@ import conf_file as Cf
 import sys
 from bm_u import title as titrer
 import datetime
-
+# listes des actes de la règle des sérologies hépatite B et des protéines
 PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
                 '1809', '1810', '1811', '1812', '1813', '1814', '1815',
                 '1816', '1817', '1818', '1819' ]
@@ -49,7 +49,7 @@ def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
   
 
 def get_name_of_nabm_files(nabm_version):
-    """Renvoie le nom des tables de la nabm en fonction de la version.
+    """Return names of database tables corresponding to NABM version.
 --> (nabm_table_name, incompatibility_table_name).
 
     >>> get_name_of_nabm_files(41)
@@ -65,7 +65,7 @@ def get_name_of_nabm_files(nabm_version):
 
     
 def nabm_version_from_dt(dt):
-    """Retourne le numéro de version de nabm pour un datetime.
+    """Return nabm version form a datatime.
 
 A AMELIORER.
 
@@ -82,15 +82,7 @@ A AMELIORER.
     >>> nabm_version_from_dt(datetime.date(2000,4,19))
     'avant'
 """
-    """
-    
-NABM_38_exigible_17_avr_2013
-NABM_39_exigible_11_juilet_2013
-NABM_40 
-NABM_41_exigible_14_avril_2014
-NABM_42_exigible_au_04_sept_2014
-NABM_43_exigible_20_avril_2016
-"""
+
     table = [
         [datetime.date(2014, 4, 14), 41],
         [datetime.date(2014, 9, 4), 42],
