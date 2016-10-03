@@ -305,6 +305,29 @@ WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
         if not noerror:
             advice("Conserver l'acte le plus cher.")
         return noerror    
+
+    def verif_blood_minimum(self):
+        """Test la présence indue d'actes de cotation minimum.
+
+Ce actes sont ajoutés pour la la sommes des analyses réalisées sur du sang
+sot au moins égale à B20.
+
+Renvoie True si la règle est respectée, et False sinon."""
+        # Principe :
+        # dan la nabm : Sang vaut 1. 
+        # Faire la somme des actes Sang=1
+        # lst = ['9905', '9910']
+        # lst.extend([str (item) for item in range (9915, 9927)]])
+        
+        # lst_cotation_minimale = ['9905', '9910', '9915', '9916', '9917', '9918', '9919', '9920',
+        #        '9921', '9922', '9923', '9924', '9925', '9926']
+        # Rechercher les actes de cotation minimale, si aucun ne rien faire (Return True)
+        # Si présence, rechercher la liste de codes sang et en faire le calcul
+             si calcul = B20 => True
+             si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
+             
+        return True
+        pass
         
     def _rech_code(self): 
         """Recherche de codes particulier.
