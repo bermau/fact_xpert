@@ -22,3 +22,4 @@ pas encore inclus dans cette version.
 sérologies. Explication : le bug était lié à une mauvaise initialisation de 
 invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests. 
 
+0.08+ : la sortie de la liste des actes est rendu compatible python.

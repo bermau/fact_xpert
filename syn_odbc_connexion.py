@@ -288,7 +288,7 @@ AND STEPTYPE=1
     cursor = CONNEXION.query(sql, (id_str,))
     rows = cursor.fetchone()
     if rows:
-       print(rows)
+       # print(rows)
        return(rows.INITUSER) 
 
 def req_full_audit_trail_for_id(id_str):
@@ -383,7 +383,8 @@ Retourne True en cas d'erreur, False Sinon"""
             if res:
                 print("Dossiers enregistrés par : ")
                 for dossier in  dossiers_lst:
-                    print(dossier[0], " enregistré par ", req_audit_trail_for_id(dossier[0]))                         
+                    print(dossier[0], "enregistré par", req_audit_trail_for_id(
+                        dossier[0]))                         
             # note : res vaut True si model_etude_1 a trouvé une erreur.
             # print("Résultat de {}, le {} : {}".format(IPP, date, res))
             return res
