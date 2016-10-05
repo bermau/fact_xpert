@@ -8,7 +8,7 @@ La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
 
 
-# Les mots PEU EFFICACE indique les axes d'améliorations
+# Les mots PEU EFFICIENT indique les axes d'améliorations
 
 import sys, os , datetime
 import lib_sqlite
@@ -287,7 +287,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
             # PEU EFFICIENT : lancer une seconde requête.
             # PEU EFFICIENT : la bases des incompatilibités est mal codée :
             # les codes sont en format string alors que la table nabm a des
-            # au format numérique.
+            # codes au format numérique. Il faut tout mettre en string.
             
             cur2 = self.ref.con.cursor()
             sql2 = """SELECT * FROM inv.invoice_list
@@ -318,13 +318,12 @@ Renvoie True si la règle est respectée, et False sinon."""
         # Faire la somme des actes Sang=1
         # lst = ['9905', '9910']
         # lst.extend([str (item) for item in range (9915, 9927)]])
-        
         # lst_cotation_minimale = ['9905', '9910', '9915', '9916', '9917', '9918', '9919', '9920',
         #        '9921', '9922', '9923', '9924', '9925', '9926']
         # Rechercher les actes de cotation minimale, si aucun ne rien faire (Return True)
         # Si présence, rechercher la liste de codes sang et en faire le calcul
-             si calcul = B20 => True
-             si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
+        #     si calcul = B20 => True
+        #     si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
              
         return True
         pass
