@@ -1,0 +1,7 @@
+# TODO
+# à faire
+# idées
+
+# Utiliser 
+     CREATE TEMPORARY TABLE invoice (def);
+au lieu d'une base remporaire.
