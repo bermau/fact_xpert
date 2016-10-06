@@ -73,6 +73,19 @@ def get_sql_for_nabm_table(table):
     
     return sql
 
+
+def get_sql_for_rename_tables(table):
+    """retorune le sql pour renommer les tables et recoder"""    
+    sql = """
+    BEGIN TRANSACTION;
+    ALTER TABLE "{table_name}" RENAME TO "{table_name}_old" ;
+    ALTER TABLE "{table_name}_corr" RENAME TO "{table_name}" ;
+
+    COMMIT ; 
+    """.format(table_name=table)
+    print(sql)
+    return sql
+
 if __name__ == '__main__': 
 
     con = sqlite3.connect("nabm_db.sqlite")
@@ -80,7 +93,8 @@ if __name__ == '__main__':
         with con:
             for name in ["nabm", "nabm41", "nabm42", "nabm43"]:
                 print("name",name)
-                con.executescript(get_sql_for_nabm_table(name))
+                # con.executescript(get_sql_for_nabm_table(name))
+                con.executescript(get_sql_for_rename_tables(name))
     except Exception as err:
         print("SQL Error is :\n%s" % err)
 

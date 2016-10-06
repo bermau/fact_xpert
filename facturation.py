@@ -18,7 +18,6 @@ import conf_file as Cf
 import lib_invoice
 import lib_smart_stdout
 
-
 from bm_u import title
 
 def sub_title(msg):
@@ -26,7 +25,17 @@ def sub_title(msg):
 
 def advice(msg):
     print("*** CONSEIL *** :", msg, "***")
-   
+
+# ATTENTION : un efonction du même nom est dasn syn_odbc_connexion
+def quoted_joiner(lst):
+    """
+    >>> quoted_joiner([ 6048, 2015, 'UHCD'])
+    "'6048', '2015', 'UHCD'"
+    
+"""
+    quoted_strings_lst = [ "'"+str(code)+"'" for code in lst] 
+    return ", ".join(quoted_strings_lst)
+
 
 class TestInvoiceAccordingToReference():
     """Tests d'une facture selon une référence.
@@ -112,7 +121,7 @@ Puis affiche le nombre de B."""
            N.coef
         FROM inv.invoice_list
         LEFT JOIN {nabm_table} AS N 
-        ON inv.invoice_list.code=N.id 
+        ON inv.invoice_list.code=N.code 
 """.format(nabm_table=self.nabm_table)
        
         res_lst = self.affiche_etude_select(req, comment=' dans la facture')
@@ -150,7 +159,7 @@ Si anomalie, retourne False, sinon True"""
            N.coef
         FROM inv.invoice_list
         LEFT JOIN {} AS N 
-        ON inv.invoice_list.code=N.id
+        ON inv.invoice_list.code=N.code
         WHERE N.libelle IS NULL
 """.format(nabm_table)
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
@@ -168,7 +177,7 @@ possible si MOD02
             sql = """SELECT I.code, I.nb_letters, I.letter, N.coef
                      FROM inv.invoice_list AS I
                      LEFT JOIN {} AS N
-                     ON I.code=N.id
+                     ON I.code=N.code
                      WHERE I.nb_letters <> N.coef
                      OR I.letter <>N.lettre
                      """.format(self.nabm_table)
@@ -188,10 +197,10 @@ possible si MOD02
 
 -> True si pas d'anomalie, False sinon."""
         noerror = True
-        req="""SELECT  code, count(code) AS 'occurence', N.MaxCode
-               FROM inv.invoice_list
-               LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
-               GROUP BY code    
+        req="""SELECT  I.code, count(I.code) AS 'occurence', N.MaxCode
+               FROM inv.invoice_list AS I
+               LEFT JOIN {ref_name} AS N ON I.code = N.code
+               GROUP BY I.code    
                HAVING occurence> 1""".format(ref_name=self.nabm_table)
         
         # self.ref instance d'objet qui contient le connecteur con.
@@ -207,18 +216,24 @@ possible si MOD02
 
     
     def _print_order_by_value(self, act_lst, max_allowed):
-        """Calculate acts ordered by value."""
-    
+        """print acts ordered by value.
+        > _print_order_by_value(['0323', '0322', '0354', '0353'], 3)
+        test remis à plus tard
+        """
+        
+        print(act_lst,max_allowed)
+        print(quoted_joiner(act_lst))
+
         req = """
         SELECT
-           N.id, N.coef, N.libelle AS 'libelle_NABM'
+           N.code, N.coef, N.libelle AS 'libelle_NABM'
         FROM {table} AS N
-        WHERE N.id in ({my_list}) 
+        WHERE N.code in ({my_list}) 
         ORDER BY N.coef DESC
-        """.format(table=self.nabm_table, my_list=', '.join(act_lst))    
-
+        """.format(table=self.nabm_table, my_list=quoted_joiner(act_lst))          
         res_lst = self.affiche_etude_select(req,
                                             comment=' classées par valeurs')
+        print(res_lst)
         col0 = [ ligne[0] for ligne in res_lst ]
         trois_plus_chers = col0[0:max_allowed]
         advice("Garder"  + str(trois_plus_chers))
@@ -517,10 +532,10 @@ def _test():
 
 if __name__=='__main__':
 
-    #_test()
+    _test()
     #_demo_1_for_simple_list()
-    _demo_2_data_from_synergy()
-    # _demo_3_several_records_from_synergy()
+    #_demo_2_data_from_synergy()
+    #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass
     
