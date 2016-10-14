@@ -198,6 +198,7 @@ possible si MOD02
         self.ref.con.row_factory = sqlite3.Row
         cur = self.ref.con.cursor()
         cur.execute(req)
+       
         for row in cur:
             print(row['code'], row['occurence'], row['MaxCode'])
             if int(row['MaxCode'])> 0 and row['occurence']> int(row['MaxCode']):
@@ -323,8 +324,8 @@ Renvoie True si la règle est respectée, et False sinon."""
         #        '9921', '9922', '9923', '9924', '9925', '9926']
         # Rechercher les actes de cotation minimale, si aucun ne rien faire (Return True)
         # Si présence, rechercher la liste de codes sang et en faire le calcul
-             si calcul = B20 => True
-             si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
+        #     si calcul = B20 => True
+        #     si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
              
         return True
         pass

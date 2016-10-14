@@ -19,9 +19,8 @@ import datetime, sys
 import lib_smart_stdout
 import lib_synergy # utilitaires pour Synergy
 
-
-CONNEXION = '' # sera utilisé pour la connexion à la base
-SAVE_PICKLE = False # True poru sauver les donnes en format pickle.
+# CONNEXION = '' # sera utilisé pour la connexion à la base
+SAVE_PICKLE = False # True pour sauver les données en format pickle.
 # Nom du fichier de sauvegarde de la sauvegarde intelligente.
 SMART_NAME_EXPORT = "err_"+datetime.date.today().strftime("%Y_%m_%d")+".txt"
 # Nom complet pour le rapport.
@@ -461,10 +460,6 @@ service(s) {} .\n".format(collection_date,str(len(lst_id)), uf_filter))
         global NB_ERREUR, NB_IPP
         NB_ERREUR += errors
         NB_IPP += ipp_verif
-        
-        #synthesis.add("erreurs", errors)
-        #synthesis.add("verif", ipp_verif)
-        
 
 class Synthesis():
     """Une classe pour accumuler des résultats de synthèse."""
@@ -473,7 +468,48 @@ class Synthesis():
     def add(self, quoi, nombre):
         self.quoi +=nombre
     
-    
+def demo_poll_simple():
+    """Démonstration d'un sondage sur plusieurs jours"""
+    global CONNEXION
+    CONNEXION = MyODBC_to_infocentre()
+    global NB_ERREUR, NB_IPP # très laid
+
+   
+    NB_ERREUR = 0
+    NB_IPP = 0
+    for date in sequence_of_dates("01/02/2016", 1):
+        _demo_etude_facturation_d_un_jour(date,  uf_filter='6048', synthesis=True)
+        # input("Etude pour "+ date + "terminée.")
+    print("Nombre d'erreur totales : {} pour {} IPP". format(str(NB_ERREUR),
+                                                             str(NB_IPP)))
+    del(CONNEXION)
+
+def demo_poll():
+    """Démonstration d'un sondage sur plusieurs jours, répétés"""
+    global CONNEXION
+    global NB_ERREUR, NB_IPP # très laid
+    CONNEXION = MyODBC_to_infocentre()
+    days = 4
+    with open(file="sondage.txt", mode='a', encoding='UTF8') as rapport:
+        # je prends le premier lundi de la première semaine pleine de chaque
+        # mois
+        for date_in_month in [#"04/01/2016",
+                              #"01/02/2016",
+                              #"07/03/2016",
+                              #"04/04/2016", "02/05/2016", "06/06/2016",
+                              "04/07/2016", "01/08/2016", "05/09/2016",
+                              #"03/10/2016", "07/11/2016", "05/12/2016";
+                              ]:
+            
+            NB_ERREUR = 0
+            NB_IPP = 0
+            for date in sequence_of_dates(date_in_month, days):
+                _demo_etude_facturation_d_un_jour(date,  uf_filter='6048',
+                                                  synthesis=True)
+                # input("Etude pour "+ date + "terminée.")
+            rapport.write("Nombre d'erreur totales {} : {} pour {} IPP\n". \
+                           format(date_in_month, str(NB_ERREUR), str(NB_IPP)))
+    del(CONNEXION)
 
 def _test():
     """Execute doctests."""
@@ -482,7 +518,7 @@ def _test():
     print("{} tests performed, {} failed.".format(tests, failures))
     
 if __name__=='__main__':
-    CONNEXION = MyODBC_to_infocentre()
+    # CONNEXION = MyODBC_to_infocentre()
     # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
     #_test()
     
@@ -490,19 +526,17 @@ if __name__=='__main__':
     #_demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     #_demo_etude_facturation_d_un_jour("05/06/2016")
     #req_audit_trail_for_id('6060248167')
-    #fac_de_IPP_date(IPP='0000000000001951052', date = '12/07/2016', nabm_version=43)
+    # fac_de_IPP_date(IPP='0000000000001951052', date = '12/07/2016', nabm_version=43)
     #fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
     #fac_de_IPP_date(IPP='1005841021', date = '12/07/2016') # requête vide, mais ne plante pas
     # fac_de_IPP_date(IPP='100584102', date = '33/07/2016') # ne plante pas.
     # fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
     # fac_de_IPP_date(IPP='486423', date = '20/04/2016')
 
-    global NB_ERREUR, NB_IPP # très laid
-    NB_ERREUR = 0
-    NB_IPP = 0
-    for date in sequence_of_dates("01/02/2016", 5):
-        _demo_etude_facturation_d_un_jour(date,  uf_filter='6048', synthesis=True)
-        # input("Etude pour "+ date + "terminée.")
-    print("Nombre d'erreur totales : {} pour {} IPP". format(str(NB_ERREUR),
-                                                             str(NB_IPP)))
-    del(CONNEXION)
+    # global NB_ERREUR, NB_IPP # très laid
+    demo_poll()
+    
+
+
+
+    # del(CONNEXION)
