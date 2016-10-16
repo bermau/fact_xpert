@@ -426,8 +426,6 @@ Retourne True si erreur, False sinon."""
     main_conclusion = main_conclusion and resp3
 
     print("Règle des protéines :               ", end='')
-##    import pdb
-##    pdb.set_trace()
     resp4 = T.verif_proteines()
     
     if DEBUG:
@@ -483,7 +481,7 @@ La facture vient par exmeple du programme syn_odbc_connexion.py
                   model_type='MOD02',
                   nabm_version=42)
 
-def _demo_3_several_record_form_synergy():
+def _demo_3_several_records_from_synergy():
     """ Traitement de plusieurs factures de suite.
 
 But : Eviter de refermer la base si possible."""
@@ -524,7 +522,7 @@ if __name__=='__main__':
     #_test()
     #_demo_1_for_simple_list()
     _demo_2_data_from_synergy()
-    # _demo_3_several_record_form_synergy()
+    # _demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass
     
