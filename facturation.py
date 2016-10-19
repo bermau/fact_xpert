@@ -207,6 +207,7 @@ possible si MOD02
         self.ref.con.row_factory = sqlite3.Row
         cur = self.ref.con.cursor()
         cur.execute(req)
+       
         for row in cur:
             print(row['code'], row['occurence'], row['MaxCode'])
             if int(row['MaxCode'])> 0 and row['occurence']> int(row['MaxCode']):

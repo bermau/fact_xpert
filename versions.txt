@@ -24,9 +24,15 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 
 0.08+ : la sortie de la liste des actes est rendu compatible python.
 
+
 0.08.1 : dans la base nabme, j'ai recodé les tables nabm et incompatibility
+0.08.1 : ajout d'une fonction demo_poll() pour réaliser une étude des erreurs sur 1 an.
+0.08.2 : Cette version est cassée (syn_odbc... est non fonctionnel).
 
 Evolution sur la branche maison : 
 tests_tracer.py permet de lancer des test (unit_tests) et d'enregistrer le résumé dans un LOG.
 
 0.09 : intégration de la branche recoder_base (recodage de la base).
+
+
+
