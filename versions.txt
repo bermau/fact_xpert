@@ -28,3 +28,5 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 
 Evolution sur la branche maison : 
 tests_tracer.py permet de lancer des test (unit_tests) et d'enregistrer le résumé dans un LOG.
+
+0.09 : intégration de la branche recoder_base (recodage de la base).
