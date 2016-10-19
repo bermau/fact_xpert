@@ -292,7 +292,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
         sql = """SELECT I.code, INC.incompatible_code
                  FROM inv.invoice_list AS I
                  JOIN {} AS INC
-                 ON I.code=INC.id
+                 ON I.code=INC.code
                  """.format(self.incompatibility_table)
         self.ref.con.row_factory = sqlite3.Row
         cur = self.ref.con.cursor()
@@ -305,6 +305,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
             # codes au format numérique. Il faut tout mettre en string.
             
             cur2 = self.ref.con.cursor()
+            # PEU EFFICIENT 
             sql2 = """SELECT * FROM inv.invoice_list
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)

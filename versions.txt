@@ -23,3 +23,8 @@ sérologies. Explication : le bug était lié à une mauvaise initialisation de
 invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests. 
 
 0.08+ : la sortie de la liste des actes est rendu compatible python.
+
+0.08.1 : dans la base nabme, j'ai recodé les tables nabm et incompatibility
+
+Evolution sur la branche maison : 
+tests_tracer.py permet de lancer des test (unit_tests) et d'enregistrer le résumé dans un LOG.

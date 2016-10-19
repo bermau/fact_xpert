@@ -5,3 +5,7 @@
 # Utiliser 
      CREATE TEMPORARY TABLE invoice (def);
 au lieu d'une base remporaire.
+
+REcoder la base nabm
+recoder la base incompatibility
+

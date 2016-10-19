@@ -19,7 +19,7 @@ COMMIT;
 
 ##def script_sql():
 def get_sql_for_nabm_table(table):
-    """return sql adapted to table name to modifiy a NABM table"""    
+    """Retourne le SQL pour recoder la table nabm"""    
     sql = """
     -- J'ai utilisé Sqlite manager :
     -- On crée la nouvelle base avec un id de type TEXT :
@@ -76,6 +76,35 @@ def get_sql_for_nabm_table(table):
     return sql
 
 
+def get_sql_for_incompatibility_table(table):
+    """Retourne le SQL pour recoder la table de type incompatibility"""    
+    sql = """
+    -- J'ai utilisé Sqlite manager pour créer le SQL
+    -- On crée la nouvelle base avec un id de type TEXT :
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE "{table_name}_corr" (
+    "code" TEXT  NOT NULL DEFAULT '0000',
+    "incompatible_code" TEXT  NOT NULL DEFAULT '0000',
+    PRIMARY KEY ("code","incompatible_code")
+    );
+
+    -- On insère toutes les données sans changement, sauf la première colonne qui
+    -- reçoit une chaîne de caractères.
+
+    INSERT INTO "{table_name}_corr" 
+
+    SELECT
+    printf("%04d", id), 
+    printf("%04d", incompatible_code)
+    FROM "{table_name}" ;
+
+    COMMIT ; 
+    """.format(table_name=table)
+    print(sql)
+    return sql
+
 def get_sql_for_rename_tables(table):
     """retorune le sql pour renommer les tables et recoder"""    
     sql = """
@@ -95,9 +124,11 @@ if __name__ == '__main__':
         with con:
             for name in ["incompatibility", "incompatibility41",
                          "incompatibility42", "incompatibility43"]:
-                print("name", name)
-                con.executescript(get_sql_for_nabm_table(name))
-                con.executescript(get_sql_for_rename_tables(name))
+                print("Traitement de la table : ", name)
+                # dé-diéser les lignes à exécuter.
+                # con.executescript(get_sql_for_nabm_table(name))
+                # con.executescript(get_sql_for_incompatibility_table(name))
+                #con.executescript(get_sql_for_rename_tables(name))
     except Exception as err:
         print("SQL Error is :\n%s" % err)
 
