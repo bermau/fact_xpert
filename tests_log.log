@@ -1,0 +1,20 @@
+factTestResults(failed=0, attempted=2)
+2016-10-15 23:07tests 
+fact : TestResults(failed=0, attempted=2)
+2016-10-15 23:08tests 
+fact : TestResults(failed=0, attempted=2)
+2016-10-15 23:08tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-15 23:10tests 
+fact : TestResults(failed=1, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-15 23:11tests 
+fact : TestResults(failed=1, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-15 23:11tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-19 22:26tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
