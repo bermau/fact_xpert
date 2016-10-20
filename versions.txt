@@ -25,3 +25,7 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 0.08+ : la sortie de la liste des actes est rendu compatible python.
 0.08.1 : ajout d'une fonction demo_poll() pour réaliser une étude des erreurs sur 1 an.
 0.08.2 : Cette version est cassée (syn_odbc... est non fonctionnel).
+
+Travail en cours : création d'une fonction Syn().fac_de_IEP_date() dans syn_odbc_connexion
+
+ 

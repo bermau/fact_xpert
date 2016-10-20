@@ -131,9 +131,9 @@ class Syn():
     """Ordres spécifiques Infocentre/Synergy."""
 
 
-    def req_example_via_class(self, dos_id=None):
+    def req_example_via_class_Syn(self, dos_id=None):
         """Un exemple de requête vers infocentre
-        <<>>> a = Syn().req_example_via_class(25)
+        <<>>> a = Syn().req_example_via_class_Syn(25)
         (1, 2)
         """
         cursor = CONNEXION.query("SELECT 1,2",None)
@@ -204,33 +204,14 @@ class Syn():
         return rows
 
 
-##    def req_vers_syn(self):
-##        """Un essai de requête vers Synergy"""
-##        cnxn = pyodbc.connect(Cf.CONNEXION_BASE_PROD)
-##        cursor = cnxn.cursor()
-##
-##        motif= "%Escheri%"
-##        cursor.execute("SELECT * FROM DICT_TEXTS WHERE TEXTTYPE=2 AND FULLTEXT LIKE ?",motif )
-##
-##        rows = cursor.fetchall()  # lit toute la suite
-##        res=[]
-##        for row in rows:
-##                res.append(row[1]+"\t"+row[4]+"\t"+row[13])
-##        cursor.close()
-##        print()
-##        print()
-##        for line in res:
-##            print(line)
-##        return res
-
-
     def req_results_from_id(self, id=None):
         """Essai pour le DIM : retrouver des résultats depuis une ID pour créer un csv."""
             
         cnxn = pyodbc.connect(Cf.CONNEXION_BASE_PROD)
         cursor = cnxn.cursor()
         output=[]
-        cursor.execute("""SELECT P.REFHOSPNUMBER,DT.TESTCODE, DT.SHORTTEXT, T.RESVALUE, DT.UNITS, R.REQDATE
+        cursor.execute("""SELECT P.REFHOSPNUMBER,DT.TESTCODE,
+                                 DT.SHORTTEXT, T.RESVALUE, DT.UNITS, R.REQDATE
     FROM TESTS T, REQUESTS R, PATIENTS P, DICT_TESTS DT
     WHERE R.PATID=P.PATID
     AND R.ACCESSNUMBER= ? 
@@ -243,7 +224,7 @@ class Syn():
         return rows
 
 
-    def req_ids_from_patid(self, IPP, date):
+    def req_ids_from_IPP_date(self, IPP, date):
         """Liste des numéros ID longs à partir d'un IPP pour une date donnée.
 
     Les arguments de date doivent être fournis au format français. 
@@ -345,9 +326,12 @@ class Syn():
     @lib_smart_stdout.record_if_true(filename=REPORT)
     def fac_de_IPP_date(self, IPP, date, nabm_version=None):
     #def fac_de_IPP_date(self, IPP, date, nabm_version=Cf.NABM_DEFAULT_VERSION):
-        """Etudie les factures cumulées d'un patient pour un jour donné
-    la date doit être au format français type 31/12/2016.
-    Retourne True en cas d'erreur, False Sinon"""
+        """Expertise à partir d'une IPP et d'une date.
+
+Etudie les factures cumulées d'un patient pour un jour donné
+La date doit être au format français type 31/12/2016.
+
+Retourne True en cas d'erreur, False Sinon"""
 
         def prt_list_tab(lst):
             """Imprime une liste tabulée"""
@@ -365,8 +349,9 @@ class Syn():
             print("NABM sera déduite de la date : ", nabm_version)
             prt("Patient :   IPP : {} ". format(IPP))
             prt("Patient : venue : {} (date de prel)".format(date)) 
-            dossiers_lst = self.req_ids_from_patid(IPP, date)
+            dossiers_lst = self.req_ids_from_IPP_date(IPP, date)
             # print(dossiers_lst)
+
             if dossiers_lst:            
                 # save_pickle
                 save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
@@ -399,7 +384,64 @@ class Syn():
             else:
                 print("Requête vide")
                 return True # (car erreur)
-         
+            
+    def IPP_from_IEP_and_date(self, IPP,  date):
+        """Retourne le numéro IPP à partir de l'IEP et de la date.
+        L'exemple ci desosu retourne le dossier de BM
+        >>> Syn().IPP_from_IEP_and_date('002135656', "04/06/2015")
+        [('00000000000002135656', )]
+        
+        """
+        IPP=lib_synergy.verif_IPP(IPP)
+
+        lendemain = le_lendemain(date) 
+        sql=r"""SELECT top 20 P.PATNUMBER
+    FROM REQUESTS R
+    RIGHT JOIN PATIENTS P
+       ON R.PATID=P.PATID
+
+    WHERE P.PATNUMBER = ? 
+    AND R.COLLECTIONDATE BETWEEN ? AND ?
+    ORDER BY R.ACCESSNUMBER
+    """
+##        sql_debug=r"""SELECT top 20 
+##      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER
+##    FROM REQUESTS R
+##    RIGHT JOIN PATIENTS P
+##       ON R.PATID=P.PATID
+##
+##    WHERE P.PATNUMBER = ? 
+##    AND R.COLLECTIONDATE BETWEEN ? AND ?
+##    ORDER BY R.ACCESSNUMBER
+##    """
+        
+        cursor = CONNEXION.query(sql,(IPP, date, lendemain))
+        rows = cursor.fetchall()
+        return rows
+    
+    def fac_de_IEP_date(self, IEP, date, nabm_version=None):
+        """Expertise à partir d'une IEP et d'une date.
+
+Etudie les factures cumulées d'un patient pour un jour donné
+la date doit être au format français type 31/12/2016.
+
+Retourne True en cas d'erreur, False Sinon"""
+        
+        IPP = self.IPP_from_IEP_and_date(IEP, date)
+
+        # POUR MEMO : demannder IPP pour la PISTE.
+        import pdb
+        pdb.set_trace()
+
+        
+        self.fac_de_IPP_date(IPP, date, nabm_version=nabm_version)
+
+
+
+
+
+    
+
     def _demo_facturation_pour_IPP_un_jour(self):
         fac_de_IPP_date(IPP='00000000000002135656', date = '29/01/2014') # B hep
         fac_de_IPP_date(IPP='00000000000002135656', date = '21/07/2009') # B div
@@ -515,9 +557,11 @@ def _test():
     print("{} tests performed, {} failed.".format(tests, failures))
     
 if __name__=='__main__':
-    # CONNEXION = MyODBC_to_infocentre()
+    CONNEXION = MyODBC_to_infocentre()
     # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
-    _test()  
+    # _test()
+    # Syn().fac_de_IPP_date(IPP='002135656', date = '16/10/2015') # BM
+    Syn().fac_de_IEP_date(IEP='002135656', date = '16/10/2015')
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     # Syn().demo_etude_facturation_d_un_jour("05/06/2016")
@@ -531,6 +575,6 @@ if __name__=='__main__':
 
     # global NB_ERREUR, NB_IPP # très laid
     # demo_poll()
-    
 
-    # del(CONNEXION)
+
+    del(CONNEXION)
