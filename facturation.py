@@ -8,7 +8,7 @@ La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
 
 
-# Les mots PEU EFFICACE indique les axes d'améliorations
+# Les mots PEU EFFICIENT indique les axes d'améliorations
 
 import sys, os , datetime
 import lib_sqlite
@@ -18,7 +18,6 @@ import conf_file as Cf
 import lib_invoice
 import lib_smart_stdout
 
-
 from bm_u import title
 
 def sub_title(msg):
@@ -26,7 +25,17 @@ def sub_title(msg):
 
 def advice(msg):
     print("*** CONSEIL *** :", msg, "***")
-   
+
+# ATTENTION : un efonction du même nom est dasn syn_odbc_connexion
+def quoted_joiner(lst):
+    """
+    >>> quoted_joiner([ 6048, 2015, 'UHCD'])
+    "'6048', '2015', 'UHCD'"
+    
+"""
+    quoted_strings_lst = [ "'"+str(code)+"'" for code in lst] 
+    return ", ".join(quoted_strings_lst)
+
 
 class TestInvoiceAccordingToReference():
     """Tests d'une facture selon une référence.
@@ -112,7 +121,7 @@ Puis affiche le nombre de B."""
            N.coef
         FROM inv.invoice_list
         LEFT JOIN {nabm_table} AS N 
-        ON inv.invoice_list.code=N.id 
+        ON inv.invoice_list.code=N.code 
 """.format(nabm_table=self.nabm_table)
        
         res_lst = self.affiche_etude_select(req, comment=' dans la facture')
@@ -150,7 +159,7 @@ Si anomalie, retourne False, sinon True"""
            N.coef
         FROM inv.invoice_list
         LEFT JOIN {} AS N 
-        ON inv.invoice_list.code=N.id
+        ON inv.invoice_list.code=N.code
         WHERE N.libelle IS NULL
 """.format(nabm_table)
         res_lst = self.affiche_etude_select(req, comment=" hors NABM")
@@ -168,7 +177,7 @@ possible si MOD02
             sql = """SELECT I.code, I.nb_letters, I.letter, N.coef
                      FROM inv.invoice_list AS I
                      LEFT JOIN {} AS N
-                     ON I.code=N.id
+                     ON I.code=N.code
                      WHERE I.nb_letters <> N.coef
                      OR I.letter <>N.lettre
                      """.format(self.nabm_table)
@@ -188,10 +197,10 @@ possible si MOD02
 
 -> True si pas d'anomalie, False sinon."""
         noerror = True
-        req="""SELECT  code, count(code) AS 'occurence', N.MaxCode
-               FROM inv.invoice_list
-               LEFT JOIN {ref_name} AS N ON inv.invoice_list.code = N.id
-               GROUP BY code    
+        req="""SELECT  I.code, count(I.code) AS 'occurence', N.MaxCode
+               FROM inv.invoice_list AS I
+               LEFT JOIN {ref_name} AS N ON I.code = N.code
+               GROUP BY I.code    
                HAVING occurence> 1""".format(ref_name=self.nabm_table)
         
         # self.ref instance d'objet qui contient le connecteur con.
@@ -208,18 +217,24 @@ possible si MOD02
 
     
     def _print_order_by_value(self, act_lst, max_allowed):
-        """Calculate acts ordered by value."""
-    
+        """print acts ordered by value.
+        > _print_order_by_value(['0323', '0322', '0354', '0353'], 3)
+        test remis à plus tard
+        """
+        
+        print(act_lst,max_allowed)
+        print(quoted_joiner(act_lst))
+
         req = """
         SELECT
-           N.id, N.coef, N.libelle AS 'libelle_NABM'
+           N.code, N.coef, N.libelle AS 'libelle_NABM'
         FROM {table} AS N
-        WHERE N.id in ({my_list}) 
+        WHERE N.code in ({my_list}) 
         ORDER BY N.coef DESC
-        """.format(table=self.nabm_table, my_list=', '.join(act_lst))    
-
+        """.format(table=self.nabm_table, my_list=quoted_joiner(act_lst))          
         res_lst = self.affiche_etude_select(req,
                                             comment=' classées par valeurs')
+        print(res_lst)
         col0 = [ ligne[0] for ligne in res_lst ]
         trois_plus_chers = col0[0:max_allowed]
         advice("Garder"  + str(trois_plus_chers))
@@ -278,7 +293,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
         sql = """SELECT I.code, INC.incompatible_code
                  FROM inv.invoice_list AS I
                  JOIN {} AS INC
-                 ON I.code=INC.id
+                 ON I.code=INC.code
                  """.format(self.incompatibility_table)
         self.ref.con.row_factory = sqlite3.Row
         cur = self.ref.con.cursor()
@@ -288,9 +303,10 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
             # PEU EFFICIENT : lancer une seconde requête.
             # PEU EFFICIENT : la bases des incompatilibités est mal codée :
             # les codes sont en format string alors que la table nabm a des
-            # au format numérique.
+            # codes au format numérique. Il faut tout mettre en string.
             
             cur2 = self.ref.con.cursor()
+            # PEU EFFICIENT 
             sql2 = """SELECT * FROM inv.invoice_list
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)
@@ -319,7 +335,6 @@ Renvoie True si la règle est respectée, et False sinon."""
         # Faire la somme des actes Sang=1
         # lst = ['9905', '9910']
         # lst.extend([str (item) for item in range (9915, 9927)]])
-        
         # lst_cotation_minimale = ['9905', '9910', '9915', '9916', '9917', '9918', '9919', '9920',
         #        '9921', '9922', '9923', '9924', '9925', '9926']
         # Rechercher les actes de cotation minimale, si aucun ne rien faire (Return True)
@@ -519,10 +534,10 @@ def _test():
 
 if __name__=='__main__':
 
-    #_test()
+    _test()
     #_demo_1_for_simple_list()
-    _demo_2_data_from_synergy()
-    # _demo_3_several_records_from_synergy()
+    #_demo_2_data_from_synergy()
+    #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass
     

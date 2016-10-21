@@ -232,23 +232,34 @@ class Syn():
           
     """
         patid = IPP
-        lendemain = le_lendemain(date)    
-
+        lendemain = le_lendemain(date)
+        # Les ref à HOSPTITALIZATION sont inutiles.
         sql=r"""SELECT top 20 
-      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME
+      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, H.HOSPITNUMBER, P. PATNUMBER
     FROM REQUESTS R
     RIGHT JOIN PATIENTS P
        ON R.PATID=P.PATID
-     JOIN HOSPITALIZATIONS H
+    JOIN HOSPITALIZATIONS H
        ON R.HOSPITID=H.HOSPITID
 
     WHERE P.PATNUMBER = ? 
     AND R.COLLECTIONDATE BETWEEN ? AND ?
     ORDER BY R.ACCESSNUMBER
     """
+##        sql_suffisant=r"""SELECT top 20 
+##      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME
+##    FROM REQUESTS R
+##    RIGHT JOIN PATIENTS P
+##       ON R.PATID=P.PATID
+##
+##    WHERE P.PATNUMBER = ? 
+##    AND R.COLLECTIONDATE BETWEEN ? AND ?
+##    ORDER BY R.ACCESSNUMBER
+##    """
         
         cursor = CONNEXION.query(sql,(patid, date, lendemain))
         rows = cursor.fetchall()
+
         # save_pickle(rows,"ID", IPP, date)
         return rows
 
@@ -325,7 +336,6 @@ class Syn():
 
     @lib_smart_stdout.record_if_true(filename=REPORT)
     def fac_de_IPP_date(self, IPP, date, nabm_version=None):
-    #def fac_de_IPP_date(self, IPP, date, nabm_version=Cf.NABM_DEFAULT_VERSION):
         """Expertise à partir d'une IPP et d'une date.
 
 Etudie les factures cumulées d'un patient pour un jour donné
@@ -353,7 +363,6 @@ Retourne True en cas d'erreur, False Sinon"""
             # print(dossiers_lst)
 
             if dossiers_lst:            
-                # save_pickle
                 save_as_pickle(dossiers_lst, "fac_ipp_dossiers_lst",IPP, date)
 
                 prt("NOM : {}    prénom : {}    NJF : {}".format(
@@ -385,37 +394,31 @@ Retourne True en cas d'erreur, False Sinon"""
                 print("Requête vide")
                 return True # (car erreur)
             
-    def IPP_from_IEP_and_date(self, IPP,  date):
+    def IPP_from_IEP_and_date(self, IEP,  date):
         """Retourne le numéro IPP à partir de l'IEP et de la date.
         L'exemple ci desosu retourne le dossier de BM
         >>> Syn().IPP_from_IEP_and_date('002135656', "04/06/2015")
         [('00000000000002135656', )]
         
         """
-        IPP=lib_synergy.verif_IPP(IPP)
+        IEP = lib_synergy.verif_IEP(IEP)
 
         lendemain = le_lendemain(date) 
-        sql=r"""SELECT top 20 P.PATNUMBER
+
+        sql=r"""SELECT top 5  P.PATNUMBER
     FROM REQUESTS R
     RIGHT JOIN PATIENTS P
        ON R.PATID=P.PATID
+     JOIN HOSPITALIZATIONS H
+       ON R.HOSPITID=H.HOSPITID
 
-    WHERE P.PATNUMBER = ? 
+    WHERE H.HOSPITNUMBER = ? 
     AND R.COLLECTIONDATE BETWEEN ? AND ?
     ORDER BY R.ACCESSNUMBER
     """
-##        sql_debug=r"""SELECT top 20 
-##      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, P.PATNUMBER
-##    FROM REQUESTS R
-##    RIGHT JOIN PATIENTS P
-##       ON R.PATID=P.PATID
-##
-##    WHERE P.PATNUMBER = ? 
-##    AND R.COLLECTIONDATE BETWEEN ? AND ?
-##    ORDER BY R.ACCESSNUMBER
-##    """
+ 
         
-        cursor = CONNEXION.query(sql,(IPP, date, lendemain))
+        cursor = CONNEXION.query(sql,(IEP, date, lendemain))
         rows = cursor.fetchall()
         return rows
     
@@ -426,12 +429,11 @@ Etudie les factures cumulées d'un patient pour un jour donné
 la date doit être au format français type 31/12/2016.
 
 Retourne True en cas d'erreur, False Sinon"""
-        
+        print("Res IPP")
         IPP = self.IPP_from_IEP_and_date(IEP, date)
-
-        # POUR MEMO : demannder IPP pour la PISTE.
-        import pdb
-        pdb.set_trace()
+        print(IPP)
+        print("tutu")
+        IPP = IPP[0][0]
 
         
         self.fac_de_IPP_date(IPP, date, nabm_version=nabm_version)
@@ -439,8 +441,38 @@ Retourne True en cas d'erreur, False Sinon"""
 
 
 
+    def req_syn(self):
+        """Une requête quelconque (pour mise au point)."""
 
-    
+        IPP = '00000000000002135656'
+        IEP = '000000007190243'
+        date= "16/10/2015"
+        lendemain = le_lendemain(date)
+        print(lendemain)
+        sql=r"""SELECT top 20 
+      R.ACCESSNUMBER, P.NAME, P.FIRSTNAME, P. MAIDENNAME, H.HOSPITNUMBER, P. PATNUMBER
+    FROM REQUESTS R
+    RIGHT JOIN PATIENTS P
+       ON R.PATID=P.PATID
+     JOIN HOSPITALIZATIONS H
+       ON R.HOSPITID=H.HOSPITID
+
+    WHERE H.HOSPITNUMBER = ? 
+    AND R.COLLECTIONDATE BETWEEN ? AND ?
+    ORDER BY R.ACCESSNUMBER
+    """
+        print(sql)
+
+        import pdb
+        # pdb.set_trace()
+        
+        cursor = CONNEXION.query(sql,(IEP, date, lendemain))
+        rows = cursor.fetchall()
+        print(rows)
+        return rows
+        
+
+ 
 
     def _demo_facturation_pour_IPP_un_jour(self):
         fac_de_IPP_date(IPP='00000000000002135656', date = '29/01/2014') # B hep
@@ -560,8 +592,11 @@ if __name__=='__main__':
     CONNEXION = MyODBC_to_infocentre()
     # OUTPUT_FILE=Cf.EXPORT_REP+"erreur2.txt"
     # _test()
-    # Syn().fac_de_IPP_date(IPP='002135656', date = '16/10/2015') # BM
-    Syn().fac_de_IEP_date(IEP='002135656', date = '16/10/2015')
+    # Syn().fac_de_IPP_date(IPP='002135656', date = '16/10/2015') # BM en IPP
+    # Syn().fac_de_IEP_date(  IEP='07190243', date = '16/10/2015') # BM en IEP 
+    # Syn().fac_de_IEP_date(IEP='7694000', date= '20/04/2016') # cas 40
+    Syn().fac_de_IEP_date(IEP='8060028', date= '08/09/2016') # cas 40
+    # Syn().req_syn()
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     # Syn().demo_etude_facturation_d_un_jour("05/06/2016")

@@ -2,15 +2,6 @@
 # -*- coding: utf-8 -*-
 """ Unittest fact_xpert."""
 
-# Les 4 lignes suivantes sont issues du fichier parent de ce script
-# Fonctionne sous Python  3.4.2 sous Linux Debian 8.1
-# Fonctionne sous Python  3.4.3 sous Windows Seven
-# ce fichier doit être compris dans /tests/ qui est situé avec les exécutables
-# 
-# v1 : jan 2016 : le test est fonctionnel sous Linux comme sous Windows
-# v2 : mars 2016 : support une nouvelle architecture : /bin/, /test/, /input/,
-# /output/
-
 # Dans ces tests, les fonctions doivent retourner False s'il y a une
 # anomalie dans la facture et True s'il n'y en a pas.
 #

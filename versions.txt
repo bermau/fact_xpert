@@ -1,4 +1,4 @@
-VERSIONS :
+﻿VERSIONS :
 
 0.02 : simplification du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
@@ -23,9 +23,14 @@ sérologies. Explication : le bug était lié à une mauvaise initialisation de
 invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests. 
 
 0.08+ : la sortie de la liste des actes est rendu compatible python.
+
+
+0.08.1 : dans la base nabme, j'ai recodé les tables nabm et incompatibility
 0.08.1 : ajout d'une fonction demo_poll() pour réaliser une étude des erreurs sur 1 an.
 0.08.2 : Cette version est cassée (syn_odbc... est non fonctionnel).
 
-Travail en cours : création d'une fonction Syn().fac_de_IEP_date() dans syn_odbc_connexion
+0.09 : intégration de la branche recoder_base (recodage de la base).
+- tests_tracer.py permet de lancer des test (unit_tests) et d'enregistrer le résumé dans un LOG.
+- Travail en cours : création d'une fonction Syn().fac_de_IEP_date() dans syn_odbc_connexion
 
- 
+0.10 : Syn().fac_de_IEP_date() est fonctionnel

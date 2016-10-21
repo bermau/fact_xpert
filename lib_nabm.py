@@ -30,7 +30,7 @@ def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
         return True, sous_liste
 
 def detecter_plus_de_deux_proteines(actes_lst):
-    """Renvoie si la liste contient plus de 2 protéines.
+    """Renvoie False si la liste contient plus de 2 protéines.
     >>> detecter_plus_de_deux_proteines(['1806','1805','1605','1819'])
     (False, ['1806', '1805', '1819'])
 
@@ -38,7 +38,7 @@ def detecter_plus_de_deux_proteines(actes_lst):
     return _detect_more_than_n_objects_in_a_list(actes_lst, PROT_LST_REF, 2)
 
 def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
-    """Renvoie si la liste contient plus de 3 sérologies hépatite B.
+    """Renvoie False si la liste contient plus de 3 sérologies hépatite B.
     >>> a = detecter_plus_de_trois_sero_hepatite_b(['1806','1805','0323', '0353', '0354'])
     >>> a[0]
     True
@@ -67,7 +67,7 @@ def get_name_of_nabm_files(nabm_version):
 def nabm_version_from_dt(dt):
     """Return nabm version form a datatime.
 
-A AMELIORER.
+TODO : verifier que dt est au format datetime.
 
     >>> nabm_version_from_dt(frdate2datetime('14/04/2014'))
     41
@@ -82,7 +82,8 @@ A AMELIORER.
     >>> nabm_version_from_dt(datetime.date(2000,4,19))
     'avant'
 """
-
+    # table contient différentes versions de nabm.
+    # chaque date de mise en place est suivi de la version de la nabm
     table = [
         [datetime.date(2014, 4, 14), 41],
         [datetime.date(2014, 9, 4), 42],
@@ -146,13 +147,13 @@ class Nabm():
         titrer("Un libellé manquant signifie probablement \
 que votre liste de codes contient un code qui a disparu de la nomenclature.");
 
-    def charger_liste_de_codes(act_lst):
-        """Enregiste une liste dans la base de données.
-
-La table est nommée : nabm_sheet
-Ne semble plus servir à rien.
-"""
-        pass
+##    def charger_liste_de_codes(act_lst):
+##        """Enregiste une liste dans la base de données.
+##
+##La table est nommée : nabm_sheet
+##Ne semble plus servir à rien.
+##"""
+##        pass
         
     def __del__(self):
         self.NABM_DB.close()

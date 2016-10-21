@@ -1,0 +1,14 @@
+# TODO
+# à faire
+# idées
+
+# Utiliser 
+     CREATE TEMPORARY TABLE invoice (def);
+au lieu d'une base remporaire.
+
+Recoder la base nabm, recoder la base incompatibility : Fait en version 0.09
+
+Améliorer la présentation à partir de l'exemple nommé PLUSIEURS_ERREURS.
+
+
+
