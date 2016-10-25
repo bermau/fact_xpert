@@ -63,25 +63,25 @@ la premier fenetre"""
         """Toujours OK"""
         self.assertTrue(True)
           
-    def test_05_nabm(self):
+    def test_05_tout_correct(self):
         """Une facture entièrement correcte."""
         self.common_set_of_tests(facture= acts_ok)
         self.assertTrue(self.test.verif_tous_codes_dans_nabm())
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
    
-    def test_06_nabm(self):
+    def test_06_actes_inconnus(self):
         """Une facture avec des actes inconnus."""
         self.common_set_of_tests(facture=acts_unknown_1515)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm())
         self.assertTrue(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
-    def test_07_nabm(self):
+    def test_07_actes_trop_repetes(self):
         """Une facture avec des actes trop répétés."""
         self.common_set_of_tests(facture= acts_703_more_than_thrice)
         self.assertTrue(self.test.verif_tous_codes_dans_nabm())
         self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
-    def test_08_nabm(self):
+    def test_08_err_repetition_inconnu(self):
         """Une facture avec répétitions non autorisées mais un acte inconnu."""
         facture = acts_703_more_than_thrice_plus_unknown
         self.common_set_of_tests(facture=facture)
@@ -92,7 +92,7 @@ la premier fenetre"""
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
         self.assertTrue(self.test.verif_hepatites_B())
 
-    def test_09_nabm(self):
+    def test_09_err_hep_B(self):
         """Une facture avec des erreurs hépatite B."""
         facture = acts_with_more_than_3_hep_B_serologies
         self.common_set_of_tests(facture=facture)
@@ -103,7 +103,7 @@ la premier fenetre"""
         self.assertTrue(detecter_plus_de_deux_proteines(facture))
         self.assertFalse(self.test.verif_hepatites_B())
 
-    def test_10_nabm(self):
+    def test_10_trois_type_d_erreurs(self):
         """Une facture avec 3 types d'erreurs."""
         facture = acts_prots_false_hep_b_false_and_unknown_1517_1518
         self.common_set_of_tests(facture=facture)
@@ -116,7 +116,7 @@ la premier fenetre"""
         (rep2, void2) = detecter_plus_de_deux_proteines(facture)
         self.assertFalse(rep2)
 
-    def test_11_nabm_MOD02(self):
+    def test_11_err_prot_sur_MOD02(self):
         """Facture avec une facture de type MOD02.
 Erreur prot"""
         # facture = FACT6_PROT_ERR
@@ -129,7 +129,7 @@ Erreur prot"""
         self.assertTrue(self.test.verif_hepatites_B())
         self.assertFalse(self.test.verif_proteines())
         
-    def test_12_nabm_MOD02(self):
+    def test_err_prot_et_hepatite_sur_MOD02(self):
         """Facture avec une facture de type MOD02.
 Erreur prot et erreur hépatites"""
         # facture = FACT6_PROT_ERR

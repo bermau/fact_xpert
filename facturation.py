@@ -26,7 +26,7 @@ def sub_title(msg):
 def advice(msg):
     print("*** CONSEIL *** :", msg, "***")
 
-# ATTENTION : un efonction du même nom est dasn syn_odbc_connexion
+# ATTENTION : une fonction du même nom est dans syn_odbc_connexion
 def quoted_joiner(lst):
     """
     >>> quoted_joiner([ 6048, 2015, 'UHCD'])
@@ -99,12 +99,14 @@ On utilise pour cela la commande attach dans Sqlite."""
         else:
             self.ref.execute_sql(sql, param=param)
         res_as_list =  self.ref.resultat_req()
+        
         if len(res_as_list) == 0:
             return None # Mieux que False
         else:
             self.prt_buf("{} lignes{} :".format(str(len(res_as_list)),comment))
             for line in res_as_list:
                 print(str(line)+',')
+            print()
             return res_as_list
         
     def affiche_liste_et_somme_theorique(self, nabm_version=43, verbose=None):
@@ -222,22 +224,20 @@ possible si MOD02
         test remis à plus tard
         """
         
-        print(act_lst,max_allowed)
-        print(quoted_joiner(act_lst))
-
         req = """
         SELECT
            N.code, N.coef, N.libelle AS 'libelle_NABM'
         FROM {table} AS N
         WHERE N.code in ({my_list}) 
         ORDER BY N.coef DESC
-        """.format(table=self.nabm_table, my_list=quoted_joiner(act_lst))          
+        """.format(table=self.nabm_table, my_list=quoted_joiner(act_lst))
         res_lst = self.affiche_etude_select(req,
-                                            comment=' classées par valeurs')
-        print(res_lst)
+                                    comment=' classées par valeurs décroissante')
         col0 = [ ligne[0] for ligne in res_lst ]
-        trois_plus_chers = col0[0:max_allowed]
-        advice("Garder"  + str(trois_plus_chers))
+        les_plus_chers = col0[0:max_allowed]
+        advice("Garder : "  + str(les_plus_chers))
+        les_moins_chers = col0[max_allowed:]
+        advice("Eliminer : "  + str(les_moins_chers))       
 
     def print_recommandation_erreur_hepatites(self, act_lst):
         """Affiche une solution pour la règle des séro hépatites."""
@@ -248,7 +248,7 @@ possible si MOD02
 
     def print_recommandation_erreur_proteines(self, act_lst):
         """Affiche une solution pour la règle des protéines."""
-        advice("Suggestion de correction pour les protéines.")
+        print("Suggestion de correction pour les protéines.")
         self._print_order_by_value(act_lst, 2)
         
     def verif_hepatites_B(self):
@@ -265,7 +265,7 @@ Renvoie True si oui, et False s'il y a plus de 3 codes."""
             # print("La règle des hépatites n'est pas enfreinte")
             return True
         else:
-            print("Règles de hépatites non respectée : {}".format(response[1]))
+            print("Règles de hépatites non respectée : {}\n".format(response[1]))
             self.print_recommandation_erreur_hepatites(response[1])
             return False 
         
@@ -282,7 +282,8 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
             # print("La règle des protéines n'est pas enfreinte")
             return True   
         else:
-            print("Règles de protéines non respectée : {}".format(response[1]))
+            # print("Règles de protéines non respectée : {}".format(response[1]))
+            print("Règles de protéines non respectée.\n")
             self.print_recommandation_erreur_proteines(response[1])
             return False
         
@@ -416,7 +417,7 @@ Retourne True si erreur, False sinon."""
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
                                         nabm_version=nabm_version)
     T.attach_invoice_database()
-    title("Affichage")
+    title("Explication des actes")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
     print("Codes existants dans la NABM :      ", end='')    

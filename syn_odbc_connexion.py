@@ -348,9 +348,10 @@ Retourne True en cas d'erreur, False Sinon"""
             for line in lst:
                 a = [ str(mot) for mot in line ]
                 print("\t".join(a))
+
         # verifier ou corriger les entrées
         IPP=lib_synergy.verif_IPP(IPP)
-        prt("***************************************************************************")
+        prt("********************************************************************")
         bm_u.title("Nouvelle étude d'IPP à une date donnée")
         if not bm_u.date_is_fr(date):
             print("Erreur saisie de date :", IPP, date)
@@ -396,7 +397,7 @@ Retourne True en cas d'erreur, False Sinon"""
             
     def IPP_from_IEP_and_date(self, IEP,  date):
         """Retourne le numéro IPP à partir de l'IEP et de la date.
-        L'exemple ci desosu retourne le dossier de BM
+        L'exemple ci dessous retourne le dossier de BM
         >>> Syn().IPP_from_IEP_and_date('002135656', "04/06/2015")
         [('00000000000002135656', )]
         
@@ -416,8 +417,7 @@ Retourne True en cas d'erreur, False Sinon"""
     AND R.COLLECTIONDATE BETWEEN ? AND ?
     ORDER BY R.ACCESSNUMBER
     """
- 
-        
+         
         cursor = CONNEXION.query(sql,(IEP, date, lendemain))
         rows = cursor.fetchall()
         return rows
@@ -429,17 +429,15 @@ Etudie les factures cumulées d'un patient pour un jour donné
 la date doit être au format français type 31/12/2016.
 
 Retourne True en cas d'erreur, False Sinon"""
-        print("Res IPP")
         IPP = self.IPP_from_IEP_and_date(IEP, date)
-        print(IPP)
-        print("tutu")
-        IPP = IPP[0][0]
-
-        
-        self.fac_de_IPP_date(IPP, date, nabm_version=nabm_version)
-
-
-
+        print("IEP: {IEP}, date : {date}".format(IEP=IEP, date=date))
+        if IPP:
+            print(IPP)
+            IPP = IPP[0][0]
+            print("IEP : {IEP} \tIPP : {IPP}".format(IEP=IEP, IPP=IPP))
+            self.fac_de_IPP_date(IPP, date, nabm_version=nabm_version)
+        else:
+            print("Requête vide : vérifier IEP et date")
 
     def req_syn(self):
         """Une requête quelconque (pour mise au point)."""
@@ -595,7 +593,8 @@ if __name__=='__main__':
     # Syn().fac_de_IPP_date(IPP='002135656', date = '16/10/2015') # BM en IPP
     # Syn().fac_de_IEP_date(  IEP='07190243', date = '16/10/2015') # BM en IEP 
     # Syn().fac_de_IEP_date(IEP='7694000', date= '20/04/2016') # cas 40
-    Syn().fac_de_IEP_date(IEP='8060028', date= '08/09/2016') # cas 40
+    # Syn().fac_de_IEP_date(IEP='8060028', date= '08/09/2016') # cas 41
+    Syn().fac_de_IEP_date(IEP='7463335', date= '29/01/2016') # cas 42
     # Syn().req_syn()
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
