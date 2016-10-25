@@ -113,8 +113,6 @@ On utilise pour cela la commande attach dans Sqlite."""
         """"Les actes sont-ils dans la nomenclature.
 
 Puis affiche le nombre de B."""
-        # BUG : il faut pouvoir indiquer la version de nabm
-        # self.prt_buf("Liste des actes de la facture.");
         req = """
         SELECT
            inv.invoice_list.id,
@@ -137,8 +135,6 @@ Puis affiche le nombre de B."""
         self.prt_buf('')
         self.prt_buf('Format pour AMZ : '+ " ".join([code[1] for code in res_lst if code[1] is not None]))
         
-        #sub_title("Somme théorique des B")
-        #self.prt_buf("d'après le code de facture, montant de la référence")
         if res_lst:
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
@@ -151,8 +147,6 @@ Recherche des lignes absentes de la NABM.
 Si anomalie, retourne False, sinon True"""
         if nabm_table is None:
             nabm_table=self.nabm_table
-        # self.prt_buf("Recherche des lignes absentes de la NABM");
-        # self.prt_buf("Question : toutes les lignes sont à la NABM ? ");
         req = """
         SELECT
            inv.invoice_list.id,
@@ -211,10 +205,11 @@ possible si MOD02
         cur.execute(req)
        
         for row in cur:
-            print(row['code'], row['occurence'], row['MaxCode'])
-            if int(row['MaxCode'])> 0 and row['occurence']> int(row['MaxCode']):
+            print("Le code {} est répété {} fois (maximum admis : {})".format(
+                row['code'], row['occurence'], row['MaxCode']))
+            if (int(row['MaxCode'])> 0) and (row['occurence']> int(row['MaxCode']) ): 
                 noerror = False
-                advice("Supprimer un ou des codes : {} (Maximum autorisé : {})". format(row['code'],row['MaxCode']))            
+                advice("Supprimer un ou des codes : {} (Maximum admis : {})". format(row['code'],row['MaxCode']))            
         return noerror
 
     
@@ -241,8 +236,7 @@ possible si MOD02
 
     def print_recommandation_erreur_hepatites(self, act_lst):
         """Affiche une solution pour la règle des séro hépatites."""
-        # print("Suggestion de correction pour les sérologies hépatites.")
-               
+
         advice("Suggestion de correction pour les sérologies hépatites.");
         self._print_order_by_value(act_lst, 3)
 
@@ -256,13 +250,10 @@ possible si MOD02
 
 Renvoie True si oui, et False s'il y a plus de 3 codes."""
         
-        # code_lst = self.get_list_of_actes() # PAS EFFICIENT.
-        # print("liste étudiée", self.invoice.act_list)
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
         # ATTENTION:  response = (bool, liste)
         if response[0] :
-            # print("La règle des hépatites n'est pas enfreinte")
             return True
         else:
             print("Règles de hépatites non respectée : {}\n".format(response[1]))
@@ -279,11 +270,9 @@ Renvoie True si oui, et False s'il y a plus de 2 codes."""
             self.invoice.act_list)
         # ATTENTION:  response = (bool, liste)
         if response[0] :
-            # print("La règle des protéines n'est pas enfreinte")
             return True   
         else:
-            # print("Règles de protéines non respectée : {}".format(response[1]))
-            print("Règles de protéines non respectée.\n")
+            print("Règle des protéines non respectée.\n")
             self.print_recommandation_erreur_proteines(response[1])
             return False
         
@@ -301,18 +290,12 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
         cur.execute(sql)
         for row in cur:
             # print(row['code'], row['incompatible_code'])
-            # PEU EFFICIENT : lancer une seconde requête.
-            # PEU EFFICIENT : la bases des incompatilibités est mal codée :
-            # les codes sont en format string alors que la table nabm a des
-            # codes au format numérique. Il faut tout mettre en string.
-            
+            # PEU EFFICIENT : lance une seconde requête.
             cur2 = self.ref.con.cursor()
-            # PEU EFFICIENT 
             sql2 = """SELECT * FROM inv.invoice_list
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)
-            for row2 in cur2:
-                
+            for row2 in cur2:                
                 print("\n          ***** Erreur d'incompatibilité    ****")
                 # PEU EFFICIENT :  MAL ECRIT.
                 print("Acte {} {} {} codé par {} ". format(row2[2],
@@ -510,7 +493,7 @@ But : Eviter de refermer la base si possible."""
                   nabm_version=41)
     #model_etude_1(data_for_tests.FACT2, model_type='MOD02')
     #model_etude_1(data_for_tests.FACT3, model_type='MOD02')
-    #model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02', nabm_version=)
+    model_etude_1(data_for_tests.FACT1_CA_578_rep, model_type='MOD02')
    
 def print_version_and_date():
     """Print version and execution datetime"""
@@ -537,7 +520,7 @@ if __name__=='__main__':
 
     _test()
     #_demo_1_for_simple_list()
-    #_demo_2_data_from_synergy()
+    _demo_2_data_from_synergy()
     #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass

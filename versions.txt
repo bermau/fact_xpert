@@ -34,3 +34,5 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 - Travail en cours : création d'une fonction Syn().fac_de_IEP_date() dans syn_odbc_connexion
 
 0.10 : Syn().fac_de_IEP_date() est fonctionnel
+
+0.11 :amélioration de la présentation en cas d'erreur de maximum de répétitions.
