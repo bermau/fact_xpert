@@ -1,4 +1,4 @@
-﻿VERSIONS :
+﻿VERSION : 0.12
 
 0.02 : simplification du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
@@ -35,4 +35,6 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 
 0.10 : Syn().fac_de_IEP_date() est fonctionnel
 
-0.11 :amélioration de la présentation en cas d'erreur de maximum de répétitions.
+0.11 : Amélioration de la présentation en cas d'erreur de maximum de répétitions.
+
+0.12 : refonte du sytème d'affichage. Désormais la conclusion est affichée de façon claire, suivie des détails en cas d'erreur détectée.

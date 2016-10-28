@@ -60,12 +60,8 @@ def record_if_true(filename='essai_sortie2.txt'):
 Enregistre la sortie standard si le résultat de la fonction est True.
 """
     def decorated(funct):
-        # print("Je décore la fonction : '{}()'".format(funct.__name__))
         def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
                                       # de la fonction
-            # print("Dans decorated, dans wrapper")
-            # a = list(args)
-            # print("Liste des arguments de : {} : {}".format(funct.__name__, list(args)))
             with PersistentStdout(filename=filename) as buf:
                   buf.important = funct(*args, **kwargs)
             return buf.important
@@ -78,12 +74,8 @@ def record_if_false(filename='essai_sortie2.txt'):
 Enregistre la sortie standard si le résultat de la fonction est False.
 """
     def decorated(funct):
-        # print("Je décore la fonction : '{}()'".format(funct.__name__))
         def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
                                       # de la fonction
-            # print("Dans decorated, dans wrapper")
-            # a = list(args)
-            # print("Liste des arguments de : {} : {}".format(funct.__name__, list(args)))
             with PersistentStdout(filename=filename) as buf:
                   buf.important = not funct(*args, **kwargs)
             return buf.important
@@ -96,7 +88,7 @@ Enregistre la sortie standard si le résultat de la fonction est False.
 def fonction_qui_ecrit_et_fait_des_tests(msg):
     """Ecrit quelque chose. Renvoie True si c'est à sauvegarder."""
     print(msg)
-    print("ceci est une ligne intéressante... ou non, en fonction\
+    print("ceci est une ligne intéressante... ou non, en fonction \
 d'un test")
     return msg == "à enregistrer"   
 

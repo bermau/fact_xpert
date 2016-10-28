@@ -7,7 +7,6 @@ Elle peut même être protégée en écriture, ce qui garantit son intégrité.
 La facture à vérifier est écrite dans une base sqlite temporaire.
 La fonction SQL attache permet de réaliser des opérations entre les 2 bases."""
 
-
 # Les mots PEU EFFICIENT indique les axes d'améliorations
 
 import sys, os , datetime
@@ -18,13 +17,16 @@ import conf_file as Cf
 import lib_invoice
 import lib_smart_stdout
 
-from bm_u import title
+from bm_u import title, Buffer
 
 def sub_title(msg):
     print("     **** "+msg+" ***")
 
 def advice(msg):
-    print("*** CONSEIL *** :", msg, "***")
+    print(get_advice(msg))
+
+def get_advice(msg):
+    return "*** CONSEIL *** : " + msg + " ***"    
 
 # ATTENTION : une fonction du même nom est dans syn_odbc_connexion
 def quoted_joiner(lst):
@@ -71,15 +73,15 @@ On utilise pour cela la commande attach dans Sqlite."""
             print("correct")
         else:
             print("\n"+" "*40 + "******** incorrect ******")
-        
-    def conclude(self):
-        """Imprime le rapport et le sauve éventuellement."""
-        for line in self.buf:
-            print(line)
-        if self.error == []:
-            print("rapport vide")
-        else:
-            print("Rapport à sauvegarder : ", self.buf)
+##        
+##    def conclude(self):
+##        """Imprime le rapport et le sauve éventuellement."""
+##        for line in self.buf:
+##            print(line)
+##        if self.error == []:
+##            print("rapport vide")
+##        else:
+##            print("Rapport à sauvegarder : ", self.buf)
 
     def attach_invoice_database(self):
         """Attacher la base de la facture à la base de nomenclature."""
@@ -89,7 +91,7 @@ On utilise pour cela la commande attach dans Sqlite."""
         # self.ref.execute_sql("attach database ':memory:' as inv")
         sys.stderr.write("Invoice db attached\n")
         
-    def affiche_etude_select(self, sql , comment='', param=None):
+    def affiche_etude_select_OK(self, sql , comment='', param=None):
         """Affiche une liste des lignes de Select éventuellement vide.
 -> Liste des résultats ou None.
 
@@ -109,6 +111,28 @@ On utilise pour cela la commande attach dans Sqlite."""
             print()
             return res_as_list
         
+    def affiche_etude_select(self, sql , comment='', param=None):
+        """Affiche une liste des lignes de Select éventuellement vide.
+-> None ou Liste des résultats et liste de commentaires.
+
+        """
+        buf = Buffer()
+        if param is None:    
+            self.ref.execute_sql(sql)
+        else:
+            self.ref.execute_sql(sql, param=param)
+        res_as_list =  self.ref.resultat_req()
+        
+        if len(res_as_list) == 0:
+            return None # Mieux que False
+        else:
+            buf.print("{} lignes{} :".format(str(len(res_as_list)),comment))
+            for line in res_as_list:
+                buf.print(str(line)+',')
+            buf.print()
+            return res_as_list, buf.msg_lst
+        
+        
     def affiche_liste_et_somme_theorique(self, nabm_version=43, verbose=None):
         """"Les actes sont-ils dans la nomenclature.
 
@@ -124,7 +148,7 @@ Puis affiche le nombre de B."""
         ON inv.invoice_list.code=N.code 
 """.format(nabm_table=self.nabm_table)
        
-        res_lst = self.affiche_etude_select(req, comment=' dans la facture')
+        res_lst, buf = self.affiche_etude_select(req, comment=' dans la facture')
         if res_lst is None:
             return
         if verbose:
@@ -139,12 +163,24 @@ Puis affiche le nombre de B."""
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
             self.prt_buf("Somme des B d'après NABM : {}".format(str(total_B)))
+
+
+    def conclude(self, noerror, buffer):
+        """Write a conclusion and if neccesary the buffer."""
+        if noerror:
+            print("OK")
+        else:
+            print("***** Incorrect *****")
+            buffer.show()
+
         
     def verif_tous_codes_dans_nabm(self, nabm_table=None):
         """"Les actes sont-ils présents dans la nomenclature ?
 
 Recherche des lignes absentes de la NABM.
-Si anomalie, retourne False, sinon True"""
+S'il y ades lignes qui n'existent pas dans la nabm retourne False, sinon True"""
+        buf = Buffer()
+        noerror = True
         if nabm_table is None:
             nabm_table=self.nabm_table
         req = """
@@ -158,15 +194,26 @@ Si anomalie, retourne False, sinon True"""
         ON inv.invoice_list.code=N.code
         WHERE N.libelle IS NULL
 """.format(nabm_table)
-        res_lst = self.affiche_etude_select(req, comment=" hors NABM")
-        return res_lst is None
-         
+        
+        A = self.affiche_etude_select(req, comment=" hors NABM")
+        if A is None:
+            pass
+        else:
+            res_lst, msg_lst = A
+            buf.extend(msg_lst)
+            noerror = False
+        self.conclude(noerror, buf)
+        return noerror
+
+            
     def verif_codes_et_montants(self, nabm_version=43):
         """Test de la valeur des codes.
 possible si MOD02
--> True si valeur anomale, sinon False."""
+-> True si valeur normales (pas d'anomale), sinon False."""
+        buf = Buffer()
         if self.invoice.model_type !='MOD02':
-            print("Vérification du montant impossible.")
+            print("Vérification du montant impossible \
+sur les factures de type MOD01.")
             # raise ValueError('Verification du montant impossible')
             return True # A améliorer.
         else:
@@ -182,10 +229,11 @@ possible si MOD02
             cur.execute(sql)
             noerror = True
             for row in cur:
-                print(row['code'], row['nb_letters'], row['coef'])
-                print("Erreur : dans l'acte {} remplacer la valeur {} par la valeur {}"\
+                buf.print(row['code'], row['nb_letters'], row['coef'])
+                buf.print("Erreur : dans l'acte {} remplacer la valeur {} par la valeur {}"\
                       .format(row['code'],row['nb_letters'],row['coef'] ))
                 noerror = False
+            self.conclude(noerror, buf)
             return noerror
 
     def verif_actes_trop_repetes(self, nabm_version=43):
@@ -193,6 +241,7 @@ possible si MOD02
 
 -> True si pas d'anomalie, False sinon."""
         noerror = True
+        buf = Buffer()
         req="""SELECT  I.code, count(I.code) AS 'occurence', N.MaxCode
                FROM inv.invoice_list AS I
                LEFT JOIN {ref_name} AS N ON I.code = N.code
@@ -205,20 +254,22 @@ possible si MOD02
         cur.execute(req)
        
         for row in cur:
-            print("Le code {} est répété {} fois (maximum admis : {})".format(
+            buf.print("Le code {} est répété {} fois (maximum admis : {})".format(
                 row['code'], row['occurence'], row['MaxCode']))
             if (int(row['MaxCode'])> 0) and (row['occurence']> int(row['MaxCode']) ): 
                 noerror = False
-                advice("Supprimer un ou des codes : {} (Maximum admis : {})". format(row['code'],row['MaxCode']))            
+                buf.print(get_advice("Supprimer un ou des codes :\
+{} (Maximum admis : {})". format(row['code'],row['MaxCode'])))            
+        self.conclude(noerror, buf)
         return noerror
 
     
-    def _print_order_by_value(self, act_lst, max_allowed):
+    def _buf_order_by_value(self, act_lst, max_allowed):
         """print acts ordered by value.
-        > _print_order_by_value(['0323', '0322', '0354', '0353'], 3)
+        > _buf_order_by_value(['0323', '0322', '0354', '0353'], 3)
         test remis à plus tard
         """
-        
+        buf = Buffer()
         req = """
         SELECT
            N.code, N.coef, N.libelle AS 'libelle_NABM'
@@ -226,60 +277,78 @@ possible si MOD02
         WHERE N.code in ({my_list}) 
         ORDER BY N.coef DESC
         """.format(table=self.nabm_table, my_list=quoted_joiner(act_lst))
-        res_lst = self.affiche_etude_select(req,
+
+        # MODIFIER : 
+        
+        res_lst, msg_lst = self.affiche_etude_select(req,
                                     comment=' classées par valeurs décroissante')
+
+        buf.extend(msg_lst)
         col0 = [ ligne[0] for ligne in res_lst ]
         les_plus_chers = col0[0:max_allowed]
-        advice("Garder : "  + str(les_plus_chers))
+        buf.print(get_advice("Garder : "  + str(les_plus_chers)))
         les_moins_chers = col0[max_allowed:]
-        advice("Eliminer : "  + str(les_moins_chers))       
+        buf.print(get_advice("Eliminer : "  + str(les_moins_chers)))
+        return buf
 
-    def print_recommandation_erreur_hepatites(self, act_lst):
-        """Affiche une solution pour la règle des séro hépatites."""
+    def get_buf_recommandation_erreur_hepatites(self, act_lst):
+        """Renvoie un buffer de messages d'une solution pour la règle des séro hépatites."""
+        buf = Buffer()
+        buf.print(get_advice("Suggestion de correction pour les sérologies hépatites."))
+        buf.extend_buf(self._buf_order_by_value(act_lst, 3))
+        return buf
 
-        advice("Suggestion de correction pour les sérologies hépatites.");
-        self._print_order_by_value(act_lst, 3)
-
-    def print_recommandation_erreur_proteines(self, act_lst):
-        """Affiche une solution pour la règle des protéines."""
-        print("Suggestion de correction pour les protéines.")
-        self._print_order_by_value(act_lst, 2)
-        
+    def get_buf_recommandation_erreur_proteines(self, act_lst):
+        """Renvoie un buffer de messages d'une solution la règle des protéines."""
+        buf = Buffer()
+        buf.print(get_advice("Suggestion de correction pour les protéines."))
+        buf.extend_buf(self._buf_order_by_value(act_lst, 2))
+        return buf 
+         
     def verif_hepatites_B(self):
         """Test s'il n'y a pas plus de 3 codes de la liste des hépatites.
 
 Renvoie True si oui, et False s'il y a plus de 3 codes."""
-        
+        buf = Buffer()
         response = lib_nabm.detecter_plus_de_trois_sero_hepatite_b(
             self.invoice.act_list)
         # ATTENTION:  response = (bool, liste)
+        noerror = True
         if response[0] :
-            return True
+            pass 
         else:
             print("Règles de hépatites non respectée : {}\n".format(response[1]))
-            self.print_recommandation_erreur_hepatites(response[1])
-            return False 
+            buf.extend_buf(self.get_buf_recommandation_erreur_hepatites(response[1]))
+            noerror = False
+        self.conclude(noerror, buf)
+        return noerror
         
     def verif_proteines(self):
         """Test s'il n'y a pas plus de 2 codes de la liste des protéines.
 
 Renvoie True si oui, et False s'il y a plus de 2 codes."""
         
-        # code_lst = self.get_list_of_actes() # PAS EFFICIENT.
+        buf = Buffer()
+        noerror = True
+        
         response = lib_nabm.detecter_plus_de_deux_proteines(
             self.invoice.act_list)
-        # ATTENTION:  response = (bool, liste)
-        if response[0] :
-            return True   
-        else:
-            print("Règle des protéines non respectée.\n")
-            self.print_recommandation_erreur_proteines(response[1])
-            return False
         
+        # Note :  response = (bool, liste)
+        if response[0] :
+            pass
+        else:
+            buf.print("Règle des protéines non respectée.")
+            buf.extend_buf(self.get_buf_recommandation_erreur_proteines(response[1]))
+            noerror = False
+        self.conclude(noerror, buf)
+        return noerror
+                      
     def verif_compatibilites(self):
         """Test la présence d'incompabilités.
 Retourne True si aucune, et False s'il y a des incompatibilités."""
         noerror = True
+        buf = Buffer()
         sql = """SELECT I.code, INC.incompatible_code
                  FROM inv.invoice_list AS I
                  JOIN {} AS INC
@@ -296,15 +365,16 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
 WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             cur2.execute(sql2)
             for row2 in cur2:                
-                print("\n          ***** Erreur d'incompatibilité    ****")
+                buf.print("\n          ***** Erreur d'incompatibilité    ****")
                 # PEU EFFICIENT :  MAL ECRIT.
-                print("Acte {} {} {} codé par {} ". format(row2[2],
+                buf.print("Acte {} {} {} codé par {} ". format(row2[2],
                                                              row2[5],
                                                              row2[4],
                                                              row2[3]))
                 noerror = False
         if not noerror:
-            advice("Conserver l'acte le plus cher.")
+            buf.print(get_advice("Conserver l'acte le plus cher."))
+        self.conclude(noerror, buf)
         return noerror    
 
     def verif_blood_minimum(self):
@@ -327,27 +397,9 @@ Renvoie True si la règle est respectée, et False sinon."""
         #     si calcul > B20, 1) Afficher les actes de cotation minmum, afficher la somme, retourner False
              
         return True
-        pass
+
         
-    def _rech_code(self): 
-        """Recherche de codes particulier.
 
-Pour bien tester, j'ai besoin d'actes dont le max soit de
-         1, 2 et 3, voire plus."""
-
-        # (nabm_table, incompatibilities_table) = lib_nabm.get_name_of_nabm_tables(43)
-        self.prt_buf("quelques codes avec MaxCode > 0");
-        sql = """Select id, Libelle, MaxCode  from {ref_name}
-        WHERE MaxCode > 5 """. format(ref_name=self.nabm_table)
-        self.ref.execute_sql(sql)
-        self.prt_buf(self.ref.resultat_req())
-        # Je retiens comme exemples :
-        # (557, 'LITHIUM (LI , LITHIEMIE , LI SERIQUE , LI ERYTHROCYTAIRE) (SANG)', 2)
-        # (1374, 'VITAMINE B 12 (DOSAGE) (SANG)', 1),
-        # (1137, 'C-PEPTIDE (SANG)', 3)
-        # (703, 'INSULINE LIBRE (SANG)', 3)
-        # (1154, 'TEST DIRECT DE COOMBS (ANTIGLOBULINE SPECIFIQUE)', 4)
-        # (274, "MYCOBACTERIE : SENSIBILITE VIS A VIS D'UN ANTIBIO PAR ANTIBIO", 5)
 
     def _sql_divers(self): 
         """Recherche de codes particulier.
@@ -395,7 +447,6 @@ Retourne True si erreur, False sinon."""
     act_ref = lib_nabm.Nabm()
     invoice = lib_invoice.Invoice(model_type=model_type)
     invoice.load_invoice_list(act_lst)
-    # invoice.show_data()
 
     T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
                                         nabm_version=nabm_version)
@@ -403,49 +454,32 @@ Retourne True si erreur, False sinon."""
     title("Explication des actes")
     T.affiche_liste_et_somme_theorique()
     title("Vérifications")
-    print("Codes existants dans la NABM :      ", end='')    
+    
+    print("\nCodes existants dans la NABM :      ", end='')    
     resp1 = T.verif_tous_codes_dans_nabm()
-    if DEBUG:
-        print("Réponse du test :", resp1)
-    T.affiche_conclusion_d_un_test(resp1)
     main_conclusion = main_conclusion and resp1
 
-    print("Répétition de codes :               ", end='')
+    print("\nRépétition de codes :               ", end='')
     resp2 = T.verif_actes_trop_repetes()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp2))
-    T.affiche_conclusion_d_un_test(resp2)
     main_conclusion = main_conclusion and resp2
 
-    print("Règle des sérologie hépatites :     ", end='')
+    print("\nRègle des sérologies hépatites :     ", end='')
     resp3 = T.verif_hepatites_B()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp3))
-    T.affiche_conclusion_d_un_test(resp3)
     main_conclusion = main_conclusion and resp3
 
-    print("Règle des protéines :               ", end='')
+    print("\nRègle des protéines :               ", end='')
     resp4 = T.verif_proteines()
-    
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp4))
-    T.affiche_conclusion_d_un_test(resp4)
     main_conclusion = main_conclusion and resp4
 
-    print("Montants :                          ", end='')
+    print("\nMontants :                          ", end='')
     resp5 = T.verif_codes_et_montants()
-    if DEBUG:
-        print("Conclusion du test : {}".format(resp5))
-    T.affiche_conclusion_d_un_test(resp5)
-    
     main_conclusion = main_conclusion and resp5
     
-    print("Incompatilibités :                  ", end='')
-    resp6 = T.verif_compatibilites()
-    T.affiche_conclusion_d_un_test(resp6)    
+    print("\nIncompatilibités :                  ", end='')
+    resp6 = T.verif_compatibilites()   
     main_conclusion = main_conclusion and resp6
     
-    print("Conclusion générale : ", end='')
+    print("\nConclusion générale : ", end='')
     T.affiche_conclusion_d_un_test(main_conclusion)
 
     return not main_conclusion
@@ -524,5 +558,19 @@ if __name__=='__main__':
     #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass
-    
+
+## Voila ce que je veux modifier : 
+##Règle des protéines :               Règle des protéines non respectée.
+##
+##Suggestion de correction pour les protéines.
+##3 lignes classées par valeurs décroissante :
+##('1817', 20, 'PREALBUMINE (DOSAGE) (SANG)'),
+##('1819', 14, 'TRANSFERRINE (SIDEROPHYLLINE) (DOSAGE) (SANG)'),
+##('1806', 10, 'ALBUMINE (DOSAGE) (SANG)'),
+##
+##*** CONSEIL *** : Garder : ['1817', '1819'] ***
+##*** CONSEIL *** : Eliminer : ['1806'] ***
+##
+##                                        ******** incorrect ******
+
 

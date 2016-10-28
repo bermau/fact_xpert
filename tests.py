@@ -81,8 +81,8 @@ la premier fenetre"""
         self.assertTrue(self.test.verif_tous_codes_dans_nabm())
         self.assertFalse(self.test.verif_actes_trop_repetes(nabm_version=43))         
 
-    def test_08_err_repetition_inconnu(self):
-        """Une facture avec répétitions non autorisées mais un acte inconnu."""
+    def test_08_err_repetition_et_inconnu(self):
+        """Une facture avec répétitions non autorisées et un acte inconnu."""
         facture = acts_703_more_than_thrice_plus_unknown
         self.common_set_of_tests(facture=facture)
         self.assertFalse(self.test.verif_tous_codes_dans_nabm())

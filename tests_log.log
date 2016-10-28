@@ -21,3 +21,18 @@ lib_nabm :TestResults(failed=0, attempted=13)
 2016-10-21 18:30tests 
 fact : TestResults(failed=0, attempted=2)
 lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-28 21:46 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+2016-10-28 21:46 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+tests :TestResults(failed=0, attempted=0)
+2016-10-28 21:49 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+tests :TestResults(failed=0, attempted=0)
+2016-10-28 21:49 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=13)
+tests :TestResults(failed=0, attempted=0)

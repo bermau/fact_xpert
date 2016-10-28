@@ -27,10 +27,50 @@ def date_is_fr(date):
     except:
         return False
 
+class Buffer():
+    """Un petit buffer pour enregistrer ces message à écrire plus tard.
+    >>> buf = Buffer()
+    >>> buf.print(22, "poires")
+    >>> buf.print(35, "abricots")
+    >>> buf.show()
+    22 poires
+    35 abricots
+    >>> buf2 = Buffer()
+    >>> buf2.print("savons", "rien à voir", "de rien")
+    >>> buf2.extend(["Line 1", "Line 2", "Line 3"])
+    >>> buf.extend_buf(buf2)
+    >>> buf.show()
+    22 poires
+    35 abricots
+    savons rien à voir de rien
+    Line 1
+    Line 2
+    Line 3
+    
+    
+    """
+    def __init__(self):
+        """Le buffer est constitué d'une liste de lignes de texte."""
+        self.msg_lst = []
+    def write(self, msg):
+        self.msg_lst.append(msg)
+    def print(self, *args):
+        self.msg_lst.append(" ".join([str(i) for i in args]))
+    def extend(self, lst):
+        """Etendre une buffer avec une liste."""
+        self.msg_lst.extend(lst)
+    def extend_buf(self, buf):
+        """Etendre un buffer avec un autre Buffer"""
+        self.msg_lst.extend(buf.msg_lst)
+    def show(self):
+        """Aficher le buffer"""
+        for i in self.msg_lst:
+            print(i)
+
 def _test():
     """Execute doctests."""
     import doctest
-    (failures, tests) = doctest.testmod(verbose=False)
+    (failures, tests) = doctest.testmod(verbose=True)
     print("{} tests performed, {} failed.".format(tests, failures))
     
 if __name__=='__main__':
