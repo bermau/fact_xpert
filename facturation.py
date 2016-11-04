@@ -178,7 +178,7 @@ Puis affiche le nombre de B."""
         """"Les actes sont-ils présents dans la nomenclature ?
 
 Recherche des lignes absentes de la NABM.
-S'il y ades lignes qui n'existent pas dans la nabm retourne False, sinon True"""
+S'il y a des lignes qui n'existent pas dans la nabm retourne False, sinon True"""
         buf = Buffer()
         noerror = True
         if nabm_table is None:
@@ -199,9 +199,10 @@ S'il y ades lignes qui n'existent pas dans la nabm retourne False, sinon True"""
         if A is None:
             pass
         else:
-            res_lst, msg_lst = A
-            buf.extend(msg_lst)
+            res_lst, msg_buf = A
+            buf.extend_buf(msg_buf)
             noerror = False
+        buf.show()
         self.conclude(noerror, buf)
         return noerror
 

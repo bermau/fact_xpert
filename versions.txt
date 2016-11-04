@@ -38,3 +38,5 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 0.11 : Amélioration de la présentation en cas d'erreur de maximum de répétitions.
 
 0.12 : refonte du sytème d'affichage. Désormais la conclusion est affichée de façon claire, suivie des détails en cas d'erreur détectée.
+
+0.12+ : trouvé un bug sur non affichage de l'explication des actes.
