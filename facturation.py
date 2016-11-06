@@ -131,8 +131,7 @@ On utilise pour cela la commande attach dans Sqlite."""
                 buf.print(str(line)+',')
             buf.print()
             return res_as_list, buf.msg_lst
-        
-        
+                
     def affiche_liste_et_somme_theorique(self, nabm_version=43, verbose=None):
         """"Les actes sont-ils dans la nomenclature.
 
@@ -147,33 +146,34 @@ Puis affiche le nombre de B."""
         LEFT JOIN {nabm_table} AS N 
         ON inv.invoice_list.code=N.code 
 """.format(nabm_table=self.nabm_table)
-       
-        res_lst, buf = self.affiche_etude_select(req, comment=' dans la facture')
+        buf = Buffer()
+        res_lst, comments = self.affiche_etude_select(req, comment=' dans la facture')
+        if comments:
+            buf.extend(comments)
+            buf.show()
         if res_lst is None:
             return
         if verbose:
-            self.prt_buf('')
-            self.prt_buf('Format python :')
-            self.prt_buf(res_lst)
-
-        self.prt_buf('')
-        self.prt_buf('Format pour AMZ : '+ " ".join([code[1] for code in res_lst if code[1] is not None]))
+            print('')
+            print('Format python :')
+            print(res_lst)
+        print('')
+        print('Format pour AMZ : '+ " ".join([code[1] for code in res_lst if code[1] is not None]))
         
         if res_lst:
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
-            self.prt_buf("Somme des B d'après NABM : {}".format(str(total_B)))
+            print("Somme des B d'après NABM : {}".format(str(total_B)))
 
 
     def conclude(self, noerror, buffer):
-        """Write a conclusion and if neccesary the buffer."""
+        """Write a conclusion and if necessary a buffer."""
         if noerror:
             print("OK")
         else:
             print("***** Incorrect *****")
             buffer.show()
 
-        
     def verif_tous_codes_dans_nabm(self, nabm_table=None):
         """"Les actes sont-ils présents dans la nomenclature ?
 
