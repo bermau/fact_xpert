@@ -199,8 +199,8 @@ S'il y a des lignes qui n'existent pas dans la nabm retourne False, sinon True""
         if A is None:
             pass
         else:
-            res_lst, msg_buf = A
-            buf.extend_buf(msg_buf)
+            res_lst, msg_lst = A
+            buf.extend(msg_lst)          
             noerror = False
         buf.show()
         self.conclude(noerror, buf)
