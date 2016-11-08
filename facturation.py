@@ -356,7 +356,7 @@ Retourne True si aucune, et False s'il y a des incompatibilités."""
                  ON I.code=INC.code
                  """.format(self.incompatibility_table)
         self.ref.con.row_factory = sqlite3.Row
-        cur = self.ref.con.cursor()
+        cur = self.ref.con.cursor() # NE SERT à RIEN ICI ??
         cur.execute(sql)
         for row in cur:
             # print(row['code'], row['incompatible_code'])
@@ -377,7 +377,28 @@ WHERE code = '{}' """ .format(str(row['incompatible_code']).rjust(4,"0"))
             buf.print(get_advice("Conserver l'acte le plus cher."))
         self.conclude(noerror, buf)
         return noerror    
+    def verif_9105_multiple(self):
+        """Test la présence de plus de 1 acte 9105.
 
+note : il existe une ambiguité sur l'autorisation de coter plusieurs fois
+cet acte sur une même journée, en particulier si le patient est venu plusieurs
+fois. Le logiciel de Fides semble refuser ces factures.
+
+Retorune True s'il y a 0 ou 1 acte 9105, False suivi du nombre si plus de 1."""
+        # noerror = True
+        sql = """SELECT count(code) FROM inv.invoice_list WHERE code ="9105" """
+        self.ref.execute_sql(sql)
+        AA = self.ref.resultat_req()
+        nb = AA[0][0]
+        print("Nb de 9105 : {}".format(str(nb)))
+        if nb > 1:
+            # Le conseil suivant est un conseil par excès.
+            advice("Par précaution, limiter le nombre de 9105 à 1.")
+            return False, nb
+        else:
+            return True
+        
+        
     def verif_blood_minimum(self):
         """Test la présence indue d'actes de cotation minimum.
 
@@ -459,12 +480,12 @@ Retourne True si erreur, False sinon."""
     print("\nCodes existants dans la NABM :      ", end='')    
     resp1 = T.verif_tous_codes_dans_nabm()
     main_conclusion = main_conclusion and resp1
-
+    
     print("\nRépétition de codes :               ", end='')
     resp2 = T.verif_actes_trop_repetes()
     main_conclusion = main_conclusion and resp2
 
-    print("\nRègle des sérologies hépatites :     ", end='')
+    print("\nRègle des sérologies hépatite B :   ", end='')
     resp3 = T.verif_hepatites_B()
     main_conclusion = main_conclusion and resp3
 
@@ -479,6 +500,9 @@ Retourne True si erreur, False sinon."""
     print("\nIncompatilibités :                  ", end='')
     resp6 = T.verif_compatibilites()   
     main_conclusion = main_conclusion and resp6
+
+    print("\nForfait Sang multiple ? :           ", end='')
+    T.verif_9105_multiple()
     
     print("\nConclusion générale : ", end='')
     T.affiche_conclusion_d_un_test(main_conclusion)
@@ -555,7 +579,7 @@ if __name__=='__main__':
 
     _test()
     #_demo_1_for_simple_list()
-    _demo_2_data_from_synergy()
+    # _demo_2_data_from_synergy()
     #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
     pass
