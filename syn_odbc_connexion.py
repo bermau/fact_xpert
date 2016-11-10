@@ -1,5 +1,5 @@
 #!/bin/env python3
-"""Essai de connexion à un odbc.
+"""Cnnexion par odbc.
 
 Pour que le programme fontionne il faut créer une connexion avec la base:
 
@@ -606,9 +606,7 @@ if __name__=='__main__':
     # Syn().fac_de_IPP_date(IPP='100584102', date = '33/07/2016') # ne plante pas.
     # Syn().fac_de_IPP_date(IPP='100584102', date = '12/07/2016')
     # Syn().fac_de_IPP_date(IPP='486423', date = '20/04/2016')
-
+    
     # global NB_ERREUR, NB_IPP # très laid
     # demo_poll()
-
-
     del(CONNEXION)

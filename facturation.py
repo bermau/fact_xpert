@@ -199,8 +199,8 @@ S'il y a des lignes qui n'existent pas dans la nabm retourne False, sinon True""
         if A is None:
             pass
         else:
-            res_lst, msg_buf = A
-            buf.extend_buf(msg_buf)
+            res_lst, msg_lst = A
+            buf.extend(msg_lst)          
             noerror = False
         buf.show()
         self.conclude(noerror, buf)
@@ -485,6 +485,9 @@ Retourne True si erreur, False sinon."""
     resp2 = T.verif_actes_trop_repetes()
     main_conclusion = main_conclusion and resp2
 
+    print("\nForfait Sang multiple ? :           ", end='')
+    T.verif_9105_multiple()
+
     print("\nRègle des sérologies hépatite B :   ", end='')
     resp3 = T.verif_hepatites_B()
     main_conclusion = main_conclusion and resp3
@@ -501,8 +504,7 @@ Retourne True si erreur, False sinon."""
     resp6 = T.verif_compatibilites()   
     main_conclusion = main_conclusion and resp6
 
-    print("\nForfait Sang multiple ? :           ", end='')
-    T.verif_9105_multiple()
+
     
     print("\nConclusion générale : ", end='')
     T.affiche_conclusion_d_un_test(main_conclusion)
@@ -524,13 +526,13 @@ On définit une liste python de codes, on en choisit un (a), on teste.
     model_etude_1(model_1, model_type='MOD01')
 
 def _demo_2_data_from_synergy():
-    """Données extraites de synergy.
+    """Données extraites antérieurement de synergy.
 
 Une démonstration.
 La facture est sur le modèle suivant dit 'MOD02'.
 Chaque ligne de facture contient le numéro de dossier, nom d'acte, la lettre type,
 le nombre de lettres.
-La facture vient par exmeple du programme syn_odbc_connexion.py
+La facture vient par exemeple du programme syn_odbc_connexion.py
     
 """
     title("DEMO 2")
@@ -579,23 +581,7 @@ if __name__=='__main__':
 
     _test()
     #_demo_1_for_simple_list()
-    # _demo_2_data_from_synergy()
+    _demo_2_data_from_synergy()
     #_demo_3_several_records_from_synergy()
     # saisie_manuelle()
-    pass
-
-## Voila ce que je veux modifier : 
-##Règle des protéines :               Règle des protéines non respectée.
-##
-##Suggestion de correction pour les protéines.
-##3 lignes classées par valeurs décroissante :
-##('1817', 20, 'PREALBUMINE (DOSAGE) (SANG)'),
-##('1819', 14, 'TRANSFERRINE (SIDEROPHYLLINE) (DOSAGE) (SANG)'),
-##('1806', 10, 'ALBUMINE (DOSAGE) (SANG)'),
-##
-##*** CONSEIL *** : Garder : ['1817', '1819'] ***
-##*** CONSEIL *** : Eliminer : ['1806'] ***
-##
-##                                        ******** incorrect ******
-
 
