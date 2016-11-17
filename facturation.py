@@ -566,7 +566,9 @@ def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""
     
     print("Mode de saisie : manuel")
-    saisie = input("Saisir une liste de codes séparés par des espaces ")
+    saisie = input("""Saisir une liste de codes actes séparés par des espaces
+Formats acceptés : 512 0512
+""")
     # saisie.replace("  "," ")
     act_lst = [ code.rjust(4,'0') for code in saisie.split(" ") if code not in ('', ' ')]
     print(act_lst)
@@ -581,7 +583,7 @@ if __name__=='__main__':
 
     _test()
     #_demo_1_for_simple_list()
-    _demo_2_data_from_synergy()
+    # _demo_2_data_from_synergy()
     #_demo_3_several_records_from_synergy()
-    # saisie_manuelle()
+    saisie_manuelle()
 
