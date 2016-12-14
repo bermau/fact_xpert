@@ -5,8 +5,6 @@ Ce module présente une fonction de démonstration demo()
 
 et une fonction de saisie manuelle de EP et date."""
 
-
-
 import  syn_odbc_connexion
 from syn_odbc_connexion import Syn
 
@@ -20,7 +18,7 @@ def demo():
 def saisie_manuelle():
     """Demande l'IEP et la date puis lance l'expertise."""
     print("""
-Saisir la L'IEP puis la date des actes (format français, ex. 21/01/2015)
+Saisir L'IEP puis la date des actes au format français (ex. 21/01/2015)
 
 Utiliser Ctrl-C pour arrêter ce programme.
 """)

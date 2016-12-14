@@ -594,9 +594,9 @@ if __name__=='__main__':
     # Syn().fac_de_IEP_date(  IEP='07190243', date = '16/10/2015') # BM en IEP 
     # Syn().fac_de_IEP_date(IEP='7694000', date= '20/04/2016') # cas 40
     # Syn().fac_de_IEP_date(IEP='8060028', date= '08/09/2016') # cas 41
-    Syn().fac_de_IEP_date(IEP='7463335', date= '29/01/2016') # cas 42
+    # Syn().fac_de_IEP_date(IEP='7463335', date= '29/01/2016') # cas 42
     # Syn().req_syn()
-    # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter='6048')
+    Syn().demo_etude_facturation_d_un_jour("03/06/2016",  uf_filter='6048')
     # Syn().demo_etude_facturation_d_un_jour("02/06/2016",  uf_filter=[ 6048, 2105, 'UHCD'])
     # Syn().demo_etude_facturation_d_un_jour("05/06/2016")
     # Syn().req_audit_trail_for_id('6060248167')

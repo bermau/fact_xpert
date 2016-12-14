@@ -56,6 +56,9 @@ def get_name_of_nabm_files(nabm_version):
     ('nabm41', 'incompatibility41')
     >>> get_name_of_nabm_files('42')
     ('nabm42', 'incompatibility42')
+    >>> get_name_of_nabm_files('43')
+    ('nabm', 'incompatibility')
+    
 """
     tables = { 43:('nabm', 'incompatibility'),
                41:('nabm41', 'incompatibility41'),

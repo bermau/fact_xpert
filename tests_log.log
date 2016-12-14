@@ -36,3 +36,11 @@ tests :TestResults(failed=0, attempted=0)
 fact : TestResults(failed=0, attempted=2)
 lib_nabm :TestResults(failed=0, attempted=13)
 tests :TestResults(failed=0, attempted=0)
+2016-12-14 15:35 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=14)
+tests :TestResults(failed=0, attempted=0)
+2016-12-14 15:36 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm :TestResults(failed=0, attempted=14)
+tests :TestResults(failed=0, attempted=0)
