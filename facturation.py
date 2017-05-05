@@ -230,7 +230,8 @@ sur les factures de type MOD01.")
             cur.execute(sql)
             noerror = True
             for row in cur:
-                buf.print(row['code'], row['nb_letters'], row['coef'])
+                buf.print("Acte\t|Fact.\t|Max\t|")
+                buf.print(row['code'],"\t|"+str(row['nb_letters']), "\t|"+str(row['coef']),"\t|")
                 buf.print("Erreur : dans l'acte {} remplacer la valeur {} par la valeur {}"\
                       .format(row['code'],row['nb_letters'],row['coef'] ))
                 noerror = False

@@ -9,6 +9,13 @@ def title(msg):
     print(msg)
     print("*" * 30)
 
+def readkey(msg=''):
+    print(msg)
+    print("Touche... ")
+    input()
+
+
+
 def date_is_fr(date):
     """Verifie qu'une date est au format français.
 

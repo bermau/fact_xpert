@@ -1,10 +1,13 @@
 """Demonstration du module de facturation.
 
-Demande une saisie d'acte et lance l'expertise."""
+Lance l'expertise sur une facture de test."""
 
 import facturation
 
 if __name__ == '__main__':
-    facturation.saisie_manuelle()
+    facturation._demo_2_data_from_synergy()
+
+
+    
     
 

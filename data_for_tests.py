@@ -242,3 +242,73 @@ PLUSIEURS_ERREURS = [('6099028079', '9105', '9105', 5, 'B'),
 ('6090123456', None, 'CHR16', 82, 'BHN'),
 ('6090123456', '0584', 'CHP28', 7, 'B'),
 ('6090123456', '1818', 'CHR10', 35, 'B')]
+
+# Data de Glims
+# obtention par
+
+GLIMS_01_MOD1 = """
+   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 
+   B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 
+   B     0522       TRANSAMINASES (ALAT ET ASAT; T      10.0 B       2.70 
+   B     0552       SANG : GLUCOSE (GLYCEMIE)            5.0 B       1.35 
+   B     0593       SANG : UREE ET CREATININE            8.0 B       2.16 
+   B     1104       HEMOGRAMME Y COMPRIS PLAQUETTE      29.0 B       7.83 
+   B     1601       SANG : BILIRUBINE (BIL)              8.0 B       2.16 
+   B     1610       SANG : IONOGRAMME COMPLET (NA       24.0 B       6.48 
+   B     1804       CRP (PROTEINE C REACTIVE) (DOS       9.0 B       2.43 
+   B     1806       ALBUMINE (DOSAGE) (SANG)             7.0 B       1.89 
+   B     9005       FORFAIT DE PRISE EN CHARGE PRE      16.0 B       4.32 
+   B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35 
+"""
+
+GLIMS_DIDIER = """
+   B     0127       INR : TEMPS DE QUICK EN CAS DE      20.0 B       5.40 
+   B     0552       SANG : GLUCOSE (GLYCEMIE)            5.0 B       1.35 
+   B     0593       SANG : UREE ET CREATININE            8.0 B       2.16 
+   B     1610       SANG : IONOGRAMME COMPLET (NA       24.0 B       6.48 
+   B     9005       FORFAIT DE PRISE EN CHARGE PRE      16.0 B       4.32 
+   B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35
+"""
+
+GLIMS_01_MOD_XX = """Demande : 17054805
+Patient : JADEFE  RETRELEFER  
+Parti paye par  CENTRE HOSPITALIER LE PUY EN VELAY
+
+================================================================================
+   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 
+   B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 
+   B     0522       TRANSAMINASES (ALAT ET ASAT; T      10.0 B       2.70 
+   B     0552       SANG : GLUCOSE (GLYCEMIE)            5.0 B       1.35 
+   B     0593       SANG : UREE ET CREATININE            8.0 B       2.16 
+   B     1104       HEMOGRAMME Y COMPRIS PLAQUETTE      29.0 B       7.83 
+   B     1601       SANG : BILIRUBINE (BIL)              8.0 B       2.16 
+   B     1610       SANG : IONOGRAMME COMPLET (NA       24.0 B       6.48 
+   B     1804       CRP (PROTEINE C REACTIVE) (DOS       9.0 B       2.43 
+   B     1806       ALBUMINE (DOSAGE) (SANG)             7.0 B       1.89 
+   B     9005       FORFAIT DE PRISE EN CHARGE PRE      16.0 B       4.32 
+   B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35 
+===============================================================================
+  Nb. de B :    135
+  Nb. de BHN :    0
+  Nb. de KB :     0
+  Nb. de TB :     0
+  Nb. de PB :     0
+  Nb. de EUR :    0
+  Nb. de 100% :   0
+"""
+
+# Même exemple mais nettoyé
+GLIMS_01_MOD_XX_corr = """
+   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 
+   B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 
+   B     0522       TRANSAMINASES (ALAT ET ASAT; T      10.0 B       2.70 
+   B     0552       SANG : GLUCOSE (GLYCEMIE)            5.0 B       1.35 
+   B     0593       SANG : UREE ET CREATININE            8.0 B       2.16 
+   B     1104       HEMOGRAMME Y COMPRIS PLAQUETTE      29.0 B       7.83 
+   B     1601       SANG : BILIRUBINE (BIL)              8.0 B       2.16 
+   B     1610       SANG : IONOGRAMME COMPLET (NA       24.0 B       6.48 
+   B     1804       CRP (PROTEINE C REACTIVE) (DOS       9.0 B       2.43 
+   B     1806       ALBUMINE (DOSAGE) (SANG)             7.0 B       1.89 
+   B     9005       FORFAIT DE PRISE EN CHARGE PRE      16.0 B       4.32 
+   B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35 
+"""

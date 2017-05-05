@@ -15,7 +15,7 @@ from bm_u import title as titrer
 import datetime
 # listes des actes de la règle des sérologies hépatite B et des protéines
 PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
-                '1809', '1810', '1811', '1812', '1813', '1814', '1815',
+                '1809', '1810', '1811', '1812', '1813', '1814', '1815', 
                 '1816', '1817', '1818', '1819' ]
 
 HEP_B_LST_REF = ['0322', '0323', '0351', '0352', '0353', '0354']
@@ -30,7 +30,8 @@ def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
         return True, sous_liste
 
 def detecter_plus_de_deux_proteines(actes_lst):
-    """Renvoie False si la liste contient plus de 2 protéines.
+    """Renvoie False si la liste contient plus de 2 protéines et la liste des actes
+en erreur.
     >>> detecter_plus_de_deux_proteines(['1806','1805','1605','1819'])
     (False, ['1806', '1805', '1819'])
 
