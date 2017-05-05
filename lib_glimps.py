@@ -1,19 +1,21 @@
+"""tools for Glims.
 
+Extraire des structures d'un tableau régulier.
+Extraction de champs de longueur fixe.
 
-"""Extraire des structures d'un tableau régulier.
+Les données sont issues d'un copier coller de 
+Dossier/ Cotation / visualisation facture."""
  
-Extraction de champs de longueur fixe"""
- 
- 
+
+# TODO : je n'arrive pas à saisir des structure multilignes dans les docstring pour les
+# doctest. Je suis obligé de redéfinir ces 2 structures générales
 struct = """
 AAA 123 Ceci est le libellé 234.5
 ALO 345 Ceci est une autre  124.5
 """
 
-seps = [0, 5, 8, 28 ]
-
 class Spliter():
-    """Split a text as the Unix cut function
+    """split a text as the Unix function cut
     >>> seps = [0, 4, 8, 28 ]
     >>> a = Spliter(struct, seps)
     >>> a.get_fields()
@@ -46,16 +48,46 @@ class Spliter():
             ar.append(ar_line)        
         return ar
 
+    def print_fields(self, fields_str):
+        """Frint tabulated fields"""
+        for line in fields_str:
+        # print(line)
+            for field in line:
+                print(field + "\t", end = '')
+            print()   
+        
+
+def glims_to_MOD01_format(splitted_data):
+    """Convert splitted data into a fact_xpert MOD01 array."""
+    A = [ line[1]  for line in splitted_data ]
+    return A
+
+def glims_to_MOD02_format(splitted_data):
+    """Convert splitted data into a fact_xpert MOD02 array."""
+    A = [( '1230567890', line[1], '*'+line[2], int(line[3][:-2]), line[0])  for line in splitted_data ]
+    return A
+
 def _test():
     """Execute doctests."""
     import doctest
     (failures, tests) = doctest.testmod(verbose=True)
     print("{} tests performed, {} failed.".format(tests, failures))
- 
+
+def demo():
+    """Demo to use Splitter"""
+
+    seps = [0, 5, 8, 28 ]
+    struct = """
+AAA 123 Ceci est le libellé 234.5
+ALO 345 Ceci est une autre  124.5
+"""
+    
+    a = Spliter(struct, seps)
+    print(a.get_fields())
+
+    
 if __name__ == "__main__":
     _test()
     
-    
-##    a = Spliter(struct, seps)
-##    print(a.get_fields())
+
 
