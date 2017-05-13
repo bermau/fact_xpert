@@ -14,6 +14,8 @@ AAA 123 Ceci est le libellé 234.5
 ALO 345 Ceci est une autre  124.5
 """
 
+seps_GLIMS = [2, 9, 20, 54, 61, 67]
+
 class Spliter():
     """split a text as the Unix function cut
     >>> seps = [0, 4, 8, 28 ]
@@ -54,8 +56,19 @@ class Spliter():
         # print(line)
             for field in line:
                 print(field + "\t", end = '')
-            print()   
-        
+            print()
+            
+def delimite_format(msg):
+    """Elimine les données inutiles de l'écran de facturation recueillies par 
+Dossier/ Cotation / visualisation facture.
+    >>> import data_for_tests as dt
+    >>> delimite_format(dt.GLIMS_01_MOD_00)
+    ['   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 ', \
+'   B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 ']
+"""
+    b = [ line for line in msg.split("\n") if line != '' ]
+    return b[b.index('='*80)+1:b.index('='*79)]
+  
 
 def glims_to_MOD01_format(splitted_data):
     """Convert splitted data into a fact_xpert MOD01 array."""
@@ -73,7 +86,7 @@ def _test():
     (failures, tests) = doctest.testmod(verbose=True)
     print("{} tests performed, {} failed.".format(tests, failures))
 
-def demo():
+def demo_for_splitter():
     """Demo to use Splitter"""
 
     seps = [0, 5, 8, 28 ]
@@ -85,9 +98,24 @@ ALO 345 Ceci est une autre  124.5
     a = Spliter(struct, seps)
     print(a.get_fields())
 
+def demo_for_glims():
+    """Demo to use Splitter with data from Glims"""
+    from  data_for_tests import GLIMS_DIDIER
+    import lib_glimps
+    
+    ar_strings = []
+    a = lib_glimps.Spliter(GLIMS_DIDIER, lib_glimps.seps_GLIMS)
+    ar_strings = a.get_fields()
+    format_MOD02 = lib_glimps.glims_to_MOD02_format(ar_strings)
+    print(format_MOD02)
+
+    # IL RESTE A ELIMINER les blancs :
+    
     
 if __name__ == "__main__":
-    _test()
-    
+    #_test()
+    demo_for_glims()
+   
+
 
 

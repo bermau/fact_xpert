@@ -64,6 +64,18 @@ DOSSIER = '17042664  18/04/2017'
 title("Selectionner les données du dossier "+ DOSSIER)
 print(data3[data3.Dossier==DOSSIER])
 
+title("Aggréger les données pour les exporter")
+grouped = data3.groupby(['Objet', 'Dossier'])
+for cle,res in grouped:
+    print("\ncle :", cle)
+    print("\nData", res)
+    # on accède aux données ainsi 
+    for l in res.values:
+        print(l)
+        print(type(l))
+        print(l[2])
+    print(res.iat[1,3])
+
 
 if __name__ == "__main__":
     pass

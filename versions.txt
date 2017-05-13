@@ -42,3 +42,8 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 0.12+ : trouvé un bug sur non affichage de l'explication des actes.
 
 0.13 : bug précédent résolu.
+
+0.14 : demo_facturation est remplacé par demo_facturation_simple_list.
+Dasnslib_glims, création d'une fonction pour nettoyer le format de facturation issu de l'écran de facturation.
+
+

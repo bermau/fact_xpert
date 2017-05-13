@@ -44,3 +44,7 @@ tests :TestResults(failed=0, attempted=0)
 fact : TestResults(failed=0, attempted=2)
 lib_nabm :TestResults(failed=0, attempted=14)
 tests :TestResults(failed=0, attempted=0)
+2017-05-13 16:07 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=0, attempted=14)
+tests : TestResults(failed=0, attempted=0)

@@ -269,8 +269,24 @@ GLIMS_DIDIER = """
    B     9005       FORFAIT DE PRISE EN CHARGE PRE      16.0 B       4.32 
    B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35
 """
+GLIMS_01_MOD_00 = """Demande : 1234567
+Patient : MONNOM  ESTPERSONNE  
+Parti paye par  CENTRE HOSPITALIER LE PUY EN VELAY
 
-GLIMS_01_MOD_XX = """Demande : 17054805
+================================================================================
+   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 
+   B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 
+===============================================================================
+  Nb. de B :    14
+  Nb. de BHN :    0
+  Nb. de KB :     0
+  Nb. de TB :     0
+  Nb. de PB :     0
+  Nb. de EUR :    0
+  Nb. de 100% :   0
+"""
+
+GLIMS_01_MOD_XX = """Demande : 1745885
 Patient : JADEFE  RETRELEFER  
 Parti paye par  CENTRE HOSPITALIER LE PUY EN VELAY
 
