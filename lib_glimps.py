@@ -16,10 +16,10 @@ ALO 345 Ceci est une autre  124.5
 
 seps_GLIMS = [2, 9, 20, 54, 61, 67]
 
-class Spliter():
+class Splitter():
     """split a text as the Unix function cut
     >>> seps = [0, 4, 8, 28 ]
-    >>> a = Spliter(struct, seps)
+    >>> a = Splitter(struct, seps)
     >>> a.get_fields()
     [['AAA', '123', 'Ceci est le libellé', '234.5'], \
 ['ALO', '345', 'Ceci est une autre ', '124.5']]
@@ -61,6 +61,8 @@ class Spliter():
 def delimite_format(msg):
     """Elimine les données inutiles de l'écran de facturation recueillies par 
 Dossier/ Cotation / visualisation facture.
+Dans notre paramétrage, les lignes d'intérêt sont délimités par des séries de =.
+
     >>> import data_for_tests as dt
     >>> delimite_format(dt.GLIMS_01_MOD_00)
     ['   B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 ', \
@@ -77,7 +79,11 @@ def glims_to_MOD01_format(splitted_data):
 
 def glims_to_MOD02_format(splitted_data):
     """Convert splitted data into a fact_xpert MOD02 array."""
-    A = [( '1230567890', line[1], '*'+line[2], int(line[3][:-2]), line[0])  for line in splitted_data ]
+    A = [( '1230567890',
+           line[1].strip(),
+           '*'+line[2].strip(),
+           int(line[3][:-2]),
+           line[0].strip())  for line in splitted_data ]
     return A
 
 def _test():
@@ -95,16 +101,16 @@ AAA 123 Ceci est le libellé 234.5
 ALO 345 Ceci est une autre  124.5
 """
     
-    a = Spliter(struct, seps)
+    a = Splitter(struct, seps)
     print(a.get_fields())
 
 def demo_for_glims():
     """Demo to use Splitter with data from Glims"""
-    from  data_for_tests import GLIMS_DIDIER
+    from  data_for_tests import GLIMS_02_MOD2
     import lib_glimps
     
     ar_strings = []
-    a = lib_glimps.Spliter(GLIMS_DIDIER, lib_glimps.seps_GLIMS)
+    a = lib_glimps.Splitter(GLIMS_02_MOD2, lib_glimps.seps_GLIMS)
     ar_strings = a.get_fields()
     format_MOD02 = lib_glimps.glims_to_MOD02_format(ar_strings)
     print(format_MOD02)

@@ -246,7 +246,7 @@ PLUSIEURS_ERREURS = [('6099028079', '9105', '9105', 5, 'B'),
 # Data de Glims
 # obtention par
 
-GLIMS_01_MOD1 = """
+GLIMS_01_MOD2 = """
    B     0514       PHOSPHATASES ALCALINES (PH. AL       7.0 B       1.89 
    B     0519       GAMMA GLUTAMYL TRANSFERASE (GA       7.0 B       1.89 
    B     0522       TRANSAMINASES (ALAT ET ASAT; T      10.0 B       2.70 
@@ -261,7 +261,7 @@ GLIMS_01_MOD1 = """
    B     9105       FORFAIT DE SECURITE POUR ECHAN       5.0 B       1.35 
 """
 
-GLIMS_DIDIER = """
+GLIMS_02_MOD2 = """
    B     0127       INR : TEMPS DE QUICK EN CAS DE      20.0 B       5.40 
    B     0552       SANG : GLUCOSE (GLYCEMIE)            5.0 B       1.35 
    B     0593       SANG : UREE ET CREATININE            8.0 B       2.16 

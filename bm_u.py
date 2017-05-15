@@ -14,7 +14,10 @@ def readkey(msg=''):
     print("Touche... ")
     input()
 
-
+def prt_lst(une_liste):
+    """print a list in a human readable format."""
+    for line in une_liste:
+        print(line)
 
 def date_is_fr(date):
     """Verifie qu'une date est au format français.
