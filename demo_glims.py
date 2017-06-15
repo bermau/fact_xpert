@@ -16,6 +16,5 @@ if __name__ == "__main__":
     ar_strings = a.get_fields()
     format_MOD02 = lib_glimps.glims_to_MOD02_format(ar_strings)
 
-
     facturation.model_etude_1(format_MOD02, model_type='MOD02')
     

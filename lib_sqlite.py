@@ -22,7 +22,7 @@ class GestionBD:
             if not os.path.isfile(dbName): 
                 print("Error : Database {} does not exist".format(dbName))   
             try:
-                # IMPORTANT la connection est10 fois plus longue si le fichier 
+                # IMPORTANT la connection est 10 fois plus longue si le fichier 
                 # est verrouillé en écriture.
                 self.con = sqlite3.connect(dbName)
             except Exception as err:
@@ -37,8 +37,6 @@ class GestionBD:
     def execute_sql(self, req, param =None):
         "Exécution de la requête <req>, avec détection d'erreur éventuelle."
         try:
-            # obligé de faire cette bidouille infame ! Je dois améliorer le
-			# passage des arguments
             if param == None :
                 self.cur.execute(req)
             else:
@@ -56,7 +54,8 @@ class GestionBD:
         return self.cur.fetchall()
 
     def quick_sql(self, req):
-       if self.execute_sql(req):
+        "print an SQL request. Préférer la méthode prt_sql_with_header."
+        if self.execute_sql(req):
           # Afficher les noms de colonnes
           records=self.resultat_req()         # ce sera un tuple de tuples
           # TypeError: 'NoneType' object is not iterable
@@ -73,15 +72,46 @@ class GestionBD:
                 
           except:
              print("Rien à afficher")
+             
+    def prt_sql_with_header(self,  sql, sep='\t', param=None):
+        """print the result of an SQL request, with columns name"""
+        self.con.row_factory = sqlite3.Row # et non pas Row()
+        c = self.con.cursor()
+        if param:
+            c.execute(sql, param)
+        else:
+            c.execute(sql)
+        for i, row in enumerate(c.fetchall()):
+            # title
+            if i == 0:
+                print('\t'.join(row.keys()))
+            # data
+            print('\t'.join([str(item) for item in row]))
+            
+    def prt_sql_in_page_mmode(self, sql, sep='\t', param=None):
+        """print a detailled record (page mode)"""
+        self.con.row_factory = sqlite3.Row # et non pas Row()
+        c = self.con.cursor()
+        if param:
+            c.execute(sql, param)
+        else:
+            c.execute(sql)      
+        line = c.fetchone()
+        if line :
+                
+            for item in line.keys():
+                print(item, sep, line[item])
+        else:
+            print("Nothing")
+             
     def commit(self):
         # if self.con: # ??
         self.con.commit()         # transfert curseur -> disque
 
     def close(self):
-        pass
         if self.con:
             self.con.close()
-            # sys.stderr.write("Database {} has been closed\n".format(self.dbname))
+            sys.stderr.write("Database {} has been closed\n".format(self.dbname))
 
 if __name__ == '__main__': 
     print("Connexion à base de donnée")
@@ -92,10 +122,11 @@ if __name__ == '__main__':
         print("OK")
     BASE.quick_sql("Select 1,2,3 ")
     BASE.quick_sql("Select 456, 345")
-    BASE.quick_sql("Select * from nabm WHERE ID = 126")
+    BASE.prt_sql_with_header("Select 1,4,2")
+    BASE.prt_sql_with_header("Select * from nabm43 LIMIT 2")
+    BASE.prt_sql_in_page_mmode("Select * from nabm43 LIMIT 1", sep = ' : \t' )
     BASE.close()
 
     # Autre exemple avec une base en mémoire RAM.
     INRAM=GestionBD(in_memory=True)
     INRAM.quick_sql("Select 1,2,3 ")
-    

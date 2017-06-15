@@ -1,4 +1,4 @@
-﻿VERSION : 0.13
+﻿VERSION : 0.15
 
 0.02 : simplification du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
@@ -46,4 +46,4 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 0.14 : demo_facturation est remplacé par demo_facturation_simple_list.
 Dasnslib_glims, création d'une fonction pour nettoyer le format de facturation issu de l'écran de facturation.
 
-
+0.15 : fonctionnement adapté pour glims/mips. Reste à prévoir la détection des erreurs de minimum de cotation.

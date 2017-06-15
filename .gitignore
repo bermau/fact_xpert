@@ -1,7 +1,7 @@
 # BM: 
 conf_file.py
 essai_*
-tempo.sqlite
+./tempo.sqlite
 PRIVATE/
 # Byte-compiled / optimized / DLL files
 __pycache__/

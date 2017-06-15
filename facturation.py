@@ -16,6 +16,8 @@ import lib_nabm
 import conf_file as Cf
 import lib_invoice
 import lib_smart_stdout
+import lib_fix_os
+
 
 from bm_u import title, Buffer
 
@@ -47,7 +49,11 @@ A la base de référence (REF) contenant la nomenclature,
 on attache une base temporaire contenant la facture, ce qui permet
 d'utiliser des instruction SQL.
 
-On utilise pour cela la commande attach dans Sqlite."""
+On utilise pour cela la commande attach dans Sqlite.
+
+Attention aux arguments : REF_DB est l'objet python qui gère la base sqlite
+contenant les données du référentiel. Par exemple REF_DB est lib_nabm.Nabm()"""
+
     def __init__(self, invoice, REF_DB, nabm_version):
         """Enregistrement de 2 connecteurs"""
 
@@ -73,43 +79,15 @@ On utilise pour cela la commande attach dans Sqlite."""
             print("correct")
         else:
             print("\n"+" "*40 + "******** incorrect ******")
-##        
-##    def conclude(self):
-##        """Imprime le rapport et le sauve éventuellement."""
-##        for line in self.buf:
-##            print(line)
-##        if self.error == []:
-##            print("rapport vide")
-##        else:
-##            print("Rapport à sauvegarder : ", self.buf)
 
     def attach_invoice_database(self):
         """Attacher la base de la facture à la base de nomenclature."""
         # ILLOGIQUE : on devrait pouvoir attacher ce qui vient de invoice.
+        
         self.ref.execute_sql("attach database 'tempo.sqlite' as inv")
         
         # self.ref.execute_sql("attach database ':memory:' as inv")
         sys.stderr.write("Invoice db attached\n")
-        
-    def affiche_etude_select_OK(self, sql , comment='', param=None):
-        """Affiche une liste des lignes de Select éventuellement vide.
--> Liste des résultats ou None.
-
-        """
-        if param is None:    
-            self.ref.execute_sql(sql)
-        else:
-            self.ref.execute_sql(sql, param=param)
-        res_as_list =  self.ref.resultat_req()
-        
-        if len(res_as_list) == 0:
-            return None # Mieux que False
-        else:
-            self.prt_buf("{} lignes{} :".format(str(len(res_as_list)),comment))
-            for line in res_as_list:
-                print(str(line)+',')
-            print()
-            return res_as_list
         
     def affiche_etude_select(self, sql , comment='', param=None):
         """Affiche une liste des lignes de Select éventuellement vide.
@@ -157,9 +135,9 @@ Puis affiche le nombre de B."""
             print('')
             print('Format python :')
             print(res_lst)
-        print('')
+            
         print('Format pour AMZ : '+ " ".join([code[1] for code in res_lst if code[1] is not None]))
-        
+        print()
         if res_lst:
             total_B =sum([line[3] for line in res_lst
                           if line[3] is not None ])
@@ -238,7 +216,7 @@ sur les factures de type MOD01.")
             self.conclude(noerror, buf)
             return noerror
 
-    def verif_actes_trop_repetes(self, nabm_version=43):
+    def verif_actes_trop_repetes(self, nabm_version=Cf.NABM_DEFAULT_VERSION):
         """Test de codes répétés.
 
 -> True si pas d'anomalie, False sinon."""
@@ -258,7 +236,7 @@ sur les factures de type MOD01.")
         for row in cur:
             buf.print("Le code {} est répété {} fois (maximum admis : {})".format(
                 row['code'], row['occurence'], row['MaxCode']))
-            if (int(row['MaxCode'])> 0) and (row['occurence']> int(row['MaxCode']) ): 
+            if (int(row['MaxCode'])> 0) and (int(row['occurence'])> int(row['MaxCode']) ): 
                 noerror = False
                 buf.print(get_advice("Supprimer un ou des codes :\
 {} (Maximum admis : {})". format(row['code'],row['MaxCode'])))            
@@ -454,7 +432,7 @@ def get_affiche_liste_codes(code_liste):
         
 DEBUG = False
 
-# @lib_smart_stdout.record_if_true(filename='erreur.txt')
+@lib_smart_stdout.record_if_true(filename='PRIVATE/erreur.txt')
 def model_etude_1(act_lst, label=None, model_type='MOD01',
                   nabm_version=Cf.NABM_DEFAULT_VERSION):
     """Une expertise mieux présentée.
@@ -470,8 +448,11 @@ Retourne True si erreur, False sinon."""
     act_ref = lib_nabm.Nabm()
     invoice = lib_invoice.Invoice(model_type=model_type)
     invoice.load_invoice_list(act_lst)
+# bizarre : 
+#    T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
+#                                        nabm_version=nabm_version
 
-    T = TestInvoiceAccordingToReference(invoice, act_ref.NABM_DB,
+    T = TestInvoiceAccordingToReference(invoice, act_ref,
                                         nabm_version=nabm_version)
     T.attach_invoice_database()
     title("Explication des actes")
@@ -504,17 +485,94 @@ Retourne True si erreur, False sinon."""
     print("\nIncompatilibités :                  ", end='')
     resp6 = T.verif_compatibilites()   
     main_conclusion = main_conclusion and resp6
-
-
     
     print("\nConclusion générale : ", end='')
     T.affiche_conclusion_d_un_test(main_conclusion)
 
     return not main_conclusion
     #T.conclude(main_conclusion)
+
+
+
+# Modèle 2 : plus compacte.
+# J'inverse la logique de sortie
+
+@lib_smart_stdout.record_if_false(filename='PRIVATE/erreur2.txt')
+def model_etude_2(act_lst, label=None, model_type='MOD01',
+                  nabm_version=Cf.NABM_DEFAULT_VERSION):
+    """Une expertise compacte avec sortie détaillée en cas d'erreur.
+Permet de spécifier la date de NABM à utiliser. 
+
+si pas d'erreur : return True,
+si erreur : retourne False + liste erreur
+"""
+
+    if label:
+        title(label)
+    main_conclusion = True
+    print_version_and_date()
+    if DEBUG:
+        print("ACTES etudiés", act_lst)
+    
+    act_ref = lib_nabm.Nabm()
+    invoice = lib_invoice.Invoice(model_type=model_type)
+    invoice.load_invoice_list(act_lst)
+    
+    T = TestInvoiceAccordingToReference(invoice, act_ref,
+                                        nabm_version=nabm_version)
+    T.attach_invoice_database()
+    title("Explication des actes")
+    T.affiche_liste_et_somme_theorique()
+    title("Vérifications")
+    
+    print("Codes existants dans la NABM :      ", end='')    
+    nabm = T.verif_tous_codes_dans_nabm()
+    main_conclusion = main_conclusion and nabm
+    
+    print("Répétition de codes :               ", end='')
+    repet = T.verif_actes_trop_repetes()
+    main_conclusion = main_conclusion and repet
+
+    print("Forfait Sang multiple ? :           ", end='')
+    sang = T.verif_9105_multiple()
+    main_conclusion = main_conclusion and sang
+    # on ne garde le nombre que si sup à 1.
+    if (sang != True): sang=sang[1] # simplification de la réponse
+    
+    print("Règle des sérologies hépatite B :   ", end='')
+    hep_b = T.verif_hepatites_B()
+    main_conclusion = main_conclusion and hep_b
+
+    print("Règle des protéines :               ", end='')
+    prot = T.verif_proteines()
+    main_conclusion = main_conclusion and prot
+
+    print("Montants :                          ", end='')
+    mont = T.verif_codes_et_montants()
+    main_conclusion = main_conclusion and mont
+    
+    print("Incompatilibités :                  ", end='')
+    incomp = T.verif_compatibilites()   
+    main_conclusion = main_conclusion and incomp
+
+    print("Conclusion générale : ", end='')
+    T.affiche_conclusion_d_un_test(main_conclusion)
+    print("Valeur de Main_conlusion ", main_conclusion)
+
+    ret_dict = {'nabm': nabm, 'repet':repet, 'sang':sang, 'hep_b':hep_b,
+                'prot':prot, 'mont':mont, 'incomp':incomp}
+    
+    if main_conclusion: # Retourne True si pas d'erreur, 
+        return main_conclusion
+    else:
+        return (main_conclusion, ret_dict) # False + erreurs si erreur.
+
+
 def _demo_1_for_simple_list():
     """Exemple d'utilisation.
 On définit une liste python de codes, on en choisit un (a), on teste.
+
+ME SEMBLE A ELIMINER
 """
     title("DEMO 1")
     import data_for_tests
@@ -559,9 +617,14 @@ But : Eviter de refermer la base si possible."""
    
 def print_version_and_date():
     """Print version and execution datetime"""
-    version = "Programme : " + os.path.basename(__file__)
+    fileprg = "Programme : " + os.path.basename(__file__)
+    # version
+    with open ('versions.txt') as f:
+        line = f.readline().rstrip('\n')
+        print(line)   
+    # datetime    
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), end='   ')
-    print(version)
+    print(fileprg)
 
 def saisie_manuelle():
     """Demande une saisie manuelle et l'expertise."""
@@ -579,12 +642,18 @@ def _test():
     import doctest
     (failures, tests) = doctest.testmod(verbose=False)
     print("{} tests performed, {} failed.".format(tests, failures))
+    print()
 
 if __name__=='__main__':
 
     _test()
-    #_demo_1_for_simple_list()
-    # _demo_2_data_from_synergy()
-    #_demo_3_several_records_from_synergy()
-    saisie_manuelle()
+##    _demo_1_for_simple_list()
+##    _demo_2_data_from_synergy()
+##    _demo_3_several_records_from_synergy()
+    # saisie_manuelle()
 
+    import data_for_tests    
+    model_etude_2(data_for_tests.FACT1, model_type='MOD02')
+
+
+    model_etude_2(data_for_tests.FACT1_ERR_0578, model_type='MOD02')

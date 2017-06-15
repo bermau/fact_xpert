@@ -5,6 +5,7 @@
 import datetime
 
 def title(msg):
+    "Print à title"
     print("*" * 30)
     print(msg)
     print("*" * 30)
@@ -38,7 +39,8 @@ def date_is_fr(date):
         return False
 
 class Buffer():
-    """Un petit buffer pour enregistrer ces message à écrire plus tard.
+    """Un buffer pour enregistrer des messages à écrire plus tard.
+
     >>> buf = Buffer()
     >>> buf.print(22, "poires")
     >>> buf.print(35, "abricots")
@@ -56,7 +58,7 @@ class Buffer():
     Line 1
     Line 2
     Line 3
-    
+
     
     """
     def __init__(self):
@@ -76,7 +78,11 @@ class Buffer():
         """Aficher le buffer"""
         for i in self.msg_lst:
             print(i)
-
+def get_version():
+    """Return version of this programm"""
+    # cf facturation.print_version_and_date()
+    
+    
 def _test():
     """Execute doctests."""
     import doctest

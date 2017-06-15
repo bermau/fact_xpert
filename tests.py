@@ -55,7 +55,7 @@ la premier fenetre"""
         self.invoice = lib_invoice.Invoice(model_type=model_type)
         self.invoice.load_invoice_list(facture)
         self.test = TestInvoiceAccordingToReference(self.invoice,
-                                                    self.act_ref.NABM_DB,
+                                                    self.act_ref,
                                                     nabm_version=nabm_version)
         self.test.attach_invoice_database()
         

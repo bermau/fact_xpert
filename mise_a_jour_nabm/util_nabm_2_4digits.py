@@ -1,22 +1,22 @@
 # file : util_nabm_2_4digits
-"""Convertir la table de la nabm en format acceptée pour l'intérgration dans
+"""Convertir la table de la nabm en format acceptée pour l'intégration dans
 sqlite.
 
+Méthode pour la conversion : récupérer le fichier excel de nabm.
+Le traiter avec l'utilisatire d'amazilia (tableur openoffice).
+- Récupérer les fichiers couples_incompabible.csv et le traiter avec le
+programme util_incompat_2_4digits.
 
-M2thode pour la conversion : récupérer le ficheir de nabm.
-Le traiter avec l'utilisatire d'amazilia.
-- Récupérer les fichiers couples_incompabible.csv et le traiter avec le programme util_incompat_2_4digits.
-- R2cupter le ficheir nabm.csv et le 
 
-Circonstances :
-Le ficheir nabm.csv entré est de type :
+- Récupérer le fichier nabm.csv et le traiter avec ce fichier.
+Le fichier nabm.csv entré est de type :
 - séparé par des virgules,
 - utf8,
-- champs délimités par des double guillemetsfichier de type
+- champs délimités par des doubles guillemets
 
 Typiquement le début du csv d'entrée est :
 
-bertrand: import_nabm$head -n 20 nabm.csv 
+$head -n 20 nabm.csv 
 "CODE","CHAPITRE","SOUS-CHAPITRE","COEFFICIENT B","DATE CREATION","LIBELLE","ENTENTE PREALABLE","REMBOURSEMENT 100%","NBR MAXI DE CODE","N° REGLE SPECIFIQUE","REF INDICATION MEDICALE","ACTES RESERVES","INITIATIVE BIOLOGISTE","CONTINGENCE TECHNIQUE","R.M.O.","EXAMEN SANGUIN","DERNIERE DATE EFFET","CODES INCOMPATIBLES"
 4084,0,0,500,22/10/2010,"DETERMINATION PRENATALE DU SEXE FOETAL SANG MATERNEL",,"1",1,,"1","1",,3,,"1",15/03/2011,
 9905,0,0,5,14/02/1997,"COMPLEMENT A LA COTATION MINIMALE DE VALEUR B 5 (SANG)",,,,,,,"1",,,"1",19/01/2010,
@@ -33,8 +33,7 @@ bertrand: import_nabm$head -n 20 nabm.csv
 On note :
 - un header
 - sur la ligne commençant par 900A, en fin de ligne, 2 codes d'exclusion entre guillemets.
-- sur la ligne commençant par 9004, un suel code d'exception.
-
+- sur la ligne commençant par 9004, un seul code d'exception.
 """
 
 import util_incompat_2_4digits as lib 
@@ -69,7 +68,7 @@ if __name__=='__main__':
     _test()
     
     # déclarations
-    file_name = "import_nabm/nabm.csv"
+    file_name = "data_nabm/nabm.csv"
     output_file_name = get_ouput_file_name(file_name, '_ok')
 
     output_lines = []

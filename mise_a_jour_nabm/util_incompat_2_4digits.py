@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # file : util_incompat_2_4digits.py
 
-"""Convertir des nombres en chaine de 4 caractères.
+"""Convertir des nombres en chaînes de 4 caractères.
 
-Le fichier provient de la l'utilisatire d'amazilia.
+Le fichier provient de l'utilitaire d'amazilia.
 Le fichier est originelement nommé : couples_incompat.csv
 
 Circonstances :
@@ -19,12 +19,12 @@ fichier commence par :
 41,40
 901,902
 
-la partie contenant
+de lignes  contenant
 
 31,1254
 2345,3453
 
-est à convertir en :
+sont à convertir en :
 0031,1254
 2345,3453
 
@@ -33,8 +33,8 @@ printf("%04d", id) # Sa syntaxe dans format est un peu différente.
 
 """
 
-file_name = "import_nabm/couples_incompat.csv"
-output_file_name = "import_nabm/couples_incompat_ok.csv"
+file_name = "data_nabm/couples_incompat.csv"
+output_file_name = "data_nabm/couples_incompat_ok.csv"
 def to4digits(num):
     """
     return a 4 digits formated number
@@ -61,7 +61,7 @@ if __name__=='__main__':
 
     # traitement    
     for ligne in  a:
-        (a, b) = ligne.split(',') # DANGER ????
+        (a, b) = ligne.split(',')
         output_lines.append((to4digits(a)+','+to4digits(b)+'\n'))
 
     # écriture

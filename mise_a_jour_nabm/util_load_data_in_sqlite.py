@@ -4,7 +4,7 @@
 
 """Charge les données csv dans la base sqlite de la nabm.
 
-IMPORTANT : METTRE A JOUR la VARIABLE DE le VERSION de NABM
+IMPORTANT : METTRE A JOUR la VARIABLE DE le VERSION de NABM de ce fichier
 
 Il y a 2 fichiers :
 - couples_incompat_ok.csv
@@ -24,32 +24,30 @@ import csv
 class CsvForNabm(csv.excel):
     delimiter = ";"
 
-# importer les biblitohèque du niveau au dessus.
-dirname = os.path.dirname(__file__)# __file__ n'est pas défini sous IDLE 2.7 ? 
+# importer les bibliothèque du niveau au dessus.
+dirname = os.path.dirname(__file__) # ! __file__ n'est pas défini sous IDLE 2.7 !
 if dirname=='':
     dirname='.'
 dirname = os.path.realpath(dirname)
 updir = os.path.split(dirname)[0]
-
 if updir not in sys.path:
     print("Ajout de {} à la variable PATH".format(updir)) 
     sys.path.append(updir)
 
-import lib_sqlite
+# importer les bibliothèques
+# import lib_sqlite
 import conf_file as Cf
 import bm_u
 
-#DB_FILE = 'ESSAI_import.sqlite'
-DB_FILE = '../nabm_db.sqlite'
+DB_FILE = '../nabm_plus_new_nabm.sqlite'
+#DB_FILE = '../nabm_db.sqlite'
 
 VERSION = str(44) 
-
-
 
 INCOMPAT_FILE = 'import_nabm/couples_incompat_ok.csv'
 INCOMPAT_TABLE_NAME = 'incompatibility' + VERSION
 
-NABM_FILE = 'import_nabm/nabm_ok.csv'
+NABM_FILE = 'data_nabm/nabm_ok.csv'
 NABM_TABLE_NAME = 'nabm' + VERSION
 
 
@@ -60,6 +58,13 @@ def read_a_key(msg=''):
     
 def get_sql_foo():
     return """Select 1,2,3"""
+
+def connect_db():
+    con = sqlite3.connect(DB_FILE)
+    con.execute("Select 1,2,3 ;")
+    con.execute("Select * from nabm43 LIMIT 10 ; ")
+    con.close()
+
 
 # Fonctions pour la table incompatibility
 def req_create_incompat_table(table_name):
@@ -120,12 +125,12 @@ def req_create_nabm_table(table_name):
     ,"libelle" varchar(255) DEFAULT (NULL)
     ,"entente" tinyint(1) DEFAULT (NULL)
     ,"Remb100" tinyint(1) DEFAULT (NULL)
-    ,"MaxCode" int(11) NOT NULL  DEFAULT ('0')
+    ,"MaxCode" int(11) NOT NULL  DEFAULT (NULL)
     ,"ReglSpec" char(2) NOT NULL  DEFAULT ('')
-    ,"RefMed" int(11) DEFAULT ('0')
+    ,"RefMed" int(11) DEFAULT (NULL)
     ,"Reserve" tinyint(1) DEFAULT (NULL)
     ,"IniBio" tinyint(1) DEFAULT (NULL)
-    ,"Tech" int(11) DEFAULT ('0')
+    ,"Tech" int(11) DEFAULT (NULL)
     ,"RMO" smallint(1) DEFAULT (NULL)
     ,"Sang" tinyint(1) DEFAULT (NULL)
     ,"DateEffet" date DEFAULT (NULL) ,"Rem" text)""".format(table=table_name)
@@ -158,26 +163,42 @@ def import_nabm(file, table):
     con = sqlite3.connect(DB_FILE)
         
     # Demande de confirmation et enregistrement dans la table
-    bm_u.print_lst(data[0:19])
+    bm_u.prt_lst(data[0:19])
     read_a_key('Importer la base des codes de la NABM ? ')
     con.executemany("insert into {} \
                     values (?,?,?,'B',?,?,?,?,?,?,?,?,?,?,?,?,?,?,'')".format(table), data)
     con.commit() # enregistre dans la base.
-
-
     
 def import_nabm_fn():
     """Donne le nom de fichier et de table pour le chargement de la NABM"""
     import_nabm(NABM_FILE, NABM_TABLE_NAME)    
 
-def trucate_nabm():
+def truncate_nabm():
     """Vide la table NABM"""
     table = NABM_TABLE_NAME
     con = sqlite3.connect(DB_FILE)
     con.execute("delete from {}". format(table))
     con.commit()
 
+def drop_nabm():
+    """supprime la table nabm"""
+    table = NABM_TABLE_NAME
+    con = sqlite3.connect(DB_FILE)
+    con.execute("DROP TABLE IF EXISTS {} ". format(table))
+    con.commit()
+    
+def correct_nabm(table = None):
+    """Remède pour ce qui est sans doute un bug du fichier d'import"""
 
+    pass
+    # SELECT * from nabm44 WHERE MaxCode =''
+    # UPDATE nabm44 set MaxCode=0 ;
+    if not table: table = NABM_TABLE_NAME;
+    con = sqlite3.connect(DB_FILE)
+    con.execute("UPDATE {} set MaxCode=0 WHERE MaxCode ='' ".format(table))
+    con.commit()
+
+    
 def sql_fn():
     "Une console Sql pour lancer quelques ordres"
     table = NABM_TABLE_NAME
@@ -197,12 +218,15 @@ def menu():
        raise SystemExit
         
     menu = {
-        "01":("Creer la table des incompatibilités",create_incompat),
+        "01a":("Connection à la base (test de ...)", connect_db), 
+        "01":("Créer la table des incompatibilités",create_incompat),
         "02":("Import incompatibles codes",import_incompat_codes_fn),
         "03":("Vider la tables des incompatibilités", truncate_incompat),
+        "03z":("Supprimer la tables de la NABM", drop_nabm),
         "04":("Créer la table de la NABM",create_nabm),
         "05":("Importer les données de la NABM",import_nabm_fn),
-        "06":("Vider la table de la NABM", trucate_nabm),
+        "05a":("correct nabm 44 ",correct_nabm), 
+        "06":("Vider la table de la NABM", truncate_nabm),
         "07":("Console SQL", sql_fn),
         "08":("Help",help_fn),
         "09":("", my_quit_fn),
@@ -226,23 +250,7 @@ def _test():
     doctest.testmod(verbose=True)
 
 if __name__=='__main__':
-    pass
     # _test()
-
-    # import_incompat_codes(INCOMPAT_TABLE_NAME)
-    # import_nabm_fn()
-    
     menu()
-    # con = sqlite3.connect(Cf.NABM_DB)  
-
-##    BASE = GestionBD(Cf.NABM_DB)
-##    BASE.execute_sql("")
-##    BASE.quick_sql("Select 1,2, 3") # execute et affiche le résultat
-##    BASE.con
-##    bASE con.cur  # accès au curseur, cf exemples dans facturation)
-##    BASE.con.execute()
-##    BASE.con.cur.fetchall() 
-##    BASE.commit() # raccourci pour BASE.con.commit()
-
 
 

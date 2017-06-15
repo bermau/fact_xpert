@@ -2,7 +2,6 @@
 # file: data_test.py
 # Set of data for tests.
 
-# 
 acts_ok = ['0323', '9105', '1208']
 
 acts_unknown_512_1245_2145 = [

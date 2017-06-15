@@ -48,3 +48,19 @@ tests :TestResults(failed=0, attempted=0)
 fact : TestResults(failed=0, attempted=2)
 lib_nabm : TestResults(failed=0, attempted=14)
 tests : TestResults(failed=0, attempted=0)
+2017-05-28 11:05 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=1, attempted=15)
+tests : TestResults(failed=0, attempted=0)
+2017-06-15 16:56 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=1, attempted=16)
+tests : TestResults(failed=0, attempted=0)
+2017-06-15 17:10 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=1, attempted=16)
+tests : TestResults(failed=0, attempted=0)
+2017-06-15 17:11 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=0, attempted=16)
+tests : TestResults(failed=0, attempted=0)

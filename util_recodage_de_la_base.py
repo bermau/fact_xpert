@@ -5,6 +5,11 @@
 # exemple : le code numérique 3 est à remplacer par la chaine "0003".
 from  lib_sqlite import *
 
+def read_a_key(msg=''):
+    """Protection simple contre l'exécution"""
+    input ("ATTENTION ce programme modifie la base : {} \n ! Contrl C or continue".format(msg))
+    print("continuing...")
+
 # l'idée générale est la suivnte : 
 sql_generique="""
 BEGIN TRANSACTION;
@@ -95,7 +100,8 @@ if __name__ == '__main__':
         with con:
             for name in ["incompatibility", "incompatibility41",
                          "incompatibility42", "incompatibility43"]:
-                print("name", name)
+                print("table name : ", name)
+                read_a_key()
                 con.executescript(get_sql_for_nabm_table(name))
                 con.executescript(get_sql_for_rename_tables(name))
     except Exception as err:

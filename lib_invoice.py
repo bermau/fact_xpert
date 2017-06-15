@@ -1,4 +1,6 @@
 #!/bin/env python3
+# -*- coding: utf-8 -*-
+
 """Implémentation d'une facture de NABM.
 La facture est implémentée dans une base sqlite pour réaliser des requêtes
 """
@@ -54,7 +56,7 @@ SELECT * from nabm ; """
     def create_table_invoice_MOD02_in_database(self):
         """Create a table for invoice.
 
-Record is as followinf : [('5305051750', '1610', 'SIONO', 24, 'B') ... ]"""
+Record is as following : [('5305051750', '1610', 'SIONO', 24, 'B') ... ]"""
         sql = "CREATE TABLE IF NOT EXISTS" + self.STRUCT_MOD02
         sys.stderr.write("Creation of invoice table in database.")
         sys.stderr.write("sql = {}".format(sql))

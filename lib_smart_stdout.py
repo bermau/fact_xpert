@@ -8,7 +8,7 @@ from io import StringIO
 class PersistentStdout(object):
     """Un buffer pour enregistrer la sortie standard.
 
-la sortie standard ne sera sauvé que si self.important est True.
+la sortie standard ne sera sauvée que si self.important est True.
 
 Cette classe fonctionne en contexte manager.
 Le contexte manager nécessite l'usage :
@@ -68,6 +68,8 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
+# Je me susi rendu compte que la logique de la fonction ci dessus était fausse.
+# la fonction ci dessous est OK.
 def record_if_false(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
@@ -76,9 +78,11 @@ Enregistre la sortie standard si le résultat de la fonction est False.
     def decorated(funct):
         def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
                                       # de la fonction
+            retour = None
             with PersistentStdout(filename=filename) as buf:
-                  buf.important = not funct(*args, **kwargs)
-            return buf.important
+                  retour = funct(*args, **kwargs)
+                  buf.important = (retour != True)             
+            return retour
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
