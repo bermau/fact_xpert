@@ -47,3 +47,7 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 Dasnslib_glims, création d'une fonction pour nettoyer le format de facturation issu de l'écran de facturation.
 
 0.15 : fonctionnement adapté pour glims/mips. Reste à prévoir la détection des erreurs de minimum de cotation.
+
+0.16 : Mise en place de la détection des erreurs de minimum de cotation. 
+Mise en place d'une présentation rapide d'une série de résultats (pseudographe sur terminal).
+Mise en place d'un export de l'expertise vers excel. 

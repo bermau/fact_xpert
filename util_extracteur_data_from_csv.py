@@ -9,7 +9,7 @@ Numpy et IPython. Wes McKinney, Ed Eyrolles, 2015.
 - http://pandas.pydata.org/pandas-docs/stable/10min.html
 """
 
-# prochaine extraction :
+# prochaine extraction : ne pas oublier :
 # del = |
 # supprimer service
 # récupérer uniquement le code NABM
@@ -22,8 +22,10 @@ HEADER_POS = 6 # numéro ("humain") de la ligne contenant les noms de colonnes)
 
 # difficulté : la structure du fichier entrant est variable.
 # Nom et ordre des colonnes à obtenir.
+
+# L'ordre des différentes utilisé est variable (je ne sais pourquoi)
 INPUT_COLUMNS = ['Objet/patient', 'N°Séjour', 'Date', 'Numdossier', 'Prescripteur', 'CdeNABM',
-           'B', 'BNH', 'TB', 'Eur']
+           'B', 'BNH',  'EUR',  'TB']
 # Nom et ordre des colonnes à obtenir.
 COLUMNS = ['Objet', 'Sejour', 'Date', 'Dossier', 'Prescripteur', 'CdeNABM',
            'B', 'BNH', 'TB', 'Eur']
@@ -134,7 +136,7 @@ def etude_dossier_par_nom(nom='None'):
         if inv:
             title(patient)
             patient = reformat_cle(patient)
-            data = model_etude_2(inv,  label=patient,  model_type='MOD02')
+            data = model_etude_4(inv,  label=patient,  model_type='MOD02')
             new_data = reformat_conclusion(patient, data)
 
 
@@ -142,6 +144,7 @@ def etude_dossier_par_nom(nom='None'):
 def reformat_conclusion(cle, data):
     """
 Crée un dictionnaire à partir du format de la fonction facturation.model_etude_2.
+version 2 : plus lisible :On code 0 si bon et 1 si mauvais.
 
 format entrée : soit True, soit (False, {dicto des erreurs})
 format de sortie : un dictionnaire simple. Exemples : 
@@ -166,7 +169,7 @@ def reformat_cle(cle):
     'LAPIN, DE GARENNE, LIEVRE, (F) 31/12/1941, 01/08/2017'
     """
 
-    return cle[0]+', '+cle[1]
+    return ','.join([str(item) for item in cle])
 
 def _test():
     """Execute doctests."""
@@ -175,16 +178,27 @@ def _test():
     print("{} tests performed, {} failed.".format(tests, failures))
     print()
 
+class Reset():
+    """Réinitialise pour une nouvelle étude."""
+
+    def reset(self):
+        """Vide la table rep"""  
+        from data_recording import DataRecorder
+        
+        DR = DataRecorder(db_name=Glob.DB_FILE)
+        DR.con.execute("delete from rep")
+        DR.commit()
+    
 if __name__=='__main__':
 
     _test()
 
-    from facturation import model_etude_2
+    from facturation import model_etude_4
     
 # importer les données et renommer les colonnes
 # Attention : le header semble varier : peut être à 4 ou 5 en fonction de l'extraction !
     # filename = 'PRIVATE/extrait_anon_201705_17.csv' 
-    filename = 'PRIVATE/factu_v6.csv'
+    filename = 'PRIVATE/factu_v7.csv'
     FILE_ENCODING = 'ISO-8859-15'
     # FILE_ENCODING = 'ansi'
 
@@ -194,6 +208,9 @@ if __name__=='__main__':
                    # la suivante est le header.
     # imposer une structure et simplifier les noms
     data = corriger_structure(data)
+
+
+    
     data.rename(columns={'Objet/patient':'Objet'}, inplace=True)
     data.rename(columns={'N°Séjour':'Sejour'}, inplace=True)
     data.rename(columns={'Numdossier':'Dossier'}, inplace=True)
@@ -212,31 +229,37 @@ if __name__=='__main__':
                  (data.Objet != EXCLURE)]
     
     # grouper pour une même personne et un même jour
-    grouped = data2.groupby(['Objet', 'Date'])
+    # grouped = data2.groupby(['Objet', 'Date'])
+    grouped = data2.groupby(['Objet', 'Date', 'Sejour', 'Prescripteur'])
 
     # Recherche d'un cas particulier :
-    title ('')
-    title("Extraction d'un dossier par nom")
-    etude_dossier_par_nom(nom='SABAT')
+    if 0: 
+        title ('')
+        title("Extraction d'un dossier par nom")
+        etude_dossier_par_nom(nom='BARATHE')
     
     # création d'un itérateur de factures
-    title ('')
-    title("Extraction de tous les dossiers.")
-    from data_recording import DataRecorder, Glob
-    DR = DataRecorder(db_name=Glob.DB_FILE)
-    i = 0 
-    for patient, inv in invoice_extractor(grouped, mode='MOD02'):
-        if i < 6:            
-            title(patient)        
-            patient = reformat_cle(patient)
-            data = model_etude_2(inv,  label=patient,  model_type='MOD02')
-            new_data = reformat_conclusion(patient, data)
-            DR.record_expertise(new_data)
+    if 1: 
+        print('')
+        title("Extraction de tous les dossiers.")
+        from data_recording import DataRecorder, Glob
+        DR = DataRecorder(db_name=Glob.DB_FILE)
+        i = 1
+        for i, (patient, inv) in enumerate(invoice_extractor(grouped, mode='MOD02')):
+            if 1:  # on peut écrire <9999
+                patient = reformat_cle(patient)
+                patient = "Cas {:04d},".format(i+1)+patient
+                title(patient)
+                data = model_etude_4(inv,  label=patient,  model_type='MOD02')
+                new_data = reformat_conclusion(patient, data)
+                DR.record_expertise(new_data)
+                DR.commit()
             i += 1
-    DR.close()
+        DR.close()
     
-    print(); title("AU FINAL")
-    DR.show_rep()
+    if 0:
+        print(); title("AU FINAL")
+        DR.show_rep()
 
         
 

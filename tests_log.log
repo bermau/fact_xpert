@@ -64,3 +64,11 @@ tests : TestResults(failed=0, attempted=0)
 fact : TestResults(failed=0, attempted=2)
 lib_nabm : TestResults(failed=0, attempted=16)
 tests : TestResults(failed=0, attempted=0)
+2017-06-23 19:35 tests 
+fact : TestResults(failed=2, attempted=5)
+lib_nabm : TestResults(failed=0, attempted=22)
+tests : TestResults(failed=0, attempted=0)
+2017-06-29 09:39 tests 
+fact : TestResults(failed=0, attempted=2)
+lib_nabm : TestResults(failed=0, attempted=22)
+tests : TestResults(failed=0, attempted=0)

@@ -16,12 +16,20 @@ import sys
 from bm_u import title
 import datetime
 
+DEBUG = False
+
 # listes des actes de la règle des sérologies hépatite B et des protéines
 PROT_LST_REF = ['0321', '0324', '1805', '1806', '1807', '1808',
                 '1809', '1810', '1811', '1812', '1813', '1814', '1815', 
                 '1816', '1817', '1818', '1819' ]
 
 HEP_B_LST_REF = ['0322', '0323', '0351', '0352', '0353', '0354']
+
+COTA_MINIMALE = ['9905', '9910']
+COTA_MINIMALE.extend([str (item) for item in range (9914, 9927)])
+
+
+
 
 def _detect_more_than_n_objects_in_a_list(actes_lst, lst_ref, N):
     """Renvoie False si une liste contient plus de n membres d'une liste de reférence.
@@ -51,6 +59,34 @@ def detecter_plus_de_trois_sero_hepatite_b(actes_lst):
     return _detect_more_than_n_objects_in_a_list(actes_lst, HEP_B_LST_REF, 3)
 
   
+def contient_acte_de_cotation_minimale(act_lst):
+    """renvoie True si la liste contient au moins un acte de cotation sang .
+    >>> contient_acte_de_cotation_minimale(['9914','1805','9921','1819'])
+    True
+    >>> contient_acte_de_cotation_minimale(['9914',None,'9921','1819'])
+    True
+    >>> contient_acte_de_cotation_minimale(['1806','1805','1605','1819'])
+    False
+"""
+    if get_actes_de_cotation_minimale(act_lst):
+            return True
+    return False    
+
+def get_actes_de_cotation_minimale(act_lst):
+    """retourne la liste des actes de cotation minimum de la liste entrée.
+
+renvoie une liste.
+
+True si la liste contient au moins un acte de cotation sang .
+    >>> get_actes_de_cotation_minimale(['9914','1805','9921','1819'])
+    ['9914', '9921']
+    >>> get_actes_de_cotation_minimale(['9914',None,'1610','1819'])
+    ['9914']
+    >>> get_actes_de_cotation_minimale(['1806','1805','1605','1819'])
+    []
+"""
+    return [item for item in act_lst if item in COTA_MINIMALE]
+
 
 def get_name_of_nabm_files(nabm_version):
     """Return names of database tables corresponding to NABM version.
@@ -130,7 +166,7 @@ Entrée : 01/02/2016
 class Nabm(lib_sqlite.GestionBD):
     "Une classe pour la consultation de la NABM."
     
-    def __init__(self, version=Cf.NABM_DEFAULT_VERSION):
+    def __init__(self, version=Cf.NABM_DEFAULT_VERSION, verbose=None):
         """Ouvre la base de données contenant la NABM
 
         >>> AA = Nabm()
@@ -139,7 +175,7 @@ class Nabm(lib_sqlite.GestionBD):
         """
         self.NABM_DB=Cf.NABM_DB # ceci est le nom du fichier.
         lib_sqlite.GestionBD.__init__(self, dbName=Cf.NABM_DB)
-        sys.stderr.write("Ouverture de la base NABM\n")
+        if verbose: sys.stderr.write("Ouverture de la base NABM\n")
         self.nabm_name, self_nabm_incompatibility=get_name_of_nabm_files(version)
 
     def describe_acte(self, code):
@@ -153,9 +189,8 @@ class Nabm(lib_sqlite.GestionBD):
         self.describe_acte("1610")
             
     def __del__(self):
-        # self.NABM_DB.close()
         self.close()
-        print("L'objet de consultation de la base a été fermé.")
+        if DEBUG : print("NABM Object closed")
 
 class Menu(Nabm):
     """Menu déroulant pour la consultation de la Nabm.
@@ -217,6 +252,6 @@ def _test():
 
 if __name__=='__main__':
     _test()
-    BB = Nabm()
-    BB.test()
-    Menu()
+##    BB = Nabm()
+##    BB.test()
+##    Menu()

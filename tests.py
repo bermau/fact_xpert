@@ -141,6 +141,29 @@ Erreur prot et erreur hépatites"""
         self.assertFalse(self.test.verif_codes_et_montants(nabm_version=42))
         self.assertFalse(self.test.verif_hepatites_B())
         self.assertFalse(self.test.verif_proteines())
+
+    def test_pas_err_detection_forfait_sang_indu_MOD02(self):
+        """Facture avec une facture de type MOD02.
+Erreur par excès de forfait sang"""
+
+        self.common_set_of_tests(facture=FACT5,
+                                 nabm_version=43,
+                                 model_type='MOD02'
+                                 )
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
+        self.assertTrue(self.test.verif_minimum_sang())
+
+    def test_err_detection_forfait_sang_indu_MOD02(self):
+        """Facture avec une facture de type MOD02.
+Erreur par excès de forfait sang"""
+
+        
+        self.common_set_of_tests(facture=FACT5_NABM43_PLUS_COTAMIN_EN_TROP,
+                                 nabm_version=43,
+                                 model_type='MOD02'
+                                 )
+        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
+        self.assertFalse(self.test.verif_minimum_sang())              
         
 def test_suite():
     """retourne la liste des tests à traiter."""

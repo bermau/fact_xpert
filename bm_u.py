@@ -75,7 +75,7 @@ class Buffer():
         """Etendre un buffer avec un autre Buffer"""
         self.msg_lst.extend(buf.msg_lst)
     def show(self):
-        """Aficher le buffer"""
+        """Afficher le buffer"""
         for i in self.msg_lst:
             print(i)
 def get_version():

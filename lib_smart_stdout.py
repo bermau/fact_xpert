@@ -68,7 +68,7 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-# Je me susi rendu compte que la logique de la fonction ci dessus était fausse.
+# Je me suis rendu compte que la logique de la fonction ci dessus était fausse.
 # la fonction ci dessous est OK.
 def record_if_false(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
@@ -81,7 +81,11 @@ Enregistre la sortie standard si le résultat de la fonction est False.
             retour = None
             with PersistentStdout(filename=filename) as buf:
                   retour = funct(*args, **kwargs)
-                  buf.important = (retour != True)             
+
+                  import pdb
+                  pdb.set_trace
+                  
+                  buf.important = (retour[0] != True)             
             return retour
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()

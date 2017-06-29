@@ -7,6 +7,8 @@ import sqlite3
 import os, sys
 import conf_file as Cf # fichier de parametrage avec nom de la base sqlite
 
+DEBUG = False
+
 class GestionBD:
     """Mise en place et interfaçage d'une base de données Sqlite."""
 
@@ -111,7 +113,7 @@ class GestionBD:
     def close(self):
         if self.con:
             self.con.close()
-            sys.stderr.write("Database {} has been closed\n".format(self.dbname))
+            if DEBUG : sys.stderr.write("Database {} has been closed\n".format(self.dbname))
 
 if __name__ == '__main__': 
     print("Connexion à base de donnée")

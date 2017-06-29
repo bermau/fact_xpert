@@ -34,7 +34,7 @@ MOD02 : liste évoluée.
         if not self.table_invoice_exists():
             # self.create_table_invoice_MOD02_in_database()
             self._force_creation_of_invoice_in_db()
-        self.act_list = [] # copy of data in database
+        self.act_lst = [] # copy of data in database
         
     def create_view_for_nabm(self):
         """Tool to create a view.
@@ -79,29 +79,29 @@ Record is as following : [('5305051750', '1610', 'SIONO', 24, 'B') ... ]"""
         """Test if table of invoices is defined."""
         return True
     
-    def load_invoice_list(self, act_list):
+    def load_invoice_list(self, act_lst):
         """Load invoice data in database according to model type."""
         if self.model_type is 'MOD01':
-            self.load_invoice_list_MOD01(act_list)
+            self.load_invoice_list_MOD01(act_lst)
         if self.model_type is 'MOD02':
-            self.load_invoice_list_MOD02(act_list)
+            self.load_invoice_list_MOD02(act_lst)
     
     def load_invoice_list_MOD01(self, act_simple_list):
         """Constitue une table (id, acte_1), (id, acte2) ... """
-        self.act_list = act_simple_list
+        self.act_lst = act_simple_list
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
         for act in act_simple_list:
             self.INVOICE_DB.execute_sql("""INSERT INTO invoice_list
                                      (code) VALUES (?) """, (act,))
         self.INVOICE_DB.commit()
 
-    def load_invoice_list_MOD02(self, act_list):
+    def load_invoice_list_MOD02(self, act_lst):
         """Constitue une table (id, acte_1), (id, acte_2) ...
 Adapté au modèle MOD02."""
-        self.act_list = [item[1] for item in act_list]
+        self.act_lst = [item[1] for item in act_lst]
         # sys.stderr.write("Loading data\n")
         self.INVOICE_DB.execute_sql("""DELETE FROM invoice_list""")
-        for line in act_list:
+        for line in act_lst:
             print(str(line)+',')
             self.INVOICE_DB.execute_sql("""INSERT INTO invoice_list
                             (record, code, analyse, nb_letters, letter)

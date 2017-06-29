@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Enregistrement des données dans une base.
+"""Enregistrement des expertises de facturation dans une base.
 
 Le but est d'enregistrer les résultats d'une expertise dans une base de
 données sqlite.
@@ -22,16 +22,18 @@ class Glob:
 
     dicoTables={"rep":[
 ('id', "k", "clé primaire"),
-('cle', 50, "Nom du Ctrl"),
+('cle', 50, "Nom du Ctrl"), 
 ('date', 10, "Date expertise"),
+('sum',4, "Somme" ),
 ('glob',4,"Réponse globale"),
 ('nabm', 4, "nabm"),
 ('repet', 4, "répétitions"),
 ('sang',4,"sang"),
 ('hep_b',4,"hep_b"),
 ('prot',4,"prot"),
-('mont',4,"mont"),
-('incomp',4,"incomp"),
+('mont',4,"montant en erreur"),
+('incomp',4,"Incompatibilité"),
+('cotamin',4, 'Cotation minimale indue')
 ]
 }
 
@@ -92,15 +94,16 @@ class DataRecorder(lib_sqlite.GestionBD):
         """enregistre le résultat d'une expertise de facturation.
 
 data est un dictionnaire"""
-        if len(data) == 2 : 
-            sql = """INSERT INTO rep (cle, date, glob)
-                         VALUES(:cle ,CURRENT_TIMESTAMP, :glob)"""
-        else:
-            sql = """INSERT INTO rep (cle, date, glob, nabm,
-                                  repet, sang, hep_b, prot, mont, incomp)
-                         VALUES(:cle ,CURRENT_TIMESTAMP, :glob, :nabm,
+##        if len(data) == 2 : 
+##            sql = """INSERT INTO rep (cle, date, glob)
+##                         VALUES(:cle ,CURRENT_TIMESTAMP, :glob)"""
+##        else:
+        sql = """INSERT INTO rep (cle, date, glob, sum, nabm,
+                                  repet, sang, hep_b, prot, mont, incomp, cotamin)
+                         VALUES(:cle ,CURRENT_TIMESTAMP, :glob, :sum, :nabm,
                          :repet, :sang,
-                                :hep_b, :prot, :mont, :incomp)"""
+                                :hep_b, :prot, :mont, :incomp, :cotamin)"""
+        
         self.con.execute(sql, data)
       
 
