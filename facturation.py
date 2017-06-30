@@ -390,7 +390,8 @@ retourne True s'il y a 0 ou 1 acte 9105, False si plus de 1."""
         """Test la présence indue d'actes de cotation minimum.
 
 Ces actes sont ajoutés pour que la somme des analyses réalisées sur du sang
-soit au moins égale à B20.
+soit au moins égale à B20. Attention il ne faut pas compter les actes de
+type forfait Sang 9105 ou forfait préanalytique (9005)
 
 Renvoie True si la règle est respectée, et False sinon."""
         # Principe :
@@ -405,18 +406,21 @@ Renvoie True si la règle est respectée, et False sinon."""
         buf = Buffer()
         noerror = True 
         
-        if lib_nabm.contient_acte_de_cotation_minimale(self.invoice.act_lst):
-            # somme des valeurs des B de type Sang.                     
+        if lib_nabm.contient_acte_de_cotation_minimale(self.invoice.act_lst):         
+# somme des valeurs des B de type Sang.                     
+# Il ne me semble pas normale que l'acte 9105  (forfait Sang) soit considéré comme Sang 
             sql ="""SELECT
         sum(N.coef)
+
         FROM {table} AS N
-        WHERE N.code in ({my_list}) 
+        WHERE N.code in ({my_list})
+        AND N.Sang = 1
+        AND N.code != 9105
         
         """.format(table=self.nabm_table, my_list=quoted_joiner(self.invoice.act_lst))
 
             cur = self.ref.con.cursor()
             cur.execute(sql)
-
             my_sum = cur.fetchone()[0]
             buf.print("Total des cotations sang : {}".format(my_sum))
             if my_sum != 20:
@@ -435,7 +439,7 @@ def get_affiche_liste_codes(code_liste):
         
 DEBUG = False
 
-record_if_true(filename='PRIVATE/erreur.txt')
+record_if_true(filename='PRIVATE/erreurs.txt')
 def model_etude_1(act_lst, label=None, model_type='MOD01',
                   nabm_version=Cf.NABM_DEFAULT_VERSION):
     """Une expertise mieux présentée.
@@ -669,7 +673,7 @@ si erreur : retourne False
         return (main_conclusion, ret_dict) # False + erreurs si erreur.
 
     
-@record_if_false(filename='PRIVATE/erreur.txt')
+@record_if_true(filename='PRIVATE/erreurs.txt')
 def model_etude_4(act_lst, label=None, model_type='MOD01',
                   nabm_version=Cf.NABM_DEFAULT_VERSION):
     """comme modèle 4 mais plus consis, et plus lisible en sortie.
@@ -758,7 +762,7 @@ si erreur : retourne True
     ret_dict['sum'] = T.affiche_liste_et_somme_theorique()
     
     for legend, test, var in zip(legends, tests, variables):
-        print("\n{:<40} : ".format(legend), end='')
+        print("{:<40} : ".format(legend), end='')
         ret_dict [var] = not(test()) # LE test renvoie False si erreur or je veux l'inverse
         main_conclusion = main_conclusion or ret_dict [var]
         if DEBUG : print(main_conclusion, ret_dict)
@@ -868,7 +872,9 @@ if __name__=='__main__':
     # 0 ou False indique une absence d'erreur de facturation
     # un nombre non égal à éro ou True indique une erreur de facturation
     
-    AA = model_etude_4(dt.FACT5_NABM43_PLUS_COTAMIN_EN_TROP, model_type='MOD02')
+    # AA = model_etude_4(dt.FACT5_NABM43_PLUS_COTAMIN_EN_TROP, model_type='MOD02')
+
+    AA = model_etude_4(dt.FACT5_NABM44_AVEC_MINIMUM_SANG_OK, model_type='MOD02')
     print(AA) 
     #_test()
   

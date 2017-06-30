@@ -1,4 +1,4 @@
-﻿VERSION : 0.15
+﻿VERSION : 0.17
 
 0.02 : simplification du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
@@ -50,4 +50,7 @@ Dasnslib_glims, création d'une fonction pour nettoyer le format de facturation 
 
 0.16 : Mise en place de la détection des erreurs de minimum de cotation. 
 Mise en place d'une présentation rapide d'une série de résultats (pseudographe sur terminal).
-Mise en place d'un export de l'expertise vers excel. 
+Mise en place d'un export de l'expertise vers excel.
+
+0.17 : correction d'un bug : le module facturation enregistre les dossiers en erreurs et non plus les dossiers corrects.
+création d'un script pour enchaîner la rédaction de l'expertise (data_recording_batch.py)

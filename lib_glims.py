@@ -1,10 +1,15 @@
 """tools for Glims.
 
+Glims est un logiciel de la société Mips.
+
 Extraire des structures d'un tableau régulier.
 Extraction de champs de longueur fixe.
 
-Les données sont issues d'un copier coller de 
-Dossier/ Cotation / visualisation facture."""
+Les données sont issues d'un copier-coller de
+
+Aller en visualisation de résultats et ouvrir un dossier.
+Quand le dossier est ouvert, cliquer droit pour choisir les menus : 
+Dossier/ Cotation / visual. facture."""
  
 
 # TODO : je n'arrive pas à saisir des structure multilignes dans les docstring pour les
@@ -107,12 +112,12 @@ ALO 345 Ceci est une autre  124.5
 def demo_for_glims():
     """Demo to use Splitter with data from Glims"""
     from  data_for_tests import GLIMS_02_MOD2
-    import lib_glimps
+    import lib_glims
     
     ar_strings = []
-    a = lib_glimps.Splitter(GLIMS_02_MOD2, lib_glimps.seps_GLIMS)
+    a = lib_glims.Splitter(GLIMS_02_MOD2, lib_glims.seps_GLIMS)
     ar_strings = a.get_fields()
-    format_MOD02 = lib_glimps.glims_to_MOD02_format(ar_strings)
+    format_MOD02 = lib_glims.glims_to_MOD02_format(ar_strings)
     print(format_MOD02)
 
     # IL RESTE A ELIMINER les blancs :

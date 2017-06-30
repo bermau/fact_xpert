@@ -17,6 +17,7 @@ Numpy et IPython. Wes McKinney, Ed Eyrolles, 2015.
 import pandas as pd
 import numpy as np
 from bm_u import title, prt_lst, readkey
+import conf_file as Cf
 
 HEADER_POS = 6 # numéro ("humain") de la ligne contenant les noms de colonnes)
 
@@ -183,16 +184,24 @@ class Reset():
 
     def reset(self):
         """Vide la table rep"""  
-        from data_recording import DataRecorder
-        
+        from data_recording import DataRecorder, Glob
         DR = DataRecorder(db_name=Glob.DB_FILE)
         DR.con.execute("delete from rep")
         DR.commit()
-    
+
+        import os
+        try: 
+            os.remove('PRIVATE/erreurs.txt')
+        except:
+            print("Fichier inexistant")  
 if __name__=='__main__':
 
-    _test()
+    # _test()
 
+    if 0:
+        AA= Reset()
+        AA.reset()
+        
     from facturation import model_etude_4
     
 # importer les données et renommer les colonnes

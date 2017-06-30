@@ -197,10 +197,6 @@ def menu():
 if __name__ == '__main__':
 
     DR = DataRecorder(db_name=Glob.DB_FILE)
-    try: 
-        DR.show_rep()
-    except:
-        pass
     menu()
 
 

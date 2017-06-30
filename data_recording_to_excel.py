@@ -11,8 +11,7 @@ from pandas import ExcelWriter
 
 import sqlite3
 
-if __name__ == '__main__':
-    
+def to_excel():
     DR = data_recording.DataRecorder(db_name="PRIVATE/result.sqlite")
     sql = "Select * from rep"
     DR.con.row_factory = sqlite3.Row
@@ -27,5 +26,9 @@ if __name__ == '__main__':
     
     writer.save()
     print("Le fichier a été sauvé dans {}".format(conf_file.EXPORT_REP+'/'+'fact_excel.xlsx'))
+
+    
+if __name__ == '__main__':
+    to_excel()
 
 
