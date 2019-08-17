@@ -51,11 +51,11 @@ la premier fenetre"""
                             nabm_version=43):
         """Une fonction pour aider à écrire des tests."""
         self.act_ref=Nabm()
-        # print("La facture étudiée est ", facture)
+        print("La facture étudiée est ", facture)
         self.invoice = lib_invoice.Invoice(model_type=model_type)
         self.invoice.load_invoice_list(facture)
         self.test = TestInvoiceAccordingToReference(self.invoice,
-                                                    self.act_ref,
+                                                    self.act_ref.NABM_DB,
                                                     nabm_version=nabm_version)
         self.test.attach_invoice_database()
         
@@ -141,44 +141,6 @@ Erreur prot et erreur hépatites"""
         self.assertFalse(self.test.verif_codes_et_montants(nabm_version=42))
         self.assertFalse(self.test.verif_hepatites_B())
         self.assertFalse(self.test.verif_proteines())
-
-    def test_pas_err_detection_forfait_sang_indu_MOD02(self):
-        """Facture avec une facture de type MOD02.
-Erreur par excès de forfait sang"""
-
-        self.common_set_of_tests(facture=FACT5,
-                                 nabm_version=43,
-                                 model_type='MOD02'
-                                 )
-        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
-        self.assertTrue(self.test.verif_minimum_sang())
-
-    def test_err_detection_forfait_sang_indu_MOD02(self):
-        """Facture avec une facture de type MOD02.
-Erreur par excès de minimum de cotation pour sang"""
-
-        
-        self.common_set_of_tests(facture=FACT5_NABM43_PLUS_COTAMIN_EN_TROP,
-                                 nabm_version=43,
-                                 model_type='MOD02'
-                                 )
-        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
-        self.assertFalse(self.test.verif_minimum_sang())
-
-    def test_err_detection_forfait_sang_ok_nabm44_MOD02(self):
-        """Facture avec une facture de type MOD02.
-minimum de cotation pour sang correct"""
-
-        
-        self.common_set_of_tests(facture=FACT5_NABM44_AVEC_MINIMUM_SANG_OK,
-                                 nabm_version=44,
-                                 model_type='MOD02'
-                                 )
-        self.assertTrue(self.test.verif_tous_codes_dans_nabm())
-        self.assertTrue(self.test.verif_minimum_sang())
-
-# FACT5_NABM44_AVEC_MINIMUM_SANG_OK
-
         
 def test_suite():
     """retourne la liste des tests à traiter."""

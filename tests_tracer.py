@@ -24,4 +24,6 @@ with open(LOG, mode="a", encoding="UTF8") as output:
     lib_tests = doctest.testmod(m=tests)
     output.write("tests : " + str(lib_tests) + "\n")
 
+    
+    
 print("Report is in {}".format(LOG))

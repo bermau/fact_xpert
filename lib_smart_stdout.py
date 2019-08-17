@@ -8,7 +8,7 @@ from io import StringIO
 class PersistentStdout(object):
     """Un buffer pour enregistrer la sortie standard.
 
-la sortie standard ne sera sauvée que si self.important est True.
+la sortie standard ne sera sauvé que si self.important est True.
 
 Cette classe fonctionne en contexte manager.
 Le contexte manager nécessite l'usage :
@@ -54,7 +54,7 @@ et __exit__ (en sortie).
 
 # Sur les décorateurs avec arguments, 
 # lire http://gillesfabio.com/blog/2010/12/16/python-et-les-decorateurs/
-def record_if_true_OLD(filename='essai_sortie2.txt'):
+def record_if_true(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
 Enregistre la sortie standard si le résultat de la fonction est True.
@@ -68,32 +68,6 @@ Enregistre la sortie standard si le résultat de la fonction est True.
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 
-
-
-
-
-
-
-def record_if_true(filename='essai_sortie2.txt'):
-    """Enregistrement conditionnel de la sortie standard d'une fonction.
-
-Enregistre la sortie standard si le résultat de la fonction est True.
-"""
-    def decorated(funct):
-        def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
-                                      # de la fonction
-            retour = None
-            with PersistentStdout(filename=filename) as buf:
-                  retour = funct(*args, **kwargs)
-                  buf.important = (retour[0] != False)
-            return retour
-        return wrapper # et non pas wrapper()
-    return decorated   # ni decorated()
-
-
-
-# Je me suis rendu compte que la logique de la fonction ci dessus était fausse.
-# la fonction ci dessous est OK.
 def record_if_false(filename='essai_sortie2.txt'):
     """Enregistrement conditionnel de la sortie standard d'une fonction.
 
@@ -102,11 +76,9 @@ Enregistre la sortie standard si le résultat de la fonction est False.
     def decorated(funct):
         def wrapper(*args, **kwargs): # indispensable pour récupérer les arguments
                                       # de la fonction
-            retour = None
             with PersistentStdout(filename=filename) as buf:
-                  retour = funct(*args, **kwargs)
-                  buf.important = (retour[0] != True)             
-            return retour
+                  buf.important = not funct(*args, **kwargs)
+            return buf.important
         return wrapper # et non pas wrapper()
     return decorated   # ni decorated()
 

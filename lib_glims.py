@@ -1,15 +1,10 @@
 """tools for Glims.
 
-Glims est un logiciel de la société Mips.
-
 Extraire des structures d'un tableau régulier.
 Extraction de champs de longueur fixe.
 
-Les données sont issues d'un copier-coller de
-
-Aller en visualisation de résultats et ouvrir un dossier.
-Quand le dossier est ouvert, cliquer droit pour choisir les menus : 
-Dossier/ Cotation / visual. facture."""
+Les données sont issues d'un copier coller de 
+Dossier/ Cotation / visualisation facture."""
  
 
 # TODO : je n'arrive pas à saisir des structure multilignes dans les docstring pour les
@@ -36,11 +31,10 @@ class Splitter():
         self.seps = seps        
  
     def get_fields(self):
-        lst_lines = [ line  for line in self.struct.rsplit("\n") if line ]
+        lst_lines = [ line  for line in self.struct.split("\n") if line ]
         ar = [] # array
         limit = len(self.seps) - 1
-        import pdb
-        # pdb.set_trace()        
+       
         for line in lst_lines:
             ar_line = [] # line in the array
             # print("trt", line)
@@ -84,9 +78,10 @@ def glims_to_MOD01_format(splitted_data):
 
 def glims_to_MOD02_format(splitted_data):
     """Convert splitted data into a fact_xpert MOD02 array."""
-    A = [( '1230567890',
+
+    A = [( '0123456789',
            line[1].strip(),
-           '*'+line[2].strip(),
+           line[2].strip(),  # POURQUOI une * ???
            int(line[3][:-2]),
            line[0].strip())  for line in splitted_data ]
     return A
@@ -112,19 +107,45 @@ ALO 345 Ceci est une autre  124.5
 def demo_for_glims():
     """Demo to use Splitter with data from Glims"""
     from  data_for_tests import GLIMS_02_MOD2
-    import lib_glims
     
     ar_strings = []
-    a = lib_glims.Splitter(GLIMS_02_MOD2, lib_glims.seps_GLIMS)
-    ar_strings = a.get_fields()
-    format_MOD02 = lib_glims.glims_to_MOD02_format(ar_strings)
-    print(format_MOD02)
-
-    # IL RESTE A ELIMINER les blancs :
+    print("Données entrées : \n\n{}\n".format(GLIMS_02_MOD2))
     
+    a = Splitter(GLIMS_02_MOD2, seps_GLIMS)
+    ar_strings = a.get_fields()
+    format_MOD02 = glims_to_MOD02_format(ar_strings)
+
+    print("Données sortie : \n\n{}\n".format(format_MOD02))
+    print(list_to_tab(format_MOD02))
+
+    # purge_double_liste(format_MOD02)
+
+
+    
+def list_to_tab(a_list):
+    """Prépare une liste pour la passer dans un tableur."""
+    sep = "\t"
+    print(a_list)
+    for line in a_list:
+        for item in line:
+            print(item, end = sep)
+        print()
+
+def purge_double_liste(double_list):
+    """"Eliminer les espace inutils d'une facture
+    >>> dl = [ [' A ', 'B '], [' C ', ' D'] ]
+    >>> purge_double_liste(dl)
+    [['A', 'B'], ['C', 'D']]
+    """
+    ll = []
+    for line in double_list:
+        ll.append([ item.strip() for item in line])
+    
+    return ll
+
     
 if __name__ == "__main__":
-    #_test()
+    _test()
     demo_for_glims()
    
 

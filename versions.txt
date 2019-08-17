@@ -1,4 +1,4 @@
-﻿VERSION : 0.17
+﻿VERSION : 0.13
 
 0.02 : simplification du code d'extraction de la nabm dans facturation dans
 la fonction verif_actes_trop_repetes.
@@ -15,12 +15,12 @@ Le nom du fichier de la sortie est déduit de la date d'exécution.
 Correction d'un bug : cas où l'acte retourne None est corrigé.
 Mise en place d'une possibilité pour identifier la personne ayant enregistré le dossier.
 
-0.07 : Début de mise en place d'un traitement en liste pour Synergy. Le fichier n'est 
+0.07 : Début de mise en place d'un traitement en liste pour Synergy. Le fichier n'est
 pas encore inclus dans cette version.
 
-0.08 : bug corrigé : correction de la détection des règles protéines et 
-sérologies. Explication : le bug était lié à une mauvaise initialisation de 
-invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests. 
+0.08 : bug corrigé : correction de la détection des règles protéines et
+sérologies. Explication : le bug était lié à une mauvaise initialisation de
+invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tests.
 
 0.08+ : la sortie de la liste des actes est rendu compatible python.
 
@@ -46,11 +46,5 @@ invoice.act_listes pour les factures de type MOD02. Prévention par ajout de tes
 0.14 : demo_facturation est remplacé par demo_facturation_simple_list.
 Dasnslib_glims, création d'une fonction pour nettoyer le format de facturation issu de l'écran de facturation.
 
-0.15 : fonctionnement adapté pour glims/mips. Reste à prévoir la détection des erreurs de minimum de cotation.
+EN COURS : modif en oct 2018. Fichiers *glimps remplacés en *glims.
 
-0.16 : Mise en place de la détection des erreurs de minimum de cotation. 
-Mise en place d'une présentation rapide d'une série de résultats (pseudographe sur terminal).
-Mise en place d'un export de l'expertise vers excel.
-
-0.17 : correction d'un bug : le module facturation enregistre les dossiers en erreurs et non plus les dossiers corrects.
-création d'un script pour enchaîner la rédaction de l'expertise (data_recording_batch.py)
