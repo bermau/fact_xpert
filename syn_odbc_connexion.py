@@ -12,7 +12,7 @@ Ce programme sauve uniquement les fichiers en erreurs.
 
 import pyodbc
 import conf_file as Cf
-import bm_u 
+import lib_bm_utils 
 import lib_nabm # utilitaires pour la NABM
 import facturation
 import datetime, sys
