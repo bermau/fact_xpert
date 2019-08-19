@@ -2,7 +2,7 @@
 """Extraire des structures d'un tableau régulier.
 
 Le cas est adapté pour des données venant de la facturation du logiciel Glimps
-de MIPS. 
+de MIPS.  
 
 Extraction de champs de longueur fixe"""
 
