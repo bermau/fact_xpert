@@ -90,18 +90,23 @@ TODO : verifier que dt est au format datetime.
     >>> nabm_version_from_dt(datetime.date(2000,4,19))
     'avant'
 """
-    # table contient différentes versions de nabm.
+    # table[] contient différentes versions de nabm.
     # chaque date de mise en place est suivie de la version de la nabm
     table = [
         [datetime.date(2014, 4, 14), 41],
         [datetime.date(2014, 9, 4), 42],
         [datetime.date(2016, 4, 20), 43],
         [datetime.date(2017, 4, 1), 44],
-        [datetime.date(2019, 1, 17), 49],  # A VERIFIER
+        [datetime.date(2017, 7, 13), 45],
+        [datetime.date(2017, 8, 9), 46],
+        [datetime.date(2018, 4, 14), 47],
+        [datetime.date(2018, 6, 29), 48],
+        [datetime.date(2019, 1, 17), 49], 
         [datetime.date(2019, 2, 1), 50], # virologie
         [datetime.date(2019, 2, 20), 51],
         [datetime.date(2019, 4, 1), 52], # bioch
         [datetime.date(2019, 5, 9), 53], # parasito
+        [datetime.date(2019, 8, 19), 54], # west_nile
         ]
     
     prec = table[0]
@@ -114,7 +119,6 @@ TODO : verifier que dt est au format datetime.
             else:
                 prec = line
         return prec[1]
-
 
 # get_nabm_version_from_fr_date(datetime.date())   
 def frdate2datetime(fr_date):

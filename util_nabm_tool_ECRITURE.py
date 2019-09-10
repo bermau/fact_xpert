@@ -68,13 +68,28 @@ def describe_a_code(input_code = None):
     if input_code is None :
         input_code = input("Code décrire (4 chiffres) : " )
     BASE = lib_nabm.Nabm()
-    BASE.NABM_DB.quick_sql("Select * from nabm where code = '{}'".format(input_code), single_column = True)
-    
+    BASE.NABM_DB.quick_sql("Select * from nabm{} where code = '{}'".format(Cf.NABM_DEFAULT_VERSION, input_code), single_column = True)
+
+def describe_code_evolution(input_code = None):
+    """Afficher l'évolution d'un code au fil des versions.
+    Attention : effet limité. N'affiche rien dans le cas des actes nouveaux ou arrêtés."""
+    if input_code is None :
+        input_code = input("Code décrire (4 chiffres) : " )
+    # à améliorer : le champs DateEffet n'a pas été importé dans toutes les tables
+    # De plus je n'ai pas la table de nabm 48
+    # à tester sur l'acte 1104
+    req = "\n UNION\n".join(["SELECT '{}' as 'vers', code, chapitre, coef from nabm{} where code='{}'".format(vers, vers, input_code) for vers in range(49, Cf.last_nabm)])
+    # req = "\n UNION\n".join(["SELECT '{}', code, chapitre, coef from nabm{} where code='{}'".format(vers, vers, input_code) for vers in range(50, 54)])
+
+    # print(req)
+    BASE = lib_nabm.Nabm()
+    BASE.NABM_DB.quick_sql(req)
+   
 def search_code_containing():
     """Rechercher une chaîne dans la NABM"""
     input_string = input("Saisir une chaîne à chercher dans le libellé (non sensible à la case) : ")
     BASE = lib_nabm.Nabm()
-    BASE.NABM_DB.quick_sql("""Select * from nabm where instr(libelle, "{}") > 0""".format(input_string.upper()) )
+    BASE.NABM_DB.quick_sql("""Select * from nabm{} where instr(libelle, "{}") > 0""".format(Cf.NABM_DEFAULT_VERSION, input_string.upper()) )
 
 def sql():
     """Boucle de lancement de commandes SQL."""
@@ -311,10 +326,13 @@ def quitter():
     "Quit"
     print("OK, Quitter")
     
-    
 def traitement_complet_nabm(num_nabm):
     """A partir d'un numéro de nabm, créer les fichiers csv et les importer
 dans la base sqlite."""
+    if not isinstance(num_nabm, int):
+        print("Erreur : numéro de version non valable")
+        return
+    
     # indiquer la version de NABM :
     set_nabm_version(num_nabm)
     
@@ -351,10 +369,11 @@ class Menu():
         ["CNT", "Créer table NABM", creer_table_nabm], 
         ["LIT", "Charge CSV incompat dans table", load_csv_inc],
         ["LNT", "Charge CSV NABM dans table", load_csv_nabm],
-        ["DIT", "Supprimer table incompat)", vider_table],
+        ["DIT", "Supprimer table incompatibilités", vider_table],
         [" ", "", nothing],      
         ["SIT", "Show structure table_incompat", voir_structure_inc],
         ["SNABM", "Show structure table_nabm", voir_structure_nabm],
+        ["2", "Décrire l'évolution d'un code", describe_code_evolution],
          ["Q", "Quitter", quitter],
                 ]
     
@@ -366,7 +385,7 @@ class Menu():
         
         def menu():
             """Affiche le menu et retourne une réponse clavier."""
-
+            print("Version actuelle : {}".format(Cf.NABM_DEFAULT_VERSION))
             for (lettre, texte, action) in Menu.lst_menu:
                 print(lettre + ' ' + texte)
             rep = input ("Choix : ")
