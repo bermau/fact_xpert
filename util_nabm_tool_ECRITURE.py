@@ -318,21 +318,21 @@ def quitter():
     
     
 def traitement_complet_nabm(num_nabm):
-    """A partir d'un numéro de nabm, crée les fichiers csv et les importe
+    """A partir d'un numéro de nabm, crée les fichiers csv et les importer
 dans la base sqlite."""
     # indiquer la version de NABM :
     set_nabm_version(num_nabm)
+    
     # créer les 2 fichiers CSV
-
-    #   path_to_file= get_fullname_to_excel_file()
-    creer_fichier_csv_incompatibilites(get_fullname_to_excel_file(), get_incompatibility_csv_name())
-    creer_fichier_csv_nabm(get_fullname_to_excel_file(), get_nabm_csv_name())
+    path_to_file = get_fullname_to_excel_file()
+    creer_fichier_csv_nabm(path_to_file, get_nabm_csv_name())
+    creer_fichier_csv_incompatibilites(path_to_file, get_incompatibility_csv_name())
     
     # Créer les 2 tables dans la base sqlite
-    creer_table_inc()
     creer_table_nabm()
+    creer_table_inc()
     
-    # intégrer les 2 fichiers CSV dans les table.
+    # intégrer les 2 fichiers CSV dans les tables.
     load_csv_nabm()
     load_csv_inc()
 
