@@ -1,5 +1,5 @@
 """Utilitaire pour la mise à jour de la NABM
-pour l'instant ne gère que la table incompatibility.
+gère des 2 tables nabm et incompatibility.
 
 contient un menu déroulant."""
 
@@ -27,11 +27,11 @@ def get_fullname_to_excel_file():
     return import_export_rep+"/" + get_excel_file_name()
 
 def get_incompatibility_table_name():
-    "retourn le nom de la table d'incompatibilité dasn la table sqlite"
+    "retourne le nom de la table d'incompatibilité dasn la table sqlite"
     return "incompatibility" + str(nabm_version)
 
 def get_nabm_table_name():
-    "retourn le nom de la table d'incompatibilité dasn la table sqlite"
+    "retourne le nom de la table d'incompatibilité dasn la table sqlite"
     return "nabm" + str(nabm_version)
 
 def get_nabm_csv_name():
@@ -47,13 +47,14 @@ def _test():
     import doctest
     doctest.testmod(verbose=True)
 
-def set_nabm_version( val ):
+def set_nabm_version(val):
     """Indiquer au système la version de NABM sur laquelle on travaille.
 num : numéro sur 1 à 3 chiffres.
     >>> set_nabm_version(49)"""
+    if not isinstance(val, int):
+        return
     global nabm_version
     nabm_version = int(val)
-
 
 def choose_nabm_version():
     "Demande la numéro de version de NABM sur laquelle on va travailler."
@@ -70,8 +71,8 @@ def describe_a_code(input_code = None):
     BASE.NABM_DB.quick_sql("Select * from nabm where code = '{}'".format(input_code), single_column = True)
     
 def search_code_containing():
-    """Rechercher un chaîne dans la NABM"""
-    input_string = input("Saisie une chaîne à chercher dans le libellé (non sensible à la case) : ")
+    """Rechercher une chaîne dans la NABM"""
+    input_string = input("Saisir une chaîne à chercher dans le libellé (non sensible à la case) : ")
     BASE = lib_nabm.Nabm()
     BASE.NABM_DB.quick_sql("""Select * from nabm where instr(libelle, "{}") > 0""".format(input_string.upper()) )
 
@@ -92,9 +93,8 @@ def list_tables():
     BASE = lib_nabm.Nabm()
     BASE.NABM_DB.quick_sql(req)
 
-
 def creer_fichier_csv_incompatibilites(path_to_file, path_to_output):
-    """Creation du CSV des incompatibilités de la NABM.
+    """Création du CSV des incompatibilités de la NABM.
     Ce fichier est créé pour être intégré dans la base sqlite."""
     print("NABM file {}".format(path_to_file))
     ws = pd.read_excel(path_to_file)
@@ -129,11 +129,10 @@ Ce fichier est créé pour être intégré dans la base sqlite.
 
     # on importe une première fois : 
     wb  =  pd.read_excel(data_in)
-    dicto = { col : to_int for col in wb.columns if wb[col].dtypes == 'float64' }
+    dicto = {col : to_int for col in wb.columns if wb[col].dtypes == 'float64'}
 
     # seconde importation : 
     wb2 =pd.read_excel(data_in, converters= dicto)
-    #wb3 = wb2[wb2.columns[:-1]]
     wb3 = wb2[wb2.columns[:-1]].copy()
     wb3['CODE'] = wb3['CODE'].apply(to4digits)
     
@@ -161,12 +160,11 @@ def _creer_fichier_csv_incomp():
     print("Fichier de sortie : {}".format(path_to_output))
     creer_fichier_csv_incompatibilites(path_to_file, path_to_output)
 
-
         
 def vider_table (table_name=None):
-    "Vider  table sqlite."
+    "Vider une table sqlite."
     if table_name is None:
-        table_name=get_incompatibility_table_name()
+        table_name = get_incompatibility_table_name()
     BASE = lib_nabm.Nabm()
     BASE.NABM_DB.quick_sql("DROP TABLE IF EXISTS {}".format(table_name))
     
@@ -213,7 +211,6 @@ CREATE TABLE IF NOT EXISTS {} (
     BASE.NABM_DB.quick_sql(sql)
 
 """
-
 Dans le sqlite j'ai :
 cid | name | type | notnull | dflt_value | pk | 
 0 | code | TEXT | 1 | '0' | 1 | 
@@ -277,18 +274,17 @@ def load_csv_many_columns(csv_file, table_name):
 
     # you must create a N long chain of question marks.
     N = 17 
-    sql_string = "INSERT INTO {} VALUES (" + ", ".join(["?"] * N)    +") ; "
+    sql_string = "INSERT INTO {} VALUES (" + ", ".join(["?"] * N)+") ; "
 
     FILE = open(csv_file, "r")
     reader = csv.reader(FILE, delimiter = separator)
     to_db = [line for line in reader]
     
     BASE = lib_nabm.Nabm()
-    # to_db[1:] : will skip first columns (= header)
+    # explanation : to_db[1:] : will skip first column (= header)
     BASE.NABM_DB.con.executemany(sql_string.format(table_name), to_db[1:])
     BASE.NABM_DB.con.commit()
-    BASE.NABM_DB.con.close() 
-    
+    BASE.NABM_DB.con.close()   
     
 def load_csv_inc():
     "Charge le CSV des incompatibilités dans la table sqlite."
@@ -297,7 +293,6 @@ def load_csv_inc():
 def load_csv_nabm():
     "Charge le CSV de la NBAM dans la table Sqlite."
     load_csv_many_columns(get_nabm_csv_name(), get_nabm_table_name())
-
 
 def voir_structure(table):
     "Affiche une structure de table de sqlite."
@@ -318,7 +313,7 @@ def quitter():
     
     
 def traitement_complet_nabm(num_nabm):
-    """A partir d'un numéro de nabm, crée les fichiers csv et les importer
+    """A partir d'un numéro de nabm, créer les fichiers csv et les importer
 dans la base sqlite."""
     # indiquer la version de NABM :
     set_nabm_version(num_nabm)
